@@ -11,3 +11,8 @@ ok ARCHITECTURE.md flowchart-v2
 ok ERD.md er
 $ grep TBD in security design
 none
+# P0.3 recheck, commit 27e1350, 2026-11-06T17:39:00Z
+You have 8 warnings.
+
+ok ARCHITECTURE.md flowchart-v2
+ok ERD.md er
