@@ -1,6 +1,6 @@
 # OpsBridge AI master inbox
 
-Updated: 2026-11-06 (America/New_York), P2 phase session. No item is open. P2 raised no owner question. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
+Updated: 2026-11-06 (America/New_York), P3 phase session. One item is open: DEC-008. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
 
 ## Open decisions
 
@@ -85,6 +85,17 @@ Updated: 2026-11-06 (America/New_York), P2 phase session. No item is open. P2 ra
 - Decision needed by: before P2.
 - Actual owner answer: 2026-11-06, in the master thread: “Start P2 locally”.
 - Authorized scope: P1 accepted for limited scope with P1-E pending. Start P2 locally. Hyperdrive and hosted proofs stay pending and are carried into later phases.
+
+### DEC-008 — P3-D pending and the P4 start
+
+- State: open.
+- Package and blocking dependency: start of P4. P4 needs no Salesforce account.
+- Decision needed and why: PRD 14 says a missing live configuration blocks full acceptance, and moving on needs Jose's explicit, recorded deferral naming the pending criterion. P3-D can't be met without a real Salesforce Developer Edition org, and no account or credential exists.
+- Options with consequence/cost: (a) Accept P3 for limited scope with P3-D pending and start P4 locally. No account and $0. The connector stays proven only on a labeled double, and any Salesforce claim stays out of the portfolio until it isn't. (b) Create a free Developer Edition org first, then follow `docs/runbooks/CONNECTORS.md`, which takes about an hour and closes P3-D before P4. It also needs a hosted origin or a local callback for the connected app, so it depends partly on P1-E.
+- Recommendation: (a). The role names a CRM without naming a vendor, simulation carries the phase, and P4 doesn't depend on it. Do (b) when hosting exists.
+- Decision needed by: before P4.
+- Actual owner answer: not received.
+- Authorized scope and explicit exclusions: none yet.
 
 ## Recorded user direction
 

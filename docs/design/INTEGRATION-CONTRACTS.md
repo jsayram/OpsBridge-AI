@@ -82,7 +82,7 @@ Known gaps from the real thing, on purpose: no TBA or OAuth 2.0 machine-to-machi
 
 Built from Salesforce's public OAuth and REST documentation, and tested only against the labeled double in `tests/integration/salesforce-double.ts`. **P3-D stays Pending Owner Credentials.** `docs/runbooks/CONNECTORS.md` has setup and revocation.
 
-Salesforce has no read-only OAuth scope. The connector requests `api refresh_token`, and read-only holds in two other places: the adapter refuses any non-GET to the data API, and the runbook has the owner connect an integration user with read-only permissions. A token goes only to an https host under `salesforce.com`, whatever a token response claims, and a stored page cursor can only be a path on that host.
+Salesforce has no read-only OAuth scope. The connector requests `api refresh_token`, and read-only holds in two other places: the adapter refuses any non-GET to the data API, and the runbook has the owner connect an integration user with read-only permissions. A token goes only to an https host under `salesforce.com`, whatever a token response claims, a stored page cursor can only be a path on that host, and redirects are errors rather than followed. An expired access token gets one refresh, outside the retrying transport, so a retry can't spend one refresh token twice. Disconnect ends any running run, and a late refresh can't restore a scrubbed token.
 
 ## Sink adapter
 

@@ -94,8 +94,9 @@ Not Configured → Simulated or Connected Test → Degraded or Disconnected. A f
 | running | succeeded | system | Last page committed. Connection cursor moves here and nowhere else. Findings are detected in this transaction |
 | running | failed | system | Transient or rate limited after bounded retries. Saved cursor kept |
 | running | dead_letter | system | Auth, permission, payload or cursor. Saved cursor kept, no retry |
-| failed, dead_letter | running | manager or owner, `resume` | Bounded at 5. Continues from the saved cursor |
+| failed, dead_letter | running | manager or owner, `resume` | Bounded at 5. Continues from the saved cursor. Refused once a newer run exists (`run_superseded`) or the connection is disconnected |
 | running, lease expired | failed | next start | Code `lease_expired` |
+| running | dead_letter | owner, disconnect | Code `disconnected`. The run loses its lease and can't write again |
 
 A run that reaches the per-call page limit stays running with a released lease, and `POST /continue` carries it on. Continue needs only the sync capability and refuses a failed run, so it can never stand in for an operator's resume.
 

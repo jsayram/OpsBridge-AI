@@ -9,6 +9,8 @@ For whoever operates the integrations page. Everything on it is simulated unless
 3. If they keep failing, the run stops at `failed` with its cursor saved. A credential, permission or payload problem goes straight to `dead_letter`, with no retries.
 4. The connection's own cursor moves only when a whole run succeeds, so a failed run can't skip records.
 5. At the end, detection runs in the same transaction as the success, and only findings with new evidence are added.
+6. A record counts as deleted at source only after a full read with no rejected records that actually returned that record type.
+7. Hosted, a run does one page per request (`SYNC_PAGES_PER_CALL`), and the browser carries on until it finishes. Closing the page leaves the run paused, with its cursor saved. Its lease lapses and the next person to sync closes it.
 
 ## What to do
 
@@ -20,7 +22,11 @@ For whoever operates the integrations page. Everything on it is simulated unless
 | Needs an operator, `http_403` | The integration role lost access | Fix the role, then resume |
 | Needs an operator, `malformed_json`, `unexpected_shape` | The source sent something unreadable | Nothing from that page was kept. Raise it with the source owner, then resume |
 | Needs an operator, `cursor_unreadable` | The saved position can't be read | Start a new full sync |
+| Needs an operator, `token_unreadable` | The stored token can't be decrypted, usually a changed key | Disconnect, which still scrubs, then connect again |
 | `retry_exhausted` | Five resumes used | Start a new sync |
+| `run_superseded` | A newer sync ran since this one failed. Finishing the old one would misread the source | Start a new sync |
+| `resume_required` | Continue only carries on a healthy run | A Manager resumes it |
+| `evidence_stale` on an approval | The customer or the stored source record changed since the finding was raised | Run a sync and review what it finds |
 | `lease_expired` on an old run | A Worker died mid-run | Nothing to do. The next sync closed it |
 | Rejected count above 0 | Records failed validation or carried a privileged field | See `rejected_sample` on the run. The rest of the page was kept |
 | Unknown fields dropped above 0 | The source added a field | Decide whether to map it. It was not stored |

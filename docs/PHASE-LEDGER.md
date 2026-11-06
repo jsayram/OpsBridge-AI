@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-06 (America/New_York), end of the local P2 phase session.
+Updated: 2026-11-06 (America/New_York), end of the local P3 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -9,7 +9,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P0 Foundation/design | P0.1–P0.6 | 6 | Run | Docs, spike, scaffold on `phase/p0-foundation` | Local checks passed; P0-C partial; hosted proofs pending; see `docs/reports/P0.md` | | No | No |
 | P1 Hosted shell/identity | P1.1–P1.5 | 5 | Run locally | Local shell, sessions, identity boundary on `phase/p1-shell` | Local checks passed at `5c4c18c`; P1-E pending; identity against a test double only; see `docs/reports/P1.md` | | No | No |
 | P2 Records/audit | P2.1–P2.5 | 5 | Run locally | Case workflow, approvals, audit and outbox insert on `phase/p2-core` | Local checks passed; P2-A to P2-E met locally, hosted repeats pending; see `docs/reports/P2.md` | | No | No |
-| P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Planned | No | No | No | No | No |
+| P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Run locally | Simulated ingestion, reconciliation, inventory slice and an owner-only Salesforce connector on `phase/p3-integration` | Local checks passed at `6e504aa`; P3-A to P3-C and P3-E to P3-H met locally on simulated sources; P3-D Pending Owner Credentials; see `docs/reports/P3.md` | | No | No |
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Planned | No | No | No | No | No |
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Planned | No | No | No | No | No |
 | P6 Analytics/business insight | P6.1–P6.5 | 5 | Planned | No | No | No | No | No |
@@ -29,6 +29,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P2:** Local run on `phase/p2-core` from `94c43fc`, waiting for coordinator review. P2-A to P2-E are met locally on Docker Postgres. Hyperdrive, Neon and hosted restore are not in any check. The P1 open item is closed: reset racing purge at the expiry boundary was a real deadlock, reproduced and fixed. DEC-007 covers starting P2 with P1-E pending. Owner Accepted stays empty. Nothing from P2 is pushed, merged or deployed.
 
 **P2:** Coordinator accepted for limited scope under delegation on 2026-11-06, at `21dfc35`. The master read the report and reran `npm run ci:local`, which passed: 62 Playwright passed, 6 skipped, 0 vulnerabilities, no leaks. P2-A to P2-E are met locally, and the P1 reset and purge race was confirmed and fixed. Hyperdrive proofs and hosted restore are pending, and the deferral from DEC-007 still applies. Owner Accepted stays empty. Nothing from P2 is pushed, merged or deployed.
+
+**P3:** Local run on `phase/p3-integration` from `0e7e4aa`, waiting for coordinator review. P3-A to P3-C and P3-E to P3-H are met locally on simulated sources. **P3-D is Pending Owner Credentials:** the owner-only Salesforce code is built and tested against a labeled double, and no real org has been connected. The ERP Simulator follows documented SuiteTalk REST conventions and is not NetSuite. An independent AI review found two High defects, both fixed with tests. Moving to P4 needs Jose's recorded deferral naming P3-D, raised as DEC-008. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -50,12 +52,12 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P2.3 | Local run | Done: state machine, checklist gates, handoffs, reopen, queues, aging | Legal and illegal moves, prerequisites, JOB-TEST-02, race with checklist | Not reviewed | | No | No |
 | P2.4 | Local run | Done: atomic approval, envelope, audit, outbox insert; dispatcher stays in P4 | ADR proof 2 on real migrations, 30 of 30; injected failure at 4 points; 14 canaries; Hyperdrive not in path | Not reviewed | | No | No |
 | P2.5 | Local run | Done: 1,000-case profile, restart and restore proofs, core E2E, recovery runbook, reports, P3 brief | Local only; hosted restore is P7.3 | Not reviewed | | No | No |
-| P3.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P3.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P3.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P3.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P3.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P3.6 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P3.1 | Local run | Done: contracts, failure classes, mappers, matching engine, glossary, migration 0004, simulator data | Contract and mapper tests, privileged fields, no fuzzy path, retry policy; Hyperdrive not in path | Not reviewed | | No | No |
+| P3.2 | Local run | Done: ERP, CRM and inventory simulators, adapters, sync runs, cursors, freshness | Replay, crash before cursor commit, one page per request, SuiteTalk convention tests, workerd proof; nothing live | Not reviewed | | No | No |
+| P3.3 | Local run, code only | Built against a labeled double; P3-D Pending Owner Credentials | Connect, read, pagination, expiry, revoke, disconnect and public denial on the double only; no real org | Not reviewed | | No | No |
+| P3.4 | Local run | Done: findings queue, definition conflict, controlled resolution, dictionary, sweep, screens, migration 0005 | Exact-ID-first, 8 concurrent approvals, replay, supersede, stale evidence, Chromium, axe | Not reviewed | | No | No |
+| P3.5 | Local run | Done: read-only inventory, snapshots, findings, case and handoff references, migration 0006 | Unknown, stale, unit, invalid unit, replay, isolation, no quantity change | Not reviewed | | No | No |
+| P3.6 | Local run | Done: all PRD 8.4 faults, operator resume, runbook, reports, P4 brief | Clean-copy CI on Node 22 at 6e504aa; proof 18 of 18 on workerd; restore 50 checks; no hosted repeat | Not reviewed | | No | No |
 | P4.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P4.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P4.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |

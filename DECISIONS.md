@@ -51,4 +51,7 @@ Short records of decisions made while building. Owner decisions live in `docs/MA
 | D-045 | 2026-11-06 | Salesforce read-only is enforced in code and by the connected user, not by scope | Salesforce has no read-only OAuth scope | Revisit if one appears |
 | D-046 | 2026-11-06 | Hosted runs do one page per request, and the client continues | A whole ERP sync measured about 20 ms of CPU under Node, against a 10 ms limit on Workers Free. The measurement isn't workerd's, so the first deploy must measure it again | Raise `SYNC_PAGES_PER_CALL` if the real number allows |
 | D-047 | 2026-11-06 | A scenario applies to one run, and an operator resume clears its fault | Simulated recovery has to look like a source that came back, and the list of scenarios stays closed so no fault detail comes from the request | None |
+| D-048 | 2026-11-06 | A failed run can't resume once a newer run exists | An old run holds an old picture of the source. Independent review reproduced it marking live records deleted | None |
+| D-049 | 2026-11-06 | Deletion needs a full read, no rejected records, and at least one row of that record type | Absence from an incomplete read proves nothing, and a false deletion is worse than a late one | None |
+| D-050 | 2026-11-06 | An approval rechecks the newest stored source record, and any difference is `evidence_stale` | A source can change and change back. That produces no new finding, so nothing else would stop an approval writing a value the source no longer holds | None |
 

@@ -1,10 +1,10 @@
 # OpsBridge AI session handoff
 
-Updated: 2026-11-06 (America/New_York), end of the local P2 phase session.
+Updated: 2026-11-06 (America/New_York), end of the local P3 phase session.
 
 ## Objective and actual state
 
-Build an honest, secure enterprise operations portfolio aligned to the Development & Automation Lead posting. Application implementation resumed on 2026-11-06 as phased sessions. P0 is coordinator accepted for limited scope, and P1 for limited scope with P1-E pending. P2 has run locally on `phase/p2-core`, which is not pushed, and is waiting for coordinator review. On a local machine a guest can launch a private workspace and take a case through its whole life: create, checklist, handoff, review, atomic approval, close and reopen, with audit history and outbox rows. Nothing is deployed, nothing is dispatched, owner identity has only met a test double, and integrations, automation, AI review and analytics don't exist yet.
+Build an honest, secure enterprise operations portfolio aligned to the Development & Automation Lead posting. Application implementation resumed on 2026-11-06 as phased sessions. P0 is coordinator accepted for limited scope, and P1 for limited scope with P1-E pending. P2 is coordinator accepted for limited scope. P3 has run locally on `phase/p3-integration`, which is not pushed, and is waiting for coordinator review. On a local machine a guest can launch a private workspace, run a case through its whole life, sync simulated CRM, ERP and inventory sources, replay them with no duplicates, walk through every PRD 8.4 fault, and resolve findings with the evidence in front of them. P3-D is Pending Owner Credentials: the Salesforce connector has only met a labeled double. Nothing is deployed, nothing is dispatched, owner identity has only met a test double, and automation, AI review and analytics don't exist yet.
 
 The source PRD is `OpsBridge_AI_Phased_PRD_v1.0.md`, unchanged. The maintained revision is `PRD.md` version 1.4, with an exact matching `OpsBridge_AI_Phased_PRD_v1.4.md` snapshot. The v1.1 and v1.2 snapshots are kept as history. The original source is preserved unchanged. A source document or scaffold plan is not a working app. No build phase is owner-accepted by this handoff.
 
@@ -57,7 +57,7 @@ Read `docs/MASTER_INBOX.md` first on return. Route required owner questions ther
 
 ## Actual verification and unresolved findings
 
-`docs/reports/P2.md` is the current record, with `docs/reports/P1.md` and `docs/reports/P0.md` before it. Nothing has run through Hyperdrive, Neon, R2, Sheets or Access, or on Cloudflare hardware. Run local tools with Node 22 on the path: the default shell is Node 26, and CI uses 22. The master pushed `main` and `phase/p0-foundation` to a public repository and opened draft PR https://github.com/jsayram/OpsBridge-AI/pull/1, which must not be merged. No decision is open. DEC-005 to DEC-007 were answered on 2026-11-06.
+`docs/reports/P3.md` is the current record, with `docs/reports/P2.md`, `P1.md` and `P0.md` before it. Nothing has run through Hyperdrive, Neon, R2, Sheets or Access, or on Cloudflare hardware, and no real Salesforce or NetSuite system has been contacted. Run local tools with Node 22 on the path: the default shell is Node 26, and CI uses 22. The master pushed `main` and `phase/p0-foundation` to a public repository and opened draft PR https://github.com/jsayram/OpsBridge-AI/pull/1, which must not be merged. DEC-008 is open: moving to P4 needs Jose's deferral naming P3-D. DEC-005 to DEC-007 were answered on 2026-11-06.
 
 The repository root is this project folder. Docker volume `opsbridge_opsbridge-pgdata` holds only disposable local data, in databases `opsbridge` (spike), `opsbridge_dev`, `opsbridge_test`, `opsbridge_migrate_test`, `opsbridge_e2e`, `opsbridge_profile_test` and `opsbridge_restart_test`. The `opsbridge-postgres` container is left running; `docker compose -f infra/docker-compose.yml down` stops it. No Worker is running.
 
@@ -66,6 +66,6 @@ The repository root is this project folder. Docker volume `opsbridge_opsbridge-p
 1. Read fresh `/Users/jramirez/Library/Application Support/CodexUsageMonitor/status.json`. Unknown/stale telemetry is not zero remaining. If a fresh signal requires handoff, finish the safe step and wait for Jose; do not schedule a continuation.
 2. Read the master inbox, this handoff, maintained PRD, roadmap, job alignment, ledger, and relevant ADRs. Confirm source/mirror version and hashes; repair any documented sync gap through the official Obsidian CLI.
 3. Inspect actual files and `git status` scoped to this project. Preserve other writers' changes and unrelated parent-repository content. Check for task-owned services before claiming none remain.
-4. Check the current phase and branch in `docs/PHASE-LEDGER.md`. Hosted P1 follows `docs/runbooks/HOSTED-SETUP.md`. The next phase brief is `docs/briefs/P3.md`, which needs the P2 gate first. Local recovery is in `docs/runbooks/RECOVERY.md`.
+4. Check the current phase and branch in `docs/PHASE-LEDGER.md`. Hosted P1 follows `docs/runbooks/HOSTED-SETUP.md`. The next phase brief is `docs/briefs/P4.md`, which needs the P3 gate and DEC-008 first. Connector operations and Salesforce setup are in `docs/runbooks/CONNECTORS.md`. Local recovery is in `docs/runbooks/RECOVERY.md`.
 5. When resumed, prepare the next bounded package brief with real branch/base identifiers, acceptance checks, ownership, dependencies, approvals and vault note path. Use `templates/work-package-brief.md`.
 6. Execute only that authorized scope, collect real verification, update the package report/ledger/handoff/vault, and return the phase gate to Jose when due.
