@@ -207,6 +207,7 @@ cases.post("/:id/handoffs", requireCapability("cases:handoff"), async (c) => {
     "reason",
     "dueAt",
     "expectedCaseVersion",
+    "inventoryItemId",
   ]);
   if ((body.toAssigneeId === undefined) === (body.toQueue === undefined)) {
     throw invalidRequest("Name either a person or a queue");
@@ -218,7 +219,12 @@ cases.post("/:id/handoffs", requireCapability("cases:handoff"), async (c) => {
   ) {
     throw invalidRequest("Bad assignee");
   }
+  const item = body.inventoryItemId;
+  if (item !== undefined && (typeof item !== "string" || !isUuid(item))) {
+    throw invalidRequest("Bad inventory item");
+  }
   const input = {
+    ...(item !== undefined ? { inventoryItemId: item as string } : {}),
     ...(body.toAssigneeId !== undefined ? { toAssigneeId: body.toAssigneeId as string } : {}),
     ...(body.toQueue !== undefined ? { toQueue: requireOneOf(body.toQueue, QUEUES, "queue") } : {}),
     reason: requireText(body.reason, "Reason", MAX_REASON),

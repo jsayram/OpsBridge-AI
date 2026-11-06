@@ -128,6 +128,36 @@ export async function loadChecklist(db: Db, workspaceId: string, caseId: string)
   return rows;
 }
 
+// What the source systems say about this case's client, for whoever picks the case up. Read-only.
+async function sourceReferences(db: Db, workspaceId: string, customerId: string) {
+  const links = await db.query(
+    `SELECT l.provider, l.external_type, l.external_id, l.last_seen, r.relationship_role
+       FROM app.external_record_links l
+       LEFT JOIN app.customer_source_relationships r
+         ON r.workspace_id = l.workspace_id AND r.external_record_link_id = l.id
+      WHERE l.workspace_id = $1 AND l.canonical_type = 'customer' AND l.canonical_id = $2
+      ORDER BY l.provider, l.external_id LIMIT 20`,
+    [workspaceId, customerId],
+  );
+  const open = await db.query(
+    `SELECT id, kind, severity, status FROM app.reconciliation_findings
+      WHERE workspace_id = $1 AND entity_type = 'customer' AND entity_id = $2
+        AND status IN ('Open','Investigating','Proposed','Deferred')
+      ORDER BY detected_at DESC, id LIMIT 10`,
+    [workspaceId, customerId],
+  );
+  return {
+    links: links.rows.map((l) => ({
+      provider: l.provider,
+      recordType: l.external_type,
+      externalId: l.external_id,
+      role: l.relationship_role,
+      lastSeen: l.last_seen.toISOString(),
+    })),
+    openFindings: open.rows,
+  };
+}
+
 export async function caseDetail(db: Db, row: Record<string, unknown>, ownWorkspace: string) {
   const id = row.id as string;
   const workspaceId = row.read_only
@@ -136,10 +166,12 @@ export async function caseDetail(db: Db, row: Record<string, unknown>, ownWorksp
   const checklist = await loadChecklist(db, workspaceId, id);
   const handoffs = await db.query(
     `SELECT h.id, h.from_queue, h.to_queue, h.due_at, h.reason, h.open_required, h.occurred_at,
-            f.display_name AS from_assignee, t.display_name AS to_assignee
+            f.display_name AS from_assignee, t.display_name AS to_assignee,
+            i.canonical_item_code AS item_code
        FROM app.consultant_handoffs h
        LEFT JOIN app.assignees f ON f.workspace_id = h.workspace_id AND f.id = h.from_assignee_id
        LEFT JOIN app.assignees t ON t.workspace_id = h.workspace_id AND t.id = h.to_assignee_id
+       LEFT JOIN app.inventory_items i ON i.workspace_id = h.workspace_id AND i.id = h.inventory_item_id
       WHERE h.workspace_id = $1 AND h.case_id = $2
       ORDER BY h.occurred_at DESC, h.id LIMIT 50`,
     [workspaceId, id],
@@ -176,7 +208,9 @@ export async function caseDetail(db: Db, row: Record<string, unknown>, ownWorksp
       reason: h.reason,
       openRequired: h.open_required,
       occurredAt: h.occurred_at.toISOString(),
+      itemCode: h.item_code,
     })),
+    sourceReferences: await sourceReferences(db, workspaceId, row.customer_id as string),
     approval: latest
       ? {
           id: latest.id,

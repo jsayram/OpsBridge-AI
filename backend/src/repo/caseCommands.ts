@@ -272,6 +272,7 @@ export type Handoff = {
   reason: string;
   dueAt?: string;
   expectedCaseVersion: number;
+  inventoryItemId?: string;
 };
 
 const unauthorizedAssignee = () =>
@@ -307,6 +308,14 @@ export async function handOffCase(
   if (assignee ? assignee.id === before.assignee_id : toQueue === before.queue) {
     throw invalidRequest("The case is already there");
   }
+  // A cross-reference to a source-backed item, read-only. Same 404 as any unknown ID.
+  if (input.inventoryItemId) {
+    const item = await ctx.db.query(
+      "SELECT 1 FROM app.inventory_items WHERE workspace_id = $1 AND id = $2",
+      [ctx.workspaceId, input.inventoryItemId],
+    );
+    if (item.rowCount === 0) throw notFound();
+  }
   const dueAt = input.dueAt ?? before.due_at;
   const updated = await ctx.db.query(
     `UPDATE app.cases SET assignee_id = $3, queue = $4, due_at = $5, version = version + 1
@@ -319,8 +328,8 @@ export async function handOffCase(
   await ctx.db.query(
     `INSERT INTO app.consultant_handoffs (workspace_id, case_id, from_assignee_id, to_assignee_id,
        from_queue, to_queue, due_at, checklist_version, open_required, reason, actor_type, actor_id,
-       expected_case_version)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+       expected_case_version, inventory_item_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       ctx.workspaceId,
       id,
@@ -335,6 +344,7 @@ export async function handOffCase(
       ctx.actorType,
       ctx.actorId,
       input.expectedCaseVersion,
+      input.inventoryItemId ?? null,
     ],
   );
   const after = (await findCase(ctx.db, ctx.workspaceId, false, id)) as Row;
