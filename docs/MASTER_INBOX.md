@@ -91,7 +91,7 @@ Updated: 2026-11-06 (America/New_York), P3 phase session. One item is open: DEC-
 - State: open.
 - Package and blocking dependency: start of P4. P4 needs no Salesforce account.
 - Decision needed and why: PRD 14 says a missing live configuration blocks full acceptance, and moving on needs Jose's explicit, recorded deferral naming the pending criterion. P3-D can't be met without a real Salesforce Developer Edition org, and no account or credential exists.
-- Options with consequence/cost: (a) Accept P3 for limited scope with P3-D pending and start P4 locally. No account and $0. The connector stays proven only on a labeled double, and any Salesforce claim stays out of the portfolio until it isn't. (b) Create a free Developer Edition org first, then follow `docs/runbooks/CONNECTORS.md`, which takes about an hour and closes P3-D before P4. It also needs a hosted origin or a local callback for the connected app, so it depends partly on P1-E.
+- Options with consequence/cost: (a) Accept P3 for limited scope with P3-D pending and start P4 locally. No account and $0. The connector stays proven only on a labeled double, and any Salesforce claim stays out of the portfolio until it isn't. (b) Create a free Developer Edition org first, then follow `docs/runbooks/CONNECTORS.md`, which closes P3-D before P4. It also needs a hosted origin or a local callback for the connected app, so it depends partly on P1-E.
 - Recommendation: (a). The role names a CRM without naming a vendor, simulation carries the phase, and P4 doesn't depend on it. Do (b) when hosting exists.
 - Decision needed by: before P4.
 - Actual owner answer: not received.
