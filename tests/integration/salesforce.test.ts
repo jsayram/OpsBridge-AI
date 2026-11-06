@@ -155,7 +155,7 @@ describe("P3.3 Salesforce connector, against a labeled test double", () => {
     const { id } = await connectOwner();
     const mig = await connect("opsbridge_migrator");
     const { rows } = await mig.query(
-      "SELECT convert_from(ciphertext, 'latin1') AS c FROM app.connection_secrets WHERE workspace_id = $1",
+      "SELECT ciphertext FROM app.connection_secrets WHERE workspace_id = $1",
       [OWNER_WS],
     );
     const dump = await mig.query(
@@ -163,7 +163,7 @@ describe("P3.3 Salesforce connector, against a labeled test double", () => {
       [OWNER_WS, id],
     );
     await mig.end();
-    expect(rows[0].c).not.toContain("double-");
+    expect(rows[0].ciphertext.toString("latin1")).not.toContain("double-");
     expect(dump.rows[0].r).not.toContain("double-");
     const list = await owner("/api/v1/integrations");
     const status = await owner("/api/v1/admin/integrations/salesforce");
@@ -302,6 +302,113 @@ describe("P3.3 Salesforce connector, against a labeled test double", () => {
       body: {},
     });
     expect(res.status).toBe(403);
+    expect(d.state.requests.length).toBe(before);
+  });
+
+  it("a state value is spent even when the provider refuses the exchange", async () => {
+    const started = await owner("/api/v1/admin/integrations/salesforce/authorize", {
+      method: "POST",
+    });
+    const state = new URL(started.json.authorizeUrl).searchParams.get("state");
+    const bad = `/api/v1/admin/integrations/salesforce/callback?code=wrong&state=${state}`;
+    expect((await owner(bad)).status).toBe(502);
+    const good = `/api/v1/admin/integrations/salesforce/callback?code=good-code&state=${state}`;
+    expect((await owner(good)).status).toBe(400);
+  });
+
+  it("disconnect stops a run in flight, and a late result can't undo it", async () => {
+    const { id } = await connectOwner();
+    const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      `INSERT INTO app.sync_runs (workspace_id, connection_id, provider, kind, lease_token, lease_expires_at)
+       VALUES ($1, $2, 'salesforce_test', 'full', gen_random_uuid(), now() + interval '1 minute')`,
+      [OWNER_WS, id],
+    );
+    await owner(`/api/v1/admin/integrations/${id}/disconnect`, { method: "POST" });
+    const { rows } = await mig.query(
+      "SELECT status, error_code, lease_token FROM app.sync_runs WHERE connection_id = $1",
+      [id],
+    );
+    await mig.end();
+    expect(rows[0]).toEqual({
+      status: "dead_letter",
+      error_code: "disconnected",
+      lease_token: null,
+    });
+  });
+
+  it("a failed run can't resume after a disconnect, and the status stays Disconnected", async () => {
+    const { id } = await connectOwner();
+    d.state.revoked = true;
+    const failed = await sync(id);
+    await owner(`/api/v1/admin/integrations/${id}/disconnect`, { method: "POST" });
+    const res = await owner(`/api/v1/admin/integrations/${id}/runs/${failed.json.id}/resume`, {
+      method: "POST",
+      body: {},
+    });
+    expect(res.json.code).toBe("not_connected");
+    const status = await owner("/api/v1/admin/integrations/salesforce");
+    expect(status.json.connection.status).toBe("Disconnected");
+  });
+
+  it("a wrong key fails the run cleanly, and disconnect still scrubs", async () => {
+    const { id } = await connectOwner();
+    const wrong = { TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString("base64") };
+    const res = await call(`/api/v1/admin/integrations/${id}/sync`, {
+      method: "POST",
+      headers: { "cf-access-jwt-assertion": await mintOwnerToken(), ...idempotencyKey() },
+      env: { ...env(), ...wrong },
+      body: {},
+    });
+    expect(res.json.status).toBe("dead_letter");
+    expect(res.json.error.code).toBe("token_unreadable");
+    const out = await call(`/api/v1/admin/integrations/${id}/disconnect`, {
+      method: "POST",
+      headers: { "cf-access-jwt-assertion": await mintOwnerToken() },
+      env: { ...env(), ...wrong },
+    });
+    expect(out.json.providerRevoked).toBe(false);
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      "SELECT ciphertext FROM app.connection_secrets WHERE workspace_id = $1",
+      [OWNER_WS],
+    );
+    await mig.end();
+    expect(rows[0].ciphertext).toBeNull();
+  });
+
+  it("disconnect works with the connector switched off", async () => {
+    const { id } = await connectOwner();
+    const out = await call(`/api/v1/admin/integrations/${id}/disconnect`, {
+      method: "POST",
+      headers: { "cf-access-jwt-assertion": await mintOwnerToken() },
+      env: ownerEnv,
+    });
+    expect(out.status).toBe(200);
+    expect(out.json.providerRevoked).toBe(false);
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      "SELECT ciphertext FROM app.connection_secrets WHERE workspace_id = $1",
+      [OWNER_WS],
+    );
+    await mig.end();
+    expect(rows[0].ciphertext).toBeNull();
+  });
+
+  it("a redirect from the data API is an error, and no token follows it", async () => {
+    const { id } = await connectOwner();
+    const before = d.state.requests.length;
+    const bounce = async (req: Request) =>
+      req.url.includes("/services/data")
+        ? new Response(null, { status: 302, headers: { location: "https://evil.example.com/" } })
+        : d.fetchDouble(req);
+    const res = await call(`/api/v1/admin/integrations/${id}/sync`, {
+      method: "POST",
+      headers: { "cf-access-jwt-assertion": await mintOwnerToken(), ...idempotencyKey() },
+      env: { ...env(), SALESFORCE_TEST_DOUBLE: bounce },
+      body: {},
+    });
+    expect(res.json.status).toBe("dead_letter");
     expect(d.state.requests.length).toBe(before);
   });
 

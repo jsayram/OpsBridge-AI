@@ -155,7 +155,7 @@ export function Reconciliation() {
       <div className="stack">
         <p className="muted">
           Where two sources disagree, the evidence is here and a person decides. Nothing merges on a
-          similar name, and nothing is written back to a source. <SimBadge />
+          similar name, and nothing is written back to a source. Demo sources are simulated.
         </p>
         <div className="row">
           <label className="field">
@@ -263,7 +263,7 @@ function FindingActions({ finding, onDone }: { finding: Finding; onDone: () => v
     finding.evidence.needsTarget ? "/customers" : null,
   );
   const [text, setText] = useState("");
-  const [target, setTarget] = useState(finding.evidence.suggestedCustomerId ?? "");
+  const [target, setTarget] = useState("");
   const [deferUntil, setDeferUntil] = useState("");
   const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [busy, setBusy] = useState(false);
@@ -353,6 +353,7 @@ function FindingActions({ finding, onDone }: { finding: Finding; onDone: () => v
             {customers.data?.items.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
+                {c.id === finding.evidence.suggestedCustomerId ? " (same normalized name)" : ""}
               </option>
             ))}
           </select>
@@ -432,7 +433,11 @@ export function FindingDetail({ id }: { id: string }) {
               <div className="row">
                 <Severity value={data.severity} />
                 <StatusChip status={data.status} />
-                <SimBadge />
+                {data.evidence.sources.some((s) => s.system.startsWith("Salesforce")) ? (
+                  <SimBadge>Connected Test</SimBadge>
+                ) : (
+                  <SimBadge />
+                )}
               </div>
             </div>
             <p>{data.evidence.explanation}</p>
@@ -646,15 +651,15 @@ export function Integrations() {
       <Head title="Integrations" route="/app/integrations" />
       <div className="stack">
         <p className="muted">
-          Each source here is a labeled simulator. Scenarios replay the failures real connectors
-          meet, from a fixed list. Nothing here reaches a real system.
+          Sources are labeled Simulated unless they say Connected Test. Scenarios replay the
+          failures real connectors meet, from a fixed list, and only on simulators.
         </p>
         {failure && <ErrorCard failure={failure} onRetry={reload} />}
         {!data && !failure && <Skeleton label="Loading integrations" />}
         {data?.items.map((c) => (
           <ConnectionCard key={c.id} connection={c} onDone={reload} />
         ))}
-        {data && (
+        {data && !data.items.some((c) => c.modeLabel === "Connected Test") && (
           <section className="card">
             <h2>Salesforce test org</h2>
             <p className="muted">

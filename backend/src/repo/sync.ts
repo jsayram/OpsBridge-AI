@@ -39,6 +39,8 @@ type Counts = {
   rejected_sample: { externalId: string; reason: string }[];
   findings_opened: number;
   marked_deleted: number;
+  detection_skipped: boolean;
+  seen_by_stream: Record<string, number>;
 };
 const zeroCounts = (): Counts => ({
   seen: 0,
@@ -52,6 +54,8 @@ const zeroCounts = (): Counts => ({
   rejected_sample: [],
   findings_opened: 0,
   marked_deleted: 0,
+  detection_skipped: false,
+  seen_by_stream: {},
 });
 
 export const PROVIDER_LABEL: Record<Provider, string> = {
@@ -177,9 +181,13 @@ export async function claimRun(
   runId: string,
   intent: "continue" | "resume" = "resume",
 ) {
-  await lockConnection(ctx.db, ctx.workspaceId, connectionId);
+  const connection = await lockConnection(ctx.db, ctx.workspaceId, connectionId);
   const { rows } = await ctx.db.query(
-    `SELECT *, lease_expires_at > now() AS lease_live FROM app.sync_runs
+    `SELECT *, lease_expires_at > now() AS lease_live,
+            EXISTS (SELECT FROM app.sync_runs n
+                     WHERE n.workspace_id = r.workspace_id AND n.connection_id = r.connection_id
+                       AND n.started_at > r.started_at) AS has_newer
+       FROM app.sync_runs r
       WHERE workspace_id = $1 AND id = $2 AND connection_id = $3 FOR UPDATE`,
     [ctx.workspaceId, runId, connectionId],
   );
@@ -188,13 +196,32 @@ export async function claimRun(
   if (run.status === "succeeded") {
     throw new ApiError(409, "run_finished", "This sync already finished.");
   }
+  if (connection.status === "Disconnected" || connection.status === "Not Configured") {
+    throw new ApiError(409, "not_connected", "This source isn't connected.");
+  }
+  // An old run has an old picture of the source. Finishing it now would mark everything a newer
+  // run saw as gone, and could move the cursor backward.
+  if (run.has_newer) {
+    throw new ApiError(409, "run_superseded", "A newer sync replaced this run. Start a new one.");
+  }
   const token = crypto.randomUUID();
   if (run.status === "running") {
     if (run.lease_live) throw inProgress();
+    // A run that handed back its lease paused cleanly. One still holding it crashed, and taking
+    // it over counts against the same bound as a resume.
+    const crashed = run.lease_token !== null;
+    if (crashed && (run.resumes as number) >= MAX_RESUMES) {
+      throw new ApiError(
+        409,
+        "retry_exhausted",
+        "This run has been retried enough. Start a new sync.",
+      );
+    }
     const { rows: taken } = await ctx.db.query(
-      `UPDATE app.sync_runs SET lease_token = $3, lease_expires_at = now() + make_interval(secs => $4)
+      `UPDATE app.sync_runs SET lease_token = $3, lease_expires_at = now() + make_interval(secs => $4),
+              resumes = resumes + $5
         WHERE workspace_id = $1 AND id = $2 RETURNING *`,
-      [ctx.workspaceId, runId, token, LEASE_SECONDS],
+      [ctx.workspaceId, runId, token, LEASE_SECONDS, crashed ? 1 : 0],
     );
     return taken[0] as Row;
   }
@@ -327,36 +354,44 @@ async function applyInvoices(
   records: SourceRecord[],
   counts: Counts,
 ) {
-  const seen = new Set<string>();
+  const newest = new Map<string, SourceRecord>();
   for (const r of records) {
-    if (seen.has(r.externalId)) {
+    const held = newest.get(r.externalId);
+    if (held) {
       counts.duplicate_skipped++;
-      continue;
+      if (r.sourceModifiedAt <= held.sourceModifiedAt) continue;
     }
-    seen.add(r.externalId);
+    newest.set(r.externalId, r);
+  }
+  for (const r of newest.values()) {
     const d = r.data as ErpInvoice;
     const held = (
       await ctx.db.query(
-        `SELECT source_modified_at, amount::text AS amount, status, tran_number FROM app.invoices
+        `SELECT source_modified_at, amount::text AS amount, status, tran_number, bill_to_external_id,
+                currency, to_char(tran_date, 'YYYY-MM-DD') AS tran_date
+           FROM app.invoices
           WHERE workspace_id = $1 AND provider = $2 AND external_id = $3 FOR UPDATE`,
         [ctx.workspaceId, run.provider, r.externalId],
       )
     ).rows[0] as Row | undefined;
     if (held) {
-      const known = (held.source_modified_at as Date).getTime();
-      const same =
-        held.amount === Number(d.amount).toFixed(2) &&
-        held.status === d.status &&
-        held.tran_number === d.tranNumber;
-      if (Date.parse(r.sourceModifiedAt) < known) {
+      if (Date.parse(r.sourceModifiedAt) < (held.source_modified_at as Date).getTime()) {
         counts.stale_skipped++;
         continue;
       }
+      const same =
+        held.amount === Number(d.amount).toFixed(2) &&
+        held.status === d.status &&
+        held.tran_number === d.tranNumber &&
+        held.bill_to_external_id === d.billToExternalId &&
+        held.currency === d.currency &&
+        held.tran_date === d.tranDate;
       if (same) {
         counts.unchanged++;
         continue;
       }
     }
+    // customer_id follows the bill-to, so a reassigned invoice can't keep its old client.
     const { rows } = await ctx.db.query(
       `INSERT INTO app.invoices (workspace_id, provider, external_id, tran_number, bill_to_external_id,
          customer_id, amount, currency, tran_date, status, source_modified_at)
@@ -365,7 +400,9 @@ async function applyInvoices(
            WHERE workspace_id = $1 AND provider = $2 AND external_type = 'customer' AND external_id = $5),
          $6, $7, $8, $9, $10)
        ON CONFLICT (workspace_id, provider, external_id) DO UPDATE
-         SET tran_number = EXCLUDED.tran_number, amount = EXCLUDED.amount, status = EXCLUDED.status,
+         SET tran_number = EXCLUDED.tran_number, bill_to_external_id = EXCLUDED.bill_to_external_id,
+             customer_id = EXCLUDED.customer_id, amount = EXCLUDED.amount, currency = EXCLUDED.currency,
+             tran_date = EXCLUDED.tran_date, status = EXCLUDED.status,
              source_modified_at = EXCLUDED.source_modified_at
        RETURNING (xmax = 0) AS inserted`,
       [
@@ -448,6 +485,9 @@ async function applyInventory(
 async function applyPage(ctx: CommandContext, run: Row, page: Page, counts: Counts) {
   const of = (stream: string) => page.items.filter((r) => r.stream === stream);
   counts.seen += page.items.length;
+  for (const r of page.items) {
+    counts.seen_by_stream[r.stream] = (counts.seen_by_stream[r.stream] ?? 0) + 1;
+  }
   counts.unknown_fields_dropped += page.stats.unknownFields;
   counts.rejected += page.stats.rejected.length;
   counts.rejected_sample = [...counts.rejected_sample, ...page.stats.rejected].slice(
@@ -483,22 +523,27 @@ async function finishSuccess(
   const connection = await lockConnection(ctx.db, ctx.workspaceId, connectionId);
   const run = await lockRun(ctx, runId, token);
   const counts = run.counts as Counts;
-  if (run.kind === "full" && counts.seen > 0) {
+  // Only a complete, clean read can show that a record is gone. A rejected record was in the
+  // read, and a stream that returned nothing proves nothing about what it used to return.
+  const readTypes = TYPES_FOR_DELETE.filter((t) => (counts.seen_by_stream[t] ?? 0) > 0);
+  if (run.kind === "full" && counts.rejected === 0 && readTypes.length > 0) {
     const gone = await ctx.db.query(
       `UPDATE app.source_records SET state = 'deleted'
         WHERE workspace_id = $1 AND connection_id = $2 AND state = 'active' AND last_seen_run <> $3
           AND external_type = ANY($4)`,
-      [ctx.workspaceId, run.connection_id, run.id, TYPES_FOR_DELETE],
+      [ctx.workspaceId, run.connection_id, run.id, readTypes],
     );
     counts.marked_deleted = gone.rowCount ?? 0;
   }
-  counts.findings_opened = await reconcile(ctx);
+  const detected = await reconcile(ctx);
+  counts.findings_opened = detected.opened;
+  counts.detection_skipped = detected.skipped;
   const watermark = (run.high_watermark as Date | null)?.toISOString() ?? connection.last_cursor;
   const healed = connection.mode === "connected_test" ? "Connected Test" : "Simulated";
   await ctx.db.query(
     `UPDATE app.external_connections
-        SET last_cursor = $3, last_success_at = now(), last_error_code = NULL, status = $4,
-            version = version + 1
+        SET last_cursor = CASE WHEN last_cursor IS NULL OR $3 > last_cursor THEN $3 ELSE last_cursor END,
+            last_success_at = now(), last_error_code = NULL, status = $4, version = version + 1
       WHERE workspace_id = $1 AND id = $2`,
     [ctx.workspaceId, run.connection_id, watermark, healed],
   );
@@ -621,7 +666,8 @@ export async function stepRun(
   // Out of pages for this call. The run stays open for resume, at no wait.
   return tx(async () => {
     const { rows } = await ctx.db.query(
-      `UPDATE app.sync_runs SET lease_expires_at = now() WHERE workspace_id = $1 AND id = $2 RETURNING *`,
+      `UPDATE app.sync_runs SET lease_expires_at = now(), lease_token = NULL
+        WHERE workspace_id = $1 AND id = $2 RETURNING *`,
       [ctx.workspaceId, runId],
     );
     return rows[0] as Row;

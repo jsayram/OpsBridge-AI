@@ -168,6 +168,27 @@ describe("P3.2 ingestion", () => {
     expect((await counts(guest.workspaceId, ["invoices"])).invoices).toBe(12);
   });
 
+  it("a crashed run taken over counts against the resume bound; a paused one doesn't", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      `INSERT INTO app.sync_runs (workspace_id, connection_id, provider, kind, resumes, lease_token, lease_expires_at)
+       VALUES ($1, $2, 'erp_simulator', 'full', 5, gen_random_uuid(), now() - interval '1 second') RETURNING id`,
+      [guest.workspaceId, id],
+    );
+    const url = `/api/v1/integrations/${id}/runs/${rows[0].id}/resume`;
+    const res = await call(url, { method: "POST", cookie: guest.cookie, body: {} });
+    expect(res.json.code).toBe("retry_exhausted");
+    await mig.query("UPDATE app.sync_runs SET resumes = 0, lease_token = NULL WHERE id = $1", [
+      rows[0].id,
+    ]);
+    await mig.end();
+    const ok = await call(url, { method: "POST", cookie: guest.cookie, body: {} });
+    expect(ok.json.status).toBe("succeeded");
+    expect(ok.json.resumes).toBe(0);
+  });
+
   it("freshness and last success are shown after a sync, never before", async () => {
     const { guest, list } = await fresh();
     expect((list.erp_simulator as Source).freshness).toBe("never");

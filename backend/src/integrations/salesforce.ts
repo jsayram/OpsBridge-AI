@@ -19,6 +19,7 @@ import { AdapterError, type SourceAdapter, type Transport } from "./types";
 
 export const SALESFORCE_SCOPES = ["api", "refresh_token"] as const;
 const STATE_MINUTES = 10;
+const OAUTH_TIMEOUT_MS = 8_000;
 const SALESFORCE_HOST = /(^|\.)salesforce\.com$/;
 
 export type SalesforceConfig = {
@@ -60,7 +61,8 @@ export function salesforceConfig(env: Bindings): SalesforceConfig | null {
     ...(env.SALESFORCE_CLIENT_SECRET ? { clientSecret: env.SALESFORCE_CLIENT_SECRET } : {}),
     redirectUri,
     encryptionKey,
-    transport: double ?? ((req) => fetch(req)),
+    // A redirect is an error here: following one could carry a bearer token to another host.
+    transport: double ?? ((req) => fetch(new Request(req, { redirect: "manual" }))),
     allowHost,
     double: double !== null,
   };
@@ -112,6 +114,7 @@ const formPost = (config: SalesforceConfig, path: string, fields: Record<string,
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams(fields).toString(),
+      signal: AbortSignal.timeout(OAUTH_TIMEOUT_MS),
     }),
   );
 
@@ -136,11 +139,14 @@ async function exchange(config: SalesforceConfig, fields: Record<string, string>
   return { ok: res.ok, body };
 }
 
+// `rotate` touches only a live row, so a refresh that finishes after a disconnect can't bring a
+// scrubbed token back.
 async function storeTokens(
   ctx: CommandContext,
   config: SalesforceConfig,
   secretId: string,
   tokens: TokenSet,
+  rotate = false,
 ) {
   const sealed = await seal(
     config.encryptionKey,
@@ -149,23 +155,29 @@ async function storeTokens(
   );
   await ctx.db.query(
     `UPDATE app.connection_secrets SET ciphertext = $3, iv = $4, scrubbed_at = NULL
-      WHERE workspace_id = $1 AND id = $2`,
-    [ctx.workspaceId, secretId, Buffer.from(sealed.ciphertext), Buffer.from(sealed.iv)],
+      WHERE workspace_id = $1 AND id = $2 AND ($5 = false OR ciphertext IS NOT NULL)`,
+    [ctx.workspaceId, secretId, Buffer.from(sealed.ciphertext), Buffer.from(sealed.iv), rotate],
   );
 }
 
 export async function completeAuthorize(
+  client: Client,
   ctx: CommandContext,
   config: SalesforceConfig,
   input: { code: string; state: string },
 ) {
-  const { rows } = await ctx.db.query(
-    `UPDATE app.oauth_states SET consumed_at = now()
-      WHERE workspace_id = $1 AND state_hash = $2 AND consumed_at IS NULL AND expires_at > now()
-      RETURNING verifier_ciphertext, iv`,
-    [ctx.workspaceId, Buffer.from(await sha256(input.state))],
-  );
-  const held = rows[0];
+  // The state burns in its own commit, before the network call, so a failed exchange can't leave
+  // it usable, and no transaction waits on the provider.
+  const stateHash = Buffer.from(await sha256(input.state));
+  const held = await inWorkspaceTx(client, ctx.workspaceId, async () => {
+    const { rows } = await ctx.db.query(
+      `UPDATE app.oauth_states SET consumed_at = now()
+        WHERE workspace_id = $1 AND state_hash = $2 AND consumed_at IS NULL AND expires_at > now()
+        RETURNING verifier_ciphertext, iv`,
+      [ctx.workspaceId, stateHash],
+    );
+    return rows[0];
+  });
   if (!held) throw invalidRequest("This sign-in link has expired. Start again.");
   const verifier = await open(
     config.encryptionKey,
@@ -178,7 +190,7 @@ export async function completeAuthorize(
     code: input.code,
     redirect_uri: config.redirectUri,
     code_verifier: verifier,
-  });
+  }).catch(() => ({ ok: false, body: null as Record<string, unknown> | null }));
   const instanceUrl = safeInstance(config, body?.instance_url);
   if (
     !ok ||
@@ -188,38 +200,37 @@ export async function completeAuthorize(
   ) {
     throw new ApiError(502, "provider_rejected", "Salesforce didn't complete the connection.");
   }
-  const existing = (
-    await ctx.db.query(
-      "SELECT id, secret_reference FROM app.external_connections WHERE workspace_id = $1 AND provider = 'salesforce_test' FOR UPDATE",
-      [ctx.workspaceId],
-    )
-  ).rows[0];
-  const secretId: string =
-    existing?.secret_reference ??
-    (
+  const tokens = { accessToken: body.access_token, refreshToken: body.refresh_token, instanceUrl };
+  await inWorkspaceTx(client, ctx.workspaceId, async () => {
+    const existing = (
       await ctx.db.query(
-        `INSERT INTO app.connection_secrets (workspace_id, provider, scrubbed_at)
-         VALUES ($1, 'salesforce_test', now()) RETURNING id`,
+        "SELECT id, secret_reference FROM app.external_connections WHERE workspace_id = $1 AND provider = 'salesforce_test' FOR UPDATE",
         [ctx.workspaceId],
       )
-    ).rows[0].id;
-  await storeTokens(ctx, config, secretId, {
-    accessToken: body.access_token,
-    refreshToken: body.refresh_token,
-    instanceUrl,
-  });
-  await ctx.db.query(
-    `INSERT INTO app.external_connections (workspace_id, provider, mode, status, scopes, secret_reference)
-     VALUES ($1, 'salesforce_test', 'connected_test', 'Connected Test', $2, $3)
-     ON CONFLICT (workspace_id, provider) DO UPDATE
-       SET status = 'Connected Test', secret_reference = EXCLUDED.secret_reference, scopes = EXCLUDED.scopes,
-           last_cursor = NULL, last_error_code = NULL, version = app.external_connections.version + 1`,
-    [ctx.workspaceId, SALESFORCE_SCOPES, secretId],
-  );
-  await writeAudit(ctx, "connection.connected", "salesforce_test", {
-    summary: config.double
-      ? "Connected to the labeled test double"
-      : "Connected to a Salesforce test org",
+    ).rows[0];
+    const secretId: string =
+      existing?.secret_reference ??
+      (
+        await ctx.db.query(
+          `INSERT INTO app.connection_secrets (workspace_id, provider, scrubbed_at)
+           VALUES ($1, 'salesforce_test', now()) RETURNING id`,
+          [ctx.workspaceId],
+        )
+      ).rows[0].id;
+    await storeTokens(ctx, config, secretId, tokens);
+    await ctx.db.query(
+      `INSERT INTO app.external_connections (workspace_id, provider, mode, status, scopes, secret_reference)
+       VALUES ($1, 'salesforce_test', 'connected_test', 'Connected Test', $2, $3)
+       ON CONFLICT (workspace_id, provider) DO UPDATE
+         SET status = 'Connected Test', secret_reference = EXCLUDED.secret_reference, scopes = EXCLUDED.scopes,
+             last_cursor = NULL, last_error_code = NULL, version = app.external_connections.version + 1`,
+      [ctx.workspaceId, SALESFORCE_SCOPES, secretId],
+    );
+    await writeAudit(ctx, "connection.connected", "salesforce_test", {
+      summary: config.double
+        ? "Connected to the labeled test double"
+        : "Connected to a Salesforce test org",
+    });
   });
 }
 
@@ -231,17 +242,23 @@ async function loadTokens(db: Db, config: SalesforceConfig, workspaceId: string,
     )
   ).rows[0];
   if (!row?.ciphertext) return null;
-  const plain = await open(
-    config.encryptionKey,
-    row.ciphertext,
-    row.iv,
-    `token:${workspaceId}:${secretId}`,
-  );
-  return JSON.parse(plain) as TokenSet;
+  try {
+    const plain = await open(
+      config.encryptionKey,
+      row.ciphertext,
+      row.iv,
+      `token:${workspaceId}:${secretId}`,
+    );
+    return JSON.parse(plain) as TokenSet;
+  } catch {
+    // A rotated or wrong key. Treated as no token, so a run fails cleanly and disconnect can scrub.
+    return null;
+  }
 }
 
-// Reads only. An access token that has expired gets one refresh, and a rotated refresh token is
-// saved in its own short transaction, before the read is retried.
+// Reads only. An expired access token gets one refresh, outside the retrying transport, so the
+// timeout there can't abandon a refresh half way and spend the same refresh token twice. The
+// rotated token is saved in its own short transaction before the read is repeated.
 export function salesforceAdapter(
   client: Client,
   ctx: CommandContext,
@@ -266,20 +283,16 @@ export function salesforceAdapter(
         typeof body.refresh_token === "string" ? body.refresh_token : current.refreshToken,
       instanceUrl: safeInstance(config, body.instance_url) ?? current.instanceUrl,
     };
-    await inWorkspaceTx(client, ctx.workspaceId, () => storeTokens(ctx, config, secretId, next));
+    await inWorkspaceTx(client, ctx.workspaceId, () =>
+      storeTokens(ctx, config, secretId, next, true),
+    );
     tokens = next;
   };
   const transport: Transport = async (req) => {
     if (req.method !== "GET") throw new AdapterError("permission", "write_blocked");
-    const send = () => {
-      const headers = new Headers(req.headers);
-      headers.set("authorization", `Bearer ${(tokens as TokenSet).accessToken}`);
-      return config.transport(new Request(req, { headers }));
-    };
-    const res = await send();
-    if (res.status !== 401) return res;
-    await refresh();
-    return send();
+    const headers = new Headers(req.headers);
+    headers.set("authorization", `Bearer ${(tokens as TokenSet).accessToken}`);
+    return config.transport(new Request(req, { headers }));
   };
   const inner = () =>
     crmAdapter(transport, {
@@ -288,6 +301,15 @@ export function salesforceAdapter(
       base: (tokens as TokenSet).instanceUrl,
       pageSize: 200,
     });
+  const refreshOnce = async <T>(read: () => Promise<T>) => {
+    try {
+      return await read();
+    } catch (e) {
+      if (!(e instanceof AdapterError) || e.code !== "http_401") throw e;
+      await refresh();
+      return read();
+    }
+  };
   return {
     system: "crm",
     provider: "salesforce_test",
@@ -297,10 +319,10 @@ export function salesforceAdapter(
       tokens = await inWorkspaceTx(client, ctx.workspaceId, () =>
         loadTokens(client, config, ctx.workspaceId, secretId),
       );
-      if (!tokens) throw new AdapterError("auth", "token_missing");
+      if (!tokens) throw new AdapterError("auth", "token_unreadable");
     },
-    list: (input) => inner().list(input),
-    health: () => inner().health(),
+    list: (input) => refreshOnce(() => inner().list(input)),
+    health: () => refreshOnce(() => inner().health()),
   };
 }
 
@@ -309,22 +331,35 @@ export function salesforceAdapter(
 export async function disconnect(
   client: Client,
   ctx: CommandContext,
-  config: SalesforceConfig,
+  config: SalesforceConfig | null,
   connection: { id: string; secret_reference: string | null },
 ) {
   let providerRevoked = false;
-  const tokens = connection.secret_reference
-    ? await inWorkspaceTx(client, ctx.workspaceId, () =>
-        loadTokens(client, config, ctx.workspaceId, connection.secret_reference as string),
-      )
-    : null;
-  if (tokens) {
+  const tokens =
+    config && connection.secret_reference
+      ? await inWorkspaceTx(client, ctx.workspaceId, () =>
+          loadTokens(client, config, ctx.workspaceId, connection.secret_reference as string),
+        )
+      : null;
+  if (config && tokens) {
     const res = await formPost(config, "/services/oauth2/revoke", {
       token: tokens.refreshToken,
     }).catch(() => null);
     providerRevoked = res?.ok === true;
   }
   await inWorkspaceTx(client, ctx.workspaceId, async () => {
+    await ctx.db.query(
+      "SELECT 1 FROM app.external_connections WHERE workspace_id = $1 AND id = $2 FOR UPDATE",
+      [ctx.workspaceId, connection.id],
+    );
+    // A run in flight loses its lease here, so it can't write again or restore the status.
+    await ctx.db.query(
+      `UPDATE app.sync_runs
+          SET status = 'dead_letter', error_class = 'auth', error_code = 'disconnected',
+              ended_at = now(), lease_token = NULL
+        WHERE workspace_id = $1 AND connection_id = $2 AND status = 'running'`,
+      [ctx.workspaceId, connection.id],
+    );
     await ctx.db.query(
       `UPDATE app.connection_secrets SET ciphertext = NULL, iv = NULL, scrubbed_at = now()
         WHERE workspace_id = $1 AND id = $2`,

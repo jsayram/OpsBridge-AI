@@ -217,6 +217,25 @@ const lockCustomer = async (ctx: CommandContext, id: string) => {
   return rows[0] as Row | undefined;
 };
 
+// The evidence is a claim about the source at detection time. Before acting on it, check that the
+// newest stored read still says so. No stored read at all means nothing has contradicted it yet.
+async function assertSourceStill(
+  ctx: CommandContext,
+  externalIds: string[],
+  field?: { name: "name" | "accountNumber"; value: string },
+) {
+  const { rows } = await ctx.db.query(
+    `SELECT external_id, state, data FROM app.source_records
+      WHERE workspace_id = $1 AND provider = 'erp_simulator' AND external_type = 'customer'
+        AND external_id = ANY($2)`,
+    [ctx.workspaceId, externalIds],
+  );
+  for (const row of rows) {
+    if (row.state !== "active") throw evidenceStale();
+    if (field && row.data[field.name] !== field.value) throw evidenceStale();
+  }
+}
+
 // The only code that changes canonical data because of a finding. It runs inside the resolve
 // transaction, touches only this workspace's rows, and never calls a source.
 async function applyResolution(
@@ -231,6 +250,7 @@ async function applyResolution(
       return "Reviewed. No canonical record changed.";
     case "link_bill_tos": {
       if (!customerId || !(await lockCustomer(ctx, customerId))) throw evidenceStale();
+      await assertSourceStill(ctx, r.externalIds);
       const version = `${r.ruleRef}/customer-1`;
       for (const externalId of r.externalIds) {
         await addLink(
@@ -263,6 +283,7 @@ async function applyResolution(
     case "set_canonical_name": {
       const customer = customerId ? await lockCustomer(ctx, customerId) : undefined;
       if (customer?.canonical_name !== r.from) throw evidenceStale();
+      await assertSourceStill(ctx, [r.externalId], { name: "name", value: r.to });
       await ctx.db.query(
         `UPDATE app.customers SET canonical_name = $3, version = version + 1
           WHERE workspace_id = $1 AND id = $2`,
@@ -273,6 +294,7 @@ async function applyResolution(
     case "set_account_code": {
       const customer = customerId ? await lockCustomer(ctx, customerId) : undefined;
       if (customer?.account_code !== r.from) throw evidenceStale();
+      await assertSourceStill(ctx, [r.externalId], { name: "accountNumber", value: r.to });
       await ctx.db.query(
         `UPDATE app.customers SET account_code = $3, version = version + 1
           WHERE workspace_id = $1 AND id = $2`,
@@ -285,6 +307,7 @@ async function applyResolution(
       if (r.suggestedCustomerId && !targetCustomerId) {
         throw invalidRequest("Choose the customer to link, after checking it is the same entity");
       }
+      if (r.provider === "erp_simulator") await assertSourceStill(ctx, [r.externalId]);
       let target = targetCustomerId;
       if (target) {
         if (!(await lockCustomer(ctx, target))) throw notFound();
@@ -401,34 +424,41 @@ const MAX_FACTS = 1000;
 // Called inside the transaction that finishes a sync. A replay of the same facts changes nothing:
 // the key already exists. A closed finding is never reopened; changed evidence is a new row that
 // links back to the one it replaces.
-export async function reconcile(ctx: CommandContext): Promise<number> {
+export async function reconcile(
+  ctx: CommandContext,
+): Promise<{ opened: number; skipped: boolean }> {
   const w = [ctx.workspaceId];
   const sources = await ctx.db.query(
     `SELECT provider, external_type, external_id, external_version, source_modified_at, state, data
-       FROM app.source_records WHERE workspace_id = $1 LIMIT ${MAX_FACTS}`,
+       FROM app.source_records WHERE workspace_id = $1
+      ORDER BY provider, external_type, external_id LIMIT ${MAX_FACTS}`,
     w,
   );
   const customers = await ctx.db.query(
     `SELECT id, canonical_name, account_code, lifecycle_status FROM app.customers
-      WHERE workspace_id = $1 LIMIT ${MAX_FACTS}`,
+      WHERE workspace_id = $1 ORDER BY id LIMIT ${MAX_FACTS}`,
     w,
   );
   const links = await ctx.db.query(
     `SELECT provider, external_type, external_id, canonical_id FROM app.external_record_links
-      WHERE workspace_id = $1 AND canonical_type = 'customer' LIMIT ${MAX_FACTS}`,
+      WHERE workspace_id = $1 AND canonical_type = 'customer' ORDER BY id LIMIT ${MAX_FACTS}`,
     w,
   );
   const items = await ctx.db.query(
     `SELECT id, canonical_item_code, canonical_unit FROM app.inventory_items
-      WHERE workspace_id = $1 LIMIT ${MAX_FACTS}`,
+      WHERE workspace_id = $1 ORDER BY id LIMIT ${MAX_FACTS}`,
     w,
   );
   const snapshots = await ctx.db.query(
     `SELECT external_id, item_code, item_id, trim_scale(quantity)::text AS quantity, unit, source_version,
             observed_at, location
-       FROM app.inventory_snapshots WHERE workspace_id = $1 LIMIT ${MAX_FACTS}`,
+       FROM app.inventory_snapshots WHERE workspace_id = $1 ORDER BY id LIMIT ${MAX_FACTS}`,
     w,
   );
+  // A partial picture would call everything past the cap unmapped. Better to say nothing.
+  if ([sources, customers, links, items, snapshots].some((r) => r.rows.length >= MAX_FACTS)) {
+    return { opened: 0, skipped: true };
+  }
   const { findings, exactLinks } = detectFindings({
     now: new Date().toISOString(),
     sources: sources.rows.map(
@@ -494,7 +524,7 @@ export async function reconcile(ctx: CommandContext): Promise<number> {
     );
     opened += rows.length;
   }
-  return opened;
+  return { opened, skipped: false };
 }
 
 // For the customer view: how one organization looks from each source.

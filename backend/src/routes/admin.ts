@@ -59,7 +59,10 @@ admin.get("/integrations/salesforce", async (c) => {
     label: "Salesforce test org",
     configured: config !== null,
     testDouble: config?.double ?? false,
-    claim: config && !config.double ? "Owner test mode" : "Pending Owner Credentials",
+    claim:
+      config && !config.double && connection?.status === "Connected Test"
+        ? "Owner test mode"
+        : "Pending Owner Credentials",
     requestedScopes: SALESFORCE_SCOPES,
     connection: connection
       ? {
@@ -90,8 +93,8 @@ admin.get("/integrations/salesforce/callback", async (c) => {
   if (!code || !state || code.length > 2000 || state.length > 200) {
     throw invalidRequest("The provider didn't complete the sign-in");
   }
-  await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
-    completeAuthorize(commandContext(db, actor, c.get("requestId")), config, { code, state }),
+  await withClient(c.env.HYPERDRIVE, (db) =>
+    completeAuthorize(db, commandContext(db, actor, c.get("requestId")), config, { code, state }),
   );
   return c.redirect("/admin");
 });
@@ -137,8 +140,8 @@ admin.post("/integrations/:id/runs/:runId/resume", (c) => moveRun(c, "resume", o
 admin.post("/integrations/:id/disconnect", async (c) => {
   const actor = c.get("actor") as OwnerActor;
   const id = canonicalId(c.req.param("id"));
+  // Missing config skips the provider call. It must never stop the local scrub.
   const config = salesforceConfig(c.env);
-  if (!config) throw notConfigured();
   const out = await withClient(c.env.HYPERDRIVE, async (db) => {
     const ctx = commandContext(db, actor, c.get("requestId"));
     const row = await inWorkspaceTx(db, actor.workspaceId, async () => {

@@ -560,19 +560,24 @@ function HandoffSection({
   );
 }
 
+const SOURCE_LABEL: Record<string, string> = {
+  crm_simulator: "CRM (simulated)",
+  erp_simulator: "ERP Simulator",
+  salesforce_test: "Salesforce test org",
+};
+
 function SourceReferencesSection({ refs }: { refs: CaseFull["sourceReferences"] }) {
   return (
     <section className="card">
       <h2>Source references</h2>
-      <p className="small muted">What simulated sources hold for this client. Read-only.</p>
+      <p className="small muted">What source systems hold for this client. Read-only.</p>
       {refs.links.length === 0 ? (
         <p className="muted">No source record is mapped to this client yet.</p>
       ) : (
         <ul className="list">
           {refs.links.map((l) => (
             <li key={`${l.provider}-${l.externalId}`}>
-              {l.provider === "erp_simulator" ? "ERP Simulator" : "CRM (simulated)"}{" "}
-              <span className="mono">{l.externalId}</span>
+              {SOURCE_LABEL[l.provider] ?? l.provider} <span className="mono">{l.externalId}</span>
               {l.role === "erp_bill_to" ? ", bill-to" : ""}
             </li>
           ))}

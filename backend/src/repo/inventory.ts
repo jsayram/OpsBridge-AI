@@ -18,15 +18,20 @@ export async function listInventory(
     [q.workspaceId, q.after ?? null, q.limit + 1],
   );
   const page = items.slice(0, q.limit);
+  // Newest version first, then the item filter, so an older row can't pass for current.
   const { rows: snapshots } = await db.query(
-    `SELECT DISTINCT ON (s.external_id) s.item_id, s.external_id, s.item_code, trim_scale(s.quantity)::text AS quantity,
-            s.unit, s.location, s.source_version, s.observed_at, s.ingested_at,
-            (SELECT count(*)::int FROM app.inventory_snapshots o
-              WHERE o.workspace_id = s.workspace_id AND o.provider = s.provider
-                AND o.external_id = s.external_id) AS versions
-       FROM app.inventory_snapshots s
-      WHERE s.workspace_id = ${owner} AND (s.item_id = ANY($2::uuid[]) OR ($3 AND s.item_id IS NULL))
-      ORDER BY s.external_id, s.source_version DESC LIMIT 200`,
+    `SELECT * FROM (
+       SELECT DISTINCT ON (s.external_id) s.item_id, s.external_id, s.item_code,
+              trim_scale(s.quantity)::text AS quantity, s.unit, s.location, s.source_version,
+              s.observed_at, s.ingested_at,
+              (SELECT count(*)::int FROM app.inventory_snapshots o
+                WHERE o.workspace_id = s.workspace_id AND o.provider = s.provider
+                  AND o.external_id = s.external_id) AS versions
+         FROM app.inventory_snapshots s
+        WHERE s.workspace_id = ${owner}
+        ORDER BY s.external_id, s.source_version DESC) newest
+      WHERE item_id = ANY($2::uuid[]) OR ($3 AND item_id IS NULL)
+      LIMIT 200`,
     [q.workspaceId, page.map((i) => i.id), q.after === undefined],
   );
   const fact = (s: Row) => ({

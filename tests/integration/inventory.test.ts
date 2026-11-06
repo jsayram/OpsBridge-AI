@@ -101,6 +101,23 @@ describe("P3.5 inventory slice (P3-G, JOB-TEST-03)", () => {
     expect(latest.versions).toBe(2);
   });
 
+  it("a record whose newest version moved items doesn't show its old version as current", async () => {
+    const { guest, id } = await fresh();
+    await sync(guest.cookie, id);
+    const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      `INSERT INTO app.inventory_snapshots (workspace_id, unresolved_source_ref, provider, external_id,
+         quantity, unit, source_version, observed_at, item_code)
+       VALUES ($1, 'SKU-NEW', 'inventory_simulator', 'INV-200', 5, 'each', 9, now(), 'SKU-NEW')`,
+      [guest.workspaceId],
+    );
+    await mig.end();
+    const view = await call("/api/v1/inventory", { cookie: guest.cookie });
+    const all = view.json.items.flatMap((i: any) => i.snapshots).map((s: any) => s.externalId);
+    expect(all).not.toContain("INV-200");
+    expect(view.json.unresolved.find((u: any) => u.externalId === "INV-200").sourceVersion).toBe(9);
+  });
+
   it("is GET only, and the role can't change an item or a recorded quantity", async () => {
     const { guest } = await fresh();
     for (const method of ["POST", "PATCH", "PUT", "DELETE"]) {

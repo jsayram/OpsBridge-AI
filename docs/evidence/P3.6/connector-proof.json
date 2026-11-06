@@ -1,0 +1,232 @@
+{
+  "ranAt": "2026-11-06T22:41:23.038Z",
+  "runtime": "wrangler dev, workerd, Docker Postgres, simulated sources only",
+  "passed": 18,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "first sync crm_simulator",
+      "ok": true,
+      "detail": {
+        "seen": 3,
+        "created": 3,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 0,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "organization": 3
+        },
+        "findings_opened": 1,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "first sync erp_simulator",
+      "ok": true,
+      "detail": {
+        "seen": 17,
+        "created": 17,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 0,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "invoice": 12,
+          "customer": 5
+        },
+        "findings_opened": 1,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "first sync inventory_simulator",
+      "ok": true,
+      "detail": {
+        "seen": 7,
+        "created": 5,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 2,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "inventory_snapshot": 7
+        },
+        "findings_opened": 4,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "full replay crm_simulator adds nothing",
+      "ok": true,
+      "detail": {
+        "seen": 3,
+        "created": 0,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 3,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "organization": 3
+        },
+        "findings_opened": 0,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "full replay erp_simulator adds nothing",
+      "ok": true,
+      "detail": {
+        "seen": 17,
+        "created": 0,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 17,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "invoice": 12,
+          "customer": 5
+        },
+        "findings_opened": 0,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "full replay inventory_simulator adds nothing",
+      "ok": true,
+      "detail": {
+        "seen": 7,
+        "created": 0,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 7,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "inventory_snapshot": 7
+        },
+        "findings_opened": 0,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "P3-B row counts equal after replay",
+      "ok": true,
+      "detail": {
+        "first": {
+          "customers": 2,
+          "invoices": 12,
+          "source_records": 8,
+          "external_record_links": 9,
+          "reconciliation_findings": 9,
+          "inventory_snapshots": 7
+        },
+        "second": {
+          "customers": 2,
+          "invoices": 12,
+          "source_records": 8,
+          "external_record_links": 9,
+          "reconciliation_findings": 9,
+          "inventory_snapshots": 7
+        }
+      }
+    },
+    {
+      "name": "outage fails with the cursor saved",
+      "ok": true,
+      "detail": {
+        "class": "transient",
+        "code": "http_500",
+        "message": "The source stopped answering. Progress is saved, so retry when it recovers.",
+        "state": "failed"
+      }
+    },
+    {
+      "name": "connection degraded",
+      "ok": true
+    },
+    {
+      "name": "the demo still reads cases during an outage",
+      "ok": true
+    },
+    {
+      "name": "resume finishes from the saved cursor",
+      "ok": true,
+      "detail": {
+        "seen": 17,
+        "created": 0,
+        "updated": 0,
+        "rejected": 0,
+        "unchanged": 17,
+        "stale_skipped": 0,
+        "marked_deleted": 0,
+        "seen_by_stream": {
+          "invoice": 12,
+          "customer": 5
+        },
+        "findings_opened": 0,
+        "rejected_sample": [],
+        "detection_skipped": false,
+        "duplicate_skipped": 0,
+        "unknown_fields_dropped": 0
+      }
+    },
+    {
+      "name": "P3-B row counts equal after outage and resume",
+      "ok": true
+    },
+    {
+      "name": "401 dead letter, no provider text",
+      "ok": true,
+      "detail": {
+        "class": "auth",
+        "code": "http_401",
+        "message": "The source rejected our credentials. Fix the connection, then retry.",
+        "state": "dead_letter"
+      }
+    },
+    {
+      "name": "no secret fields in a response",
+      "ok": true
+    },
+    {
+      "name": "a guest gets no admin route",
+      "ok": true
+    },
+    {
+      "name": "unknown scenario refused",
+      "ok": true
+    },
+    {
+      "name": "a viewer can't sync",
+      "ok": true
+    },
+    {
+      "name": "no live connection exists in any demo workspace",
+      "ok": true
+    }
+  ]
+}

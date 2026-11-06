@@ -163,6 +163,106 @@ describe("PRD 8.4 transport faults (P3-C)", () => {
   });
 });
 
+describe("findings from the independent review", () => {
+  it("an old failed run can't resume after a newer run, so nothing is falsely deleted", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    const failed = await sync(guest.cookie, id, { scenario: "http_5xx_outage" });
+    expect((await sync(guest.cookie, id, { full: true })).json.status).toBe("succeeded");
+    const res = await resume(guest, id, failed.json.id);
+    expect(res.json.code).toBe("run_superseded");
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      "SELECT count(*)::int AS n FROM app.source_records WHERE workspace_id = $1 AND state = 'deleted'",
+      [guest.workspaceId],
+    );
+    await mig.end();
+    expect(rows[0].n).toBe(0);
+  });
+
+  it("a rejected record isn't counted as deleted", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    await sync(guest.cookie, id);
+    const res = await sync(guest.cookie, id, { scenario: "privileged_field" });
+    expect(res.json.counts.rejected).toBe(1);
+    expect(res.json.counts.marked_deleted).toBe(0);
+    expect((await findings(guest.cookie)).some((f) => f.kind === "source_deleted")).toBe(false);
+  });
+
+  it("a read with a stream missing can't delete that stream", async () => {
+    const { guest, list } = await fresh();
+    await sync(guest.cookie, (list.erp_simulator as Source).id);
+    const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      "UPDATE app.source_records SET external_type = 'organization' WHERE workspace_id = $1 AND external_id = '5001'",
+      [guest.workspaceId],
+    );
+    await mig.end();
+    const res = await sync(guest.cookie, (list.erp_simulator as Source).id, { full: true });
+    // The ERP read has no organization stream, so that row stays, whatever it was.
+    expect(res.json.counts.marked_deleted).toBe(0);
+  });
+
+  it("an approval rechecks the source: a change that was reverted makes the evidence stale", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    await sync(guest.cookie, id, { scenario: "renamed_customer" });
+    const newer = (await findings(guest.cookie)).find(
+      (f) => f.kind === "name_mismatch" && f.supersedes,
+    );
+    // The source goes back to its older name, which is a fact the queue has already seen.
+    const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      "UPDATE app.source_records SET data = jsonb_set(data, '{name}', '\"Cedar Point Landscaping, Inc. (fictional)\"') WHERE workspace_id = $1 AND external_id = '6001'",
+      [guest.workspaceId],
+    );
+    await mig.end();
+    const moved = await call(`/api/v1/reconciliation/${newer.id}/advance`, {
+      method: "POST",
+      cookie: guest.cookie,
+      body: { to: "Investigating", version: newer.version },
+    });
+    const proposed = await call(`/api/v1/reconciliation/${newer.id}/advance`, {
+      method: "POST",
+      cookie: guest.cookie,
+      body: { to: "Proposed", version: moved.json.version, proposal: "Take the new name" },
+    });
+    const res = await call(`/api/v1/reconciliation/${newer.id}/resolve`, {
+      method: "POST",
+      cookie: guest.cookie,
+      headers: { "idempotency-key": `revert-${Date.now()}` },
+      body: { decision: "approve", version: proposed.json.version },
+    });
+    expect(res.json.code).toBe("evidence_stale");
+    const customers = await call("/api/v1/customers", { cookie: guest.cookie });
+    expect(customers.text).not.toContain("Outdoor Services");
+  });
+
+  it("an invoice that moves to another bill-to follows it, and the newest copy in a page wins", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    await sync(guest.cookie, id);
+    const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      `UPDATE app.invoices SET bill_to_external_id = '6001', customer_id = (SELECT canonical_id FROM app.external_record_links l
+         WHERE l.workspace_id = $1 AND l.external_id = '6001'), source_modified_at = source_modified_at - interval '1 day'
+       WHERE workspace_id = $1 AND bill_to_external_id = '5002'`,
+      [guest.workspaceId],
+    );
+    const res = await sync(guest.cookie, id, { full: true });
+    expect(res.json.counts.updated).toBeGreaterThan(0);
+    const { rows } = await mig.query(
+      "SELECT customer_id FROM app.invoices WHERE workspace_id = $1 AND bill_to_external_id = '5002'",
+      [guest.workspaceId],
+    );
+    await mig.end();
+    expect(rows.length).toBeGreaterThan(0);
+    // 5002 isn't mapped yet, so the stale client is gone rather than kept.
+    expect(rows.every((r) => r.customer_id === null)).toBe(true);
+  });
+});
+
 describe("PRD 8.4 data faults", () => {
   it("duplicate events add one row each", async () => {
     const { guest, list } = await fresh();

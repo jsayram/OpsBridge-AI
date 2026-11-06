@@ -64,8 +64,8 @@ export type EvidenceSource = {
 
 export type Resolution =
   | { type: "link_bill_tos"; externalIds: string[]; ruleRef: string }
-  | { type: "set_canonical_name"; from: string; to: string }
-  | { type: "set_account_code"; from: string; to: string }
+  | { type: "set_canonical_name"; externalId: string; from: string; to: string }
+  | { type: "set_account_code"; externalId: string; from: string; to: string }
   | {
       type: "link_or_create";
       provider: string;
@@ -363,7 +363,12 @@ export function detectFindings(input: DetectInput): {
             "Approve to take the ERP legal name, or reject to keep the current name.",
           ruleRef: "R-CUST-2",
           normalization: NORMALIZATION_VERSION,
-          resolution: { type: "set_canonical_name", from: customer.canonicalName, to: name },
+          resolution: {
+            type: "set_canonical_name",
+            externalId: c.externalId,
+            from: customer.canonicalName,
+            to: name,
+          },
         },
       });
     }
@@ -395,7 +400,12 @@ export function detectFindings(input: DetectInput): {
           recommendedAction: "Check with finance, then approve the ERP account or reject.",
           ruleRef: "R-CUST-2",
           normalization: NORMALIZATION_VERSION,
-          resolution: { type: "set_account_code", from: customer.accountCode, to: account },
+          resolution: {
+            type: "set_account_code",
+            externalId: c.externalId,
+            from: customer.accountCode,
+            to: account,
+          },
         },
       });
     }

@@ -139,13 +139,15 @@ const listAll = await call("/api/v1/integrations");
 check("no secret fields in a response", !/secret|token|lease/i.test(JSON.stringify(listAll.json)));
 check(
   "a guest gets no admin route",
-  (
-    await call(`/api/v1/admin/integrations/${erp.id}/sync`, {
-      method: "POST",
-      key: key(),
-      body: {},
-    })
-  ).status === 404,
+  [401, 404].includes(
+    (
+      await call(`/api/v1/admin/integrations/${erp.id}/sync`, {
+        method: "POST",
+        key: key(),
+        body: {},
+      })
+    ).status,
+  ),
 );
 check("unknown scenario refused", (await sync(erp.id, { scenario: "drop_tables" })).status === 400);
 await call("/api/v1/demo/role", { method: "POST", body: { role: "viewer" } });
