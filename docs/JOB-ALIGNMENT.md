@@ -1,0 +1,89 @@
+# OpsBridge AI: job alignment and evidence plan
+
+Reviewed: November 5, 2026 (America/New_York). Planning audit only; application implementation remains paused.
+
+Source: the owner-supplied four-page `Development_Automation_Lead_JD.pdf`, for Development & Automation Lead at másLabor. Source SHA-256: `b29b7d3adf1455107cb41949a864cdd36d107e9b2325cd97b8b681a5262d0a4b`. Essential duties are on pages 2–3; qualifications are on page 3. The document supplies role requirements, not permission to access company systems or contact anyone.
+
+**Evidence status as of this audit:** Every product capability below is **Planned, not implemented or verified**. This matrix is a design for future evidence, not a claim that Jose satisfies every qualification. Personnel requirements need truthful examples from his actual experience in addition to this portfolio. Working conditions and compensation are personal employment considerations, outside application acceptance.
+
+The selected stack direction is TypeScript on Cloudflare Workers with PostgreSQL through Hyperdrive (DEC-001, decided November 6, 2026). The posting was re-read in full that day, and the hash above matched. The posting requires proficiency in **at least one** modern language; Python, C# and JavaScript/TypeScript are examples, not three separate requirements. Azure and AWS are examples of cloud platforms under nice-to-haves. Cloudflare is not disqualified by that wording. Salesforce is a project choice for demonstrating a CRM; the supplied posting names a CRM but does not identify its vendor. NetSuite is expressly named and is a strong plus. A NetSuite-like simulator proves adapter/reconciliation design, **not live NetSuite experience**.
+
+## How to use this matrix
+
+- Keep each `JOB-XX` ID stable when changing the roadmap. Link its implementation, test IDs, phase report, and vault learning note in the requirements traceability matrix.
+- Macro phases P0–P8 provide grouping. The revised PRD assigns smaller subphases; a subphase brief must name all applicable `JOB-XX` IDs and the concrete evidence it will produce.
+- Promote status separately through Planned → Implemented → Verified → Owner accepted. Record merge and release states separately. A passing mock test does not promote a live integration requirement.
+- Before release, replace planned evidence with actual artifact paths, command results, commit/CI references, provider mode, review date, limitations, and Jose's acceptance. Missing evidence stays visible.
+
+## Must-have qualifications
+
+| ID | Posting requirement | Planned product or portfolio proof | Phase ownership | Evidence required before claiming coverage |
+|---|---|---|---|---|
+| JOB-01 | Hands-on delivery of production applications or system integrations | One deployed application, persistence, authentication, release/support runbooks | P1, P2, P7, P8 | Clean-checkout build; hosted HTTPS smoke check; actual release record; rollback/restore evidence. A portfolio deployment must not be represented as customer adoption or production employer work. |
+| JOB-02 | Proficiency in at least one modern language | Maintainable implementation in the owner-approved stack | P0–P8 | Readable code and review examples; Jose can explain one request from UI through business rule, transaction, test, and result. Adding unused languages provides no additional proof. |
+| JOB-03 | Build/consume REST APIs and integrate CRM/ERP; NetSuite a strong plus | Versioned API, Salesforce Developer Edition read-only adapter, clearly labeled ERP Simulator | P0, P3, P7 | OpenAPI and contract tests; actual authorized Salesforce test-org connection/revocation evidence for live claim; simulator fault/replay tests. Real NetSuite remains an explicit experience gap unless independently authorized and verified later. |
+| JOB-04 | Strong SQL and data modeling | Canonical relational schema, constraints, migrations, scoped queries and measured query plans | P0, P2, P3, P6 | ERD/data dictionary; migration tests; transaction/concurrency cases; seeded query plans and reconciliation query explanations. If the database changes, update the dialect, transaction model and acceptance tests. |
+| JOB-05 | Git, code review and agile delivery | Small change sets, review checklist, prioritized backlog and iterative releases | P0–P8 | Actual commit/PR history when repository workflow is authorized; review findings and fixes; subphase reports. AI reviews are identified as AI reviews, not teammate reviews. |
+| JOB-06 | Experience leading or mentoring developers | Engineering standards, explanations, reviewer feedback and developer onboarding materials | P0, P7, P8 + interview | Actual mentoring/technical-lead examples supplied by Jose; product artifacts demonstrate preparedness but cannot establish people-management experience. Subagent coordination is not management of human employees. |
+| JOB-07 | Hands-on AI development tools | Bounded AI coding/review workflow with human validation | Every subphase | Development log records the task delegated to AI, review performed, actual checks, defects found and Jose's explanation of the resulting code. Avoid secrets and raw private transcripts. |
+| JOB-08 | Clear communication for non-technical stakeholders | One-page business brief, decision summaries, plain-language workflow/error copy and executive walkthrough | P0, P6, P8 | Artifact understandable without reading source; separates assumptions, measurements and limitations; timed demonstration and recorded reviewer feedback where available. |
+| JOB-09 | Handle ambiguity, iterate quickly in evolving environments | Explicit assumptions, options, ADRs, small experiments and revised backlog | P0–P8 | Decision log showing alternatives, a bounded validation task, observed result, decision owner and resulting change. No fabricated stakeholder feedback or speed claims. |
+
+## Essential responsibilities
+
+| ID | Posting responsibility | Planned product or process proof | Phase ownership | Evidence required before claiming coverage |
+|---|---|---|---|---|
+| JOB-10 | Internal tools connecting consultant workflows and business operations | Fictional consultant case queue with assignment, checklist, due date, handoff, review and status history | P0, P2, P3 | State/permission matrix and user journey; persisted assignment/handoff timeline; tests for unauthorized transition, stale update, overdue item and missing dependency. No real immigration workflow or employer procedure is implied. |
+| JOB-11 | Connect an inventory control platform | Small synthetic inventory-reference adapter and reconciliation slice | P0, P3, P6 | Canonical item identity, SKU/unit definition, source timestamp and read-only quantity snapshot; paginated sync; stale/missing-item/unit-mismatch fixtures; repeated sync creates no duplicates; scoped status/report evidence. No purchasing, fulfillment, stock writeback or real inventory system access. |
+| JOB-12 | Eliminate worthwhile manual workflows and reporting using scripts/workflow/RPA/AI tools | Before/after workflow map, scheduled/repeatable reconciliation and approval-triggered notifications | P0, P3, P4, P6 | Manual baseline labeled assumed unless measured; repeatable task and failure tests; actual steps/time recorded when measured. Do not claim UiPath, Power Automate or browser RPA experience unless implemented; the posting's tools are alternatives. |
+| JOB-13 | Pilot and scale generative AI/LLM solutions | Bounded document extraction, field/source comparison, abstention and human approval | P5, P7 | Forty-document fixture set, explicit live-vs-fixture mode, schema/source validation, adversarial and outage tests, evaluation report with failures and cost. This is a small synthetic pilot; it does not prove organization-wide adoption or unrestricted agent capability. |
+| JOB-14 | Document systems so they outlive the original developer | Setup, integration, operations, decision, recovery and handoff documents plus per-subphase vault entries | Every subphase, P8 | Read-back verification of each saved vault checkpoint; clean-start/recovery walkthrough; successor can follow steps without hidden knowledge. Documentation is part of the subphase exit gate. |
+| JOB-15 | Prioritize, run sprints, coach and provide regular feedback | Ordered backlog, acceptance criteria, change/review cadence and retrospective template | P0–P8 | Actual project planning/retrospective records, identified solo/AI context; truthful coaching examples from prior experience. A template is evidence of process design, not proof that Jose managed a development team. |
+| JOB-16 | Hiring and onboarding participation | Role scorecard, structured technical-review rubric and developer onboarding exercise | P0, P8 + interview | Clearly labeled illustrative materials and a rehearsed onboarding path; actual hiring involvement described only if Jose supplies it. No candidate evaluation or hiring action is authorized. |
+| JOB-17 | Partner with operations, finance, sales and consulting on roadmap/alignment | Fictional stakeholder needs matrix, shared glossary, decision/impact brief and priority tradeoffs | P0, P3, P6, P8 | Each representative department has a stated need and linked acceptance criterion; cross-functional scenarios and decisions are labeled hypothetical until real permitted feedback exists. |
+| JOB-18 | Encourage experimentation/adoption and reuse what works across teams | Operator quick start, short training scenario, feedback log, pilot-to-rollout checklist and reusable typed workflow | P0, P4, P7, P8 | A reusable rule exercised on a second synthetic team/workflow without copying business logic; operator walkthrough and feedback, or explicitly marked rehearsal; success/adoption metrics defined without invented users. |
+| JOB-19 | Reconcile pipelines into a trusted source of truth | Stable external identity mapping, canonical records, sync cursors, evidence-backed findings, resilient retries | P2, P3, P7 | Repeat sync and out-of-order/duplicate/failure tests; explicit field authority and freshness; reconciliation does not silently destroy source values. |
+| JOB-20 | Resolve data-quality gaps and differing definitions of customer | Business glossary and source-of-truth mapping separate CRM prospect/account from ERP bill-to entity, consultant client and canonical customer | P0, P3, P6 | Contract fixture demonstrating one organization with multiple source entities; mapping decision with rationale; orphan invoice and duplicate tests; reviewer approval and audit. Distinguish semantic disagreement from a spelling mismatch. |
+| JOB-21 | Dashboards and self-serve reporting | Operations/quality/integration views and bounded, permission-scoped report filters/export | P6, P7 | User can change date/status/assignee/source filters without a developer; counts reconcile to transactions; zero-row and stale-source cases; cross-workspace denial; safe CSV escaping/formula-injection protection and bounded export. React charts are custom BI, not Power BI/Tableau/Looker experience. |
+| JOB-22 | Decision-ready ROI, cost/benefit and scenarios | Adjustable ROI calculator, sensitivity scenarios and one-page executive decision memo | P6, P8 | Baseline/base/downside scenario with formula tests, assumption provenance, provider/operating costs, break-even/zero-denominator handling and limitations. Projected savings remain illustrative; a portfolio does not prove an employer track record. |
+
+## Nice-to-have qualifications
+
+| ID | Posting qualification | Planned evidence | Phase ownership | Honest boundary |
+|---|---|---|---|---|
+| JOB-23 | Cloud platforms and CI/CD | Owner-selected hosting, isolated environments, automated checks, controlled deployment, observable recovery | P0, P1, P7, P8 | Azure/AWS are examples, not requirements. Cloudflare can provide relevant cloud evidence if selected and verified. Preserve functional/security requirements when changing providers; do not imply Azure/AWS experience from Cloudflare deployment. |
+| JOB-24 | Workflow/RPA tools | One independently verified Zapier test workflow and reliable internal automation | P4, P7 | Zapier satisfies a named tool example. Distinguish simulated, queued, provider-accepted, confirmed and failed; no claim to all listed RPA products. |
+| JOB-25 | Startup/high-growth/consulting/professional-services background | Synthetic Northstar consulting context and consulting-style discovery/hand-off pack | P0, P8 + interview | Demonstrates domain reasoning; does not create work-history experience. Jose must use truthful real examples for this background qualification. |
+
+Nice-to-have LLM, BI and executive-business-case qualifications are covered by JOB-13, JOB-21 and JOB-22 respectively; their presence here does not raise them to mandatory tool/vendor requirements.
+
+## Gaps found in PRD v1.0 and required revisions
+
+1. **Inventory needs executable scope (JOB-11).** Twenty inventory references in seed data are not enough. Add a small read-only adapter contract, canonical identity, discrepancy cases, UI/source status, and acceptance tests in P3. Keep purchasing and stock writeback out of scope.
+2. **Consultant workflow needs visible handoffs (JOB-10).** Existing cases/statuses are a good base. Make assignment, checklist, due date, ownership transfer and audited review explicit. It remains fictional consulting work, not a reproduction of másLabor's internal platform.
+3. **Customer definitions need semantic examples (JOB-20).** Normalizing names is insufficient for the posting's explicit example. Add a glossary, source-authority matrix, multiple bill-to entities and reviewer-approved identity mapping, with disagreement preserved for audit.
+4. **Self-serve reporting needs a tested interaction (JOB-21).** Add bounded filters, reusable/saved report criteria where useful, scoped safe export and a data dictionary. A static dashboard is only part of the duty.
+5. **People/process evidence needs explicit deliverables (JOB-06, JOB-15–18).** Add a stakeholder brief, prioritized backlog/retrospective, developer/operator onboarding, feedback and rollout/reuse exercise. Keep human leadership/hiring/adoption claims dependent on actual experience/evidence.
+6. **The owner must understand the work (JOB-02, JOB-07–09).** Each subphase ends with a short explanation of what changed, why, failure/security behavior, actual checks and restart steps. Capture Jose's questions and answers in the vault. Acceptance records must say whether the explanation was reviewed; silence is not acceptance.
+7. **Preserve vendor flexibility (JOB-02, JOB-23).** Evaluate hosting against the job evidence, SQL/concurrency, sessions, durable events, document processing, cost and operability. Do not add multiple languages, enterprise licenses or cloud providers solely to display logos.
+
+## Minimum job-focused acceptance scenarios to add
+
+These supplement the PRD's original E2E-01–E2E-28. Stable suffixes avoid silently renumbering original scenarios.
+
+| ID | Scenario | Required outcome | Job IDs |
+|---|---|---|---|
+| JOB-TEST-01 | One CRM organization maps to two legitimate ERP bill-to entities | Explicit semantic mapping explains the relationship; no false automatic duplicate merge; human decision auditable | JOB-03, JOB-19, JOB-20 |
+| JOB-TEST-02 | Consultant hands a case to another scoped analyst with an outstanding checklist item | New assignment and due/checklist state persist; invalid/unauthorized or stale handoff rejected; timeline records the action | JOB-10 |
+| JOB-TEST-03 | Inventory adapter returns an unknown SKU, stale snapshot or mismatched unit | Finding preserves source evidence and freshness; no stock mutation; replay is idempotent | JOB-11, JOB-19 |
+| JOB-TEST-04 | Manager filters a report and exports results | Counts match the same scoped records; bounds/permissions enforced; spreadsheet-formula payload safely neutralized; empty and stale states explained | JOB-04, JOB-21 |
+| JOB-TEST-05 | ROI scenario changes workload, exception rate, labor assumption and operating cost | Deterministic base/downside outputs with units, provenance, nonzero-cost denominator handling and explicit illustrative labels | JOB-22 |
+| JOB-TEST-06 | A typed notification workflow is reused for a second fictional consulting team | Shared rule path works without cross-workspace leakage; effect/delivery labels remain accurate; reuse documented | JOB-12, JOB-18, JOB-24 |
+| JOB-TEST-07 | A replacement developer/operator follows the written instructions | Record what was actually rehearsed, missing steps and fixes; do not invent an independent tester; vault links and restart steps resolve | JOB-08, JOB-14, JOB-16 |
+| JOB-TEST-08 | Jose reviews the phase's completed packages | Brief covers business purpose, data flow, security boundary, failure path, tests and tradeoff; questions documented, coordinator package review recorded, and Jose accepts or requests revision at the macro-phase gate | JOB-02, JOB-06–09, JOB-15 |
+
+## Interview claim gate
+
+For each job-relevant claim, retain: claim text; `JOB-XX` IDs; implementation path; actual test/run evidence; live/simulated status; measured/estimated provenance; limitations; date; owner acceptance. Claims without this record remain planned or illustrative. Release evidence must match deployed behavior. The final five-minute walkthrough should connect business need → reliable integration/data model → human-reviewed AI → controlled automation → reporting/ROI → tests/operations, with a separate engineering drill-down for inventory, SQL and failure recovery.
+
+This file is a planning artifact. It does not certify security, prove hiring outcomes, establish compliance, or imply any affiliation with másLabor or the named vendors.
