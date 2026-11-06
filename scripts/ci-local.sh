@@ -22,6 +22,7 @@ step "typecheck" npm run -s typecheck
 step "unit tests" npm test --silent
 step "database" npm run -s db:up
 step "integration tests" npm run -s test:integration
+step "query profile" npm run -s test:profile
 step "build" npm run -s build
 step "client bundle" npm run -s check:bundle
 step "fixtures" npm run -s check:fixtures

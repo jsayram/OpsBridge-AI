@@ -18,6 +18,7 @@
     "audit": "npm audit --audit-level=high",
     "ci:local": "bash scripts/ci-local.sh",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:profile": "vitest run --config vitest.profile.config.ts",
     "test:e2e": "playwright test",
     "check:bundle": "node scripts/check-bundle.mjs",
     "db:up": "docker compose -f infra/docker-compose.yml up -d --wait",

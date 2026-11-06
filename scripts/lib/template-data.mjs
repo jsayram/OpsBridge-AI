@@ -142,6 +142,7 @@ export function buildTemplate(manifest) {
       proposed_payload: JSON.stringify({ title: c.title }),
       status: "pending",
       requested_by: "seed",
+      created_at: at(-1),
     }));
 
   const docCats = manifest.template.documents;
@@ -157,6 +158,7 @@ export function buildTemplate(manifest) {
       fixture_id: `fx-${category}-${String(i + 1).padStart(2, "0")}`,
       category,
       status: "Pending",
+      created_at: at(-10),
       pack_key: packCase ? `document-${i + 1}` : null,
     };
   });
@@ -289,6 +291,7 @@ export function buildTemplate(manifest) {
         idempotency_key: `seed:${outbox.length}`,
         evidence_ref: label === "Confirmed" ? `seed-run-${outbox.length}` : null,
         created_at: at(-outbox.length),
+        next_attempt_at: at(-outbox.length),
         ...AUTOMATION_LABELS[label],
       });
     }

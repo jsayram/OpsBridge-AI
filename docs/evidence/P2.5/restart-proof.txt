@@ -1,0 +1,9 @@
+worker 1 up at 2026-11-06T20:49:39.993Z
+wrote approval, new case and handoff; read 100 cases
+worker 1 stopped
+postgres container restarted
+worker 2 up
+state identical after restart: true
+idempotency key survived, same case returned: true
+session cookie still works, write after restart at version 2
+RESTART PROOF PASSED

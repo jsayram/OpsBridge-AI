@@ -42,6 +42,7 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:integration
+      - run: npm run test:profile
       - run: npm run build
       - run: npm run check:bundle
       - run: npm run check:fixtures

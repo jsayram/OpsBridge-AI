@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import pg from "pg";
 import { beforeAll, describe, expect, it } from "vitest";
 import { connect } from "./harness";
 
@@ -36,6 +37,35 @@ describe("migrations on an empty database", () => {
 
   it("seed is idempotent", () => {
     expect(run("seed")).toEqual(run("seed"));
+  });
+
+  // The template is read-only to every runtime role, so nothing the other tests do can touch it.
+  it("P2-E two clean seeds on separate databases hold identical records", async () => {
+    const fresh = new pg.Client({ connectionString: migratorUrl });
+    await fresh.connect();
+    const main = await connect("opsbridge_migrator");
+    const template = "00000000-0000-4000-8000-000000000001";
+    const { rows: tables } = await fresh.query(
+      `SELECT table_name,
+              string_agg(column_name, ', ' ORDER BY ordinal_position)
+                FILTER (WHERE table_name <> 'audit_events' OR column_name <> 'id') AS cols
+         FROM information_schema.columns WHERE table_schema = 'app'
+          AND table_name IN (SELECT table_name FROM information_schema.columns
+                              WHERE table_schema = 'app' AND column_name = 'workspace_id')
+        GROUP BY 1`,
+    );
+    expect(tables.length).toBeGreaterThanOrEqual(15);
+    let seeded = 0;
+    for (const { table_name, cols } of tables) {
+      const sql = `SELECT count(*)::int AS n,
+          md5(coalesce(string_agg(x::text, '|' ORDER BY x::text), '')) AS hash
+        FROM (SELECT ${cols} FROM app.${table_name} WHERE workspace_id = $1) x`;
+      const a = (await fresh.query(sql, [template])).rows[0];
+      expect((await main.query(sql, [template])).rows[0], table_name).toEqual(a);
+      seeded += a.n;
+    }
+    expect(seeded).toBeGreaterThan(280);
+    await Promise.all([fresh.end(), main.end()]);
   });
 });
 

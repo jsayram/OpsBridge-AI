@@ -51,6 +51,11 @@ denied "guard on restored copy: admin TRUNCATE audit" "append-only" q "$dst" "TR
 denied "restored copy: app role cannot DELETE audit" "permission denied" q_app opsbridge_app "DELETE FROM app.audit_events"
 denied "restored copy: app role cannot write workspaces" "permission denied" q_app opsbridge_app "INSERT INTO app.workspaces(name,mode) VALUES ('x','owner')"
 denied "restored copy: cleanup cannot read cases" "permission denied" q_app opsbridge_cleanup "SELECT 1 FROM app.cases"
+denied "restored copy: app role cannot change the outbox" "permission denied" q_app opsbridge_app "UPDATE app.outbox SET dispatch_state='accepted'"
+denied "restored copy: app role cannot rewrite a handoff" "permission denied" q_app opsbridge_app "UPDATE app.consultant_handoffs SET reason='x'"
+denied "restored copy: one outbox row per idempotency key" "duplicate key" q "$dst" "INSERT INTO app.outbox (workspace_id, event_type, payload_ref, payload, idempotency_key) SELECT workspace_id, event_type, payload_ref, payload, idempotency_key FROM app.outbox LIMIT 1"
+denied "restored copy: one pending approval per case" "approvals_one_pending" q "$dst" "INSERT INTO app.approvals (workspace_id, case_id, proposed_action, requested_by) SELECT workspace_id, case_id, proposed_action, requested_by FROM app.approvals WHERE status='pending' LIMIT 1"
+check "restored copy: migrations recorded" "$(q "$dst" "SELECT count(*) FROM ops.schema_migrations")" "$(q "$src" "SELECT count(*) FROM ops.schema_migrations")"
 check "restored copy: no-context app read returns nothing but template" \
   "$(q_app opsbridge_app "SELECT count(*) FROM app.workspaces WHERE mode <> 'template'")" "0"
 

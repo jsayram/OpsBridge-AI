@@ -172,6 +172,7 @@ export async function seed(url) {
         title: "Owner workspace sample case",
         case_type: "Onboarding",
         status: "Draft",
+        created_at: manifest.clock,
       },
     ]);
     await c.query("COMMIT");
@@ -186,7 +187,8 @@ export async function seed(url) {
 
 // Test databases only: many launches from one address, so limits are set by each test.
 export async function relaxLimits(url) {
-  if (!/opsbridge_(test|e2e)$/.test(url)) throw new Error("relaxLimits is for test databases");
+  if (!/\/opsbridge_([a-z0-9_]+_)?(test|e2e)$/.test(url))
+    throw new Error("relaxLimits is for test databases");
   const c = await connect(url);
   await c.query("UPDATE app.demo_limits SET workspace_cap = 100000, hourly_limit = 100000");
   await c.end();
