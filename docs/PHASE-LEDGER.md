@@ -18,16 +18,20 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 
 Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. If they change, update this inventory in the same revision and preserve retired IDs rather than reusing them for unrelated work.
 
+## Phase gate record
+
+**P0:** Coordinator accepted for limited scope under delegation on 2026-11-06, at `601854a`. The master inspected the branch, reports and inbox and reran `npm run ci:local`, which passed. P0-C stays partial because GitHub Actions has never run (DEC-004). Hyperdrive, Neon and real-sheet proofs stay pending (DEC-002). Proof 1b failed and is routed as DEC-003. The master did not rerun the 42 DB proofs, and the restore has not been repeated on the final SQL, so P1 repeats both first. Owner Accepted stays empty. Nothing is merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
 |---|---|---|---|---|---|---|---|
-| P0.1 | Run | Done: Docs at branch head | Document review; all 25 JOB IDs present | Pending master | | No | No |
-| P0.2 | Run | Done; proof 1b failed, DEC-003: `spikes/p0.2`, ADR-000, cost inventory | 42 local DB checks passed; CPU measured two ways; Hyperdrive and Neon not run | Pending master | | No | No |
-| P0.3 | Run | Done: Architecture, threat model, design docs, PRD v1.3 | OpenAPI lint, schema samples, diagram parse, ID retention check | Pending master | | No | No |
-| P0.4 | Run | Done: Prototypes, journey, fixture plan, manifest | Browser and script checks; no full keyboard or screen-reader run | Pending master | | No | No |
-| P0.5 | Run | Done; P0-C partial: Scaffold and workflow | Clean-copy CI on Node 22 and 26, canaries failed as intended; GitHub Actions never run | Pending master | | No | No |
-| P0.6 | Run | Done: Reports, ledger, handoff, P1 brief, vault | See `docs/reports/P0.6.md` | Pending master | | No | No |
+| P0.1 | Run | Done: Docs at branch head | Document review; all 25 JOB IDs present | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
+| P0.2 | Run | Done; proof 1b failed, DEC-003: `spikes/p0.2`, ADR-000, cost inventory | 42 local DB checks passed; CPU measured two ways; Hyperdrive and Neon not run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
+| P0.3 | Run | Done: Architecture, threat model, design docs, PRD v1.3 | OpenAPI lint, schema samples, diagram parse, ID retention check | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
+| P0.4 | Run | Done: Prototypes, journey, fixture plan, manifest | Browser and script checks; no full keyboard or screen-reader run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
+| P0.5 | Run | Done; P0-C partial: Scaffold and workflow | Clean-copy CI on Node 22 and 26, canaries failed as intended; GitHub Actions never run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
+| P0.6 | Run | Done: Reports, ledger, handoff, P1 brief, vault | See `docs/reports/P0.6.md` | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
 | P1.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P1.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P1.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
