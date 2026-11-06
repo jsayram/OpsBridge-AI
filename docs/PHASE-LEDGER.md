@@ -24,6 +24,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P1:** Local part run on `phase/p1-shell` from `84c9694`, waiting for coordinator review. P1-A to P1-D and P1-F are met locally, P1-C against a labeled test double. P1-E is pending, since no account or deploy exists. The P0 repeats named above were done first: 42 of 42 proofs, and the restore on final SQL, both in `docs/evidence/P1.0/`. DEC-002, DEC-003 and DEC-004 were answered during the phase. DEC-005 to DEC-007 are open. Owner Accepted stays empty.
 
+**P1:** Local scope reviewed by the master on 2026-11-06 at `12d1172`, and `npm run ci:local` was rerun and passed: 48 Playwright passed, 6 skipped. P1-A to P1-D and P1-F are met locally, P1-C against a labeled test double. P1-E is pending, so P1 is not accepted until Jose answers DEC-007. Reset racing purge at the expiry boundary is unconfirmed and carries forward. Owner Accepted stays empty. Nothing from P1 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
@@ -34,11 +36,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P0.4 | Run | Done: Prototypes, journey, fixture plan, manifest | Browser and script checks; no full keyboard or screen-reader run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
 | P0.5 | Run | Done; P0-C partial: Scaffold and workflow | Clean-copy CI on Node 22 and 26, canaries failed as intended; GitHub Actions never run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
 | P0.6 | Run | Done: Reports, ledger, handoff, P1 brief, vault | See `docs/reports/P0.6.md` | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
-| P1.1 | Local run | Partial: migrations, environment reference, rollback plan, smoke, inert release workflow | Migrate twice, grants, release gate, smoke on workerd; nothing hosted | Pending master | | No | No |
-| P1.2 | Local run | Done against a labeled test double; owner identity Pending Owner Configuration | Token, subject, revocation and guest denial tests; Access only against a stub | Pending master | | No | No |
-| P1.3 | Local run | Done: sessions, reset, quotas, seed, scoped reads, cron purge | Two guests plus owner matrix, P3 checks on real migrations, mutation canaries; Hyperdrive not in path | Pending master | | No | No |
-| P1.4 | Local run | Done: shell, states, request IDs, logs, CSP | Playwright on workerd in Chromium, axe, keyboard, reduced motion, phone; no Safari or screen reader | Pending master | | No | No |
-| P1.5 | Local preparation only | Partial: reports, setup steps, P2 brief | Clean-copy CI on Node 22; no staging proof | Pending master | | No | No |
+| P1.1 | Local run | Partial: migrations, environment reference, rollback plan, smoke, inert release workflow | Migrate twice, grants, release gate, smoke on workerd; nothing hosted | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
+| P1.2 | Local run | Done against a labeled test double; owner identity Pending Owner Configuration | Token, subject, revocation and guest denial tests; Access only against a stub | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
+| P1.3 | Local run | Done: sessions, reset, quotas, seed, scoped reads, cron purge | Two guests plus owner matrix, P3 checks on real migrations, mutation canaries; Hyperdrive not in path | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
+| P1.4 | Local run | Done: shell, states, request IDs, logs, CSP | Playwright on workerd in Chromium, axe, keyboard, reduced motion, phone; no Safari or screen reader | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
+| P1.5 | Local preparation only | Partial: reports, setup steps, P2 brief | Clean-copy CI on Node 22; no staging proof | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
 | P2.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P2.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P2.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
