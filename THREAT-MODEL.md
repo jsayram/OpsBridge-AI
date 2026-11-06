@@ -1,6 +1,6 @@
 # Threat model
 
-Review date: 2026-11-06, P0.3, updated at P1. Next review: end of P4 and at P7.1. This is engineering work against OWASP ASVS, the API and LLM Top 10 lists and NIST SSDF as checklists. It is not a compliance claim and not an independent audit. PRD 12.2 stays the master threat-to-control table; this document adds the system-specific analysis.
+Review date: 2026-11-06, P0.3, updated at P1 and P3. Next review: end of P4 and at P7.1. This is engineering work against OWASP ASVS, the API and LLM Top 10 lists and NIST SSDF as checklists. It is not a compliance claim and not an independent audit. PRD 12.2 stays the master threat-to-control table; this document adds the system-specific analysis.
 
 Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 
@@ -66,6 +66,22 @@ Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 | Cost | Neon compute exhausted, DB suspended | 0.25 CU cap, 30-minute sweep, no keep-warm, launch caps | Budget table in `docs/design/COST-INVENTORY.md` | Suspension until the next billing period is a real outage; landing page and recording survive |
 | Availability | Free-plan 10 ms CPU exceeded | Requests measured at about 4 ms locally; no PDF parsing on public paths | P1.5 reads real CPU time | Production CPU unknown until a Worker is deployed |
 | Network | Neon endpoint reachable from the internet | TLS required, strong generated passwords, least-privilege roles, no anonymous access | Check at P1.1 with a real project | See below |
+
+## Source integrations (P3)
+
+| Threat | Control | Test |
+|---|---|---|
+| A guest reaches a live source | Adapter comes from the connection row. The guest path can only build a simulator. A database trigger refuses a live connection outside the owner workspace | `sync.test.ts`, `salesforce.test.ts` |
+| Hostile source data carries authority | Mappers are allowlists. A field named like authority rejects the record. No source value picks a workspace | `reconcile.test.ts`, `faults.test.ts` |
+| A stored cursor steers a token | The CRM cursor must be a path of a fixed shape, joined to the configured host | `erp-simulator.test.ts` |
+| A token response steers a token | `instance_url` must be https on an allowed host before any token goes to it | `salesforce.test.ts` |
+| OAuth code injection or replay | Single-use hashed state, ten-minute expiry, PKCE S256, behind `ownerGate` | `salesforce.test.ts` |
+| Database dump exposes provider tokens | AES-256-GCM with a Worker secret, bound to workspace and row. Disconnect scrubs the ciphertext. Key rotation is manual today | `salesforce.test.ts` |
+| Provider error text leaks into logs or the UI | Errors carry a class and a code only | `faults.test.ts`, `integration-http.test.ts` |
+| Reviewer tricked by a look-alike name | Normalized names only suggest, and a person must pick the target. There is no similarity score in the code | `reconcile.test.ts` |
+| A source row triggers an unbounded write | Page sizes are fixed, one running run per connection, demo write cap | `sync.test.ts` |
+
+Residual risk: Salesforce's `api` scope allows writes, so the connector's GET-only rule and a read-only integration user are what hold the line. Neither has met a real org yet. `TOKEN_ENCRYPTION_KEY` rotation has no tooling, and disconnecting and reconnecting is the workaround.
 
 ## Database network exposure (ADR proof 5)
 

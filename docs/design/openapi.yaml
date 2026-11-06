@@ -3,9 +3,10 @@ info:
   title: OpsBridge AI API
   version: 0.1.0
   description: >
-    PRD 8.2 surface. Implemented through P2: health, demo, me, summary, cases and their
-    workflow routes, approvals, customers, assignees, and admin status and logout.
-    Every other operation is design until a phase implements it. All records are synthetic.
+    PRD 8.2 surface. Implemented through P3: health, demo, me, summary, cases and their
+    workflow routes, approvals, customers, assignees, reconciliation, integrations, inventory,
+    and admin status, logout, sync and the Salesforce connection routes. Every other operation
+    is design until a phase implements it. All records are synthetic.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -405,6 +406,13 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/Limit" }
         - { $ref: "#/components/parameters/Cursor" }
+        - name: status
+          in: query
+          schema: { enum: [Open, Investigating, Proposed, Deferred, Resolved, Dismissed] }
+        - name: scope
+          in: query
+          description: shared lists read-only template samples, guests only
+          schema: { enum: [shared] }
       responses:
         "200":
           description: Page of findings
@@ -418,6 +426,37 @@ paths:
                     type: array
                     items: { $ref: "#/components/schemas/Finding" }
                   nextCursor: { type: string }
+  /api/v1/reconciliation/definitions:
+    get:
+      tags: [reconciliation]
+      operationId: businessDefinitions
+      summary: Business dictionary and rules
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/reconciliation/customers/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [reconciliation]
+      operationId: customerSources
+      summary: One customer's source identities and bill-tos
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/reconciliation/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [reconciliation]
+      operationId: getFinding
+      summary: One finding with its evidence
+      responses:
+        "200":
+          description: Finding
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Finding" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/v1/reconciliation/{id}/advance:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -452,6 +491,8 @@ paths:
       tags: [reconciliation]
       operationId: resolveFinding
       summary: Approve, reject or defer
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
       requestBody:
         required: true
         content:
@@ -465,6 +506,10 @@ paths:
                 version: { type: integer }
                 deferUntil: { type: string, format: date-time }
                 reason: { type: string, maxLength: 500 }
+                targetCustomerId:
+                  type: string
+                  format: uuid
+                  description: Required to approve a link that rests on a normalized name
       responses:
         "200":
           description: Updated finding
@@ -483,8 +528,86 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: "#/components/schemas/Integration" }
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Integration" }
+  /api/v1/integrations/{id}/runs:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [integrations]
+      operationId: listSyncRuns
+      summary: Recent sync runs
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/sync:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [integrations]
+      operationId: syncSimulated
+      summary: Run a simulated sync. Refuses a live connection
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                scenario: { type: string, description: A name from the closed scenario list }
+                full: { type: boolean }
+      responses:
+        "200":
+          description: The run, finished or still running
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/runs/{runId}/continue:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [integrations]
+      operationId: continueRun
+      summary: Carry on a healthy run that ran out of pages for one request
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/runs/{runId}/resume:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [integrations]
+      operationId: resumeRun
+      summary: Operator recovery of a failed run from its saved cursor
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /api/v1/automations/runs:
     get:
       tags: [automations]
@@ -592,6 +715,35 @@ paths:
                   signedOut: { const: true }
                   providerLogoutPath: { type: string }
         "401": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/salesforce:
+    get:
+      tags: [admin]
+      operationId: salesforceStatus
+      summary: Owner-only connector state. Says Pending Owner Credentials until a real org connects
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/admin/integrations/salesforce/authorize:
+    post:
+      tags: [admin]
+      operationId: salesforceAuthorize
+      summary: Start the OAuth web server flow with PKCE
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/salesforce/callback:
+    get:
+      tags: [admin]
+      operationId: salesforceCallback
+      summary: Finish the OAuth flow. Single-use state
+      security:
+        - ownerSession: []
+      responses:
+        "302": { description: Back to the admin page }
+        "400": { $ref: "#/components/responses/Error" }
   /api/v1/admin/integrations/{id}/sync:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -604,8 +756,23 @@ paths:
       parameters:
         - { $ref: "#/components/parameters/IdempotencyKey" }
       responses:
-        "202": { $ref: "#/components/responses/Accepted" }
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/disconnect:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [admin]
+      operationId: disconnectIntegration
+      summary: Revoke at the provider, then scrub the stored token
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
   /api/v1/admin/automations/runs/{id}/confirm:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -848,13 +1015,43 @@ components:
         status: { enum: [Open, Investigating, Proposed, Deferred, Resolved, Dismissed] }
         deferUntil: { type: [string, "null"], format: date-time }
         version: { type: integer }
+        customer: { type: [string, "null"] }
+        proposal: { type: [string, "null"] }
+        superseded: { type: boolean }
+        readOnly: { type: boolean }
+        evidence:
+          type: object
+          description: Source values and timestamps, differences, match basis, explanation, rule, recommended action
     Integration:
       type: object
       required: [provider, status]
       properties:
         provider: { type: string }
+        label: { type: string, description: "For example ERP Simulator. Never a claim of a live connection" }
+        modeLabel: { enum: [Simulated, Connected Test] }
         status: { enum: [Not Configured, Simulated, Connected Test, Degraded, Disconnected] }
         lastSuccessAt: { type: [string, "null"], format: date-time }
+        freshness: { enum: [never, fresh, aging, stale] }
+        lastRun:
+          oneOf:
+            - { $ref: "#/components/schemas/SyncRun" }
+            - { type: "null" }
+    SyncRun:
+      type: object
+      required: [id, kind, status, pages, counts]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { enum: [full, delta] }
+        scenario: { type: string }
+        status: { enum: [running, succeeded, failed, dead_letter] }
+        pages: { type: integer }
+        counts: { type: object }
+        resumes: { type: integer }
+        resumable: { type: boolean }
+        cursorSaved: { type: boolean }
+        error:
+          type: [object, "null"]
+          description: A class, a code and a fixed message. Never provider text
     Run:
       type: object
       required: [id, eventType, deliveryLabel, attempts]

@@ -4,26 +4,85 @@ Every source and sink sits behind a typed adapter. The public demo uses the simu
 
 ## Source adapter (CRM, ERP, inventory)
 
+Implemented at P3 in `backend/src/integrations/`. The types below are the code's.
+
 ```ts
-interface SourceAdapter<T> {
-  readonly provider: "crm" | "erp" | "inventory";
+interface SourceAdapter {
+  readonly system: "crm" | "erp" | "inventory";
+  readonly provider: "crm_simulator" | "erp_simulator" | "inventory_simulator" | "salesforce_test";
   readonly mode: "simulated" | "connected_test";
-  list(input: { cursor?: string; limit: number }): Promise<Page<SourceRecord<T>>>;
+  readonly pageSize: number;
+  list(input: { cursor?: string; limit: number; since?: string }): Promise<Page>;
   health(): Promise<{ status: "ok" | "degraded"; detail: string }>;
 }
-type SourceRecord<T> = { externalId: string; externalVersion: string; observedAt: string; data: T };
-type Page<T> = { items: T[]; nextCursor?: string };
+type SourceRecord<T> = {
+  stream: "organization" | "customer" | "invoice" | "inventory_snapshot";
+  externalId: string;
+  externalVersion: string;
+  sourceModifiedAt: string;
+  observedAt: string;
+  data: T;
+};
+type Page = {
+  items: SourceRecord[];
+  stats: { unknownFields: number; rejected: { externalId: string; reason: string }[] };
+  nextCursor?: string;
+  highWatermark: string | null;
+};
 ```
 
-| Rule | Applies to |
-|---|---|
-| Timeout 8 s, retries 3 with jittered backoff, 429 honors `Retry-After` | All |
-| 401, 403 and validation errors don't retry | All |
-| Cursor advances only after the page commits | All |
-| Unknown fields are dropped and counted, never stored raw | All |
-| Fault modes 401, 403, 429, 5xx, timeout, duplicate, out-of-order, renamed, stale, deleted, mismatched ID | ERP simulator (PRD 8.4) |
-| OAuth with PKCE, read scopes only, owner-started, refresh token server-side | Salesforce adapter |
-| Item code, quantity, unit, location, external version, source timestamp; read-only | Inventory simulator |
+| Rule | Applies to | Where |
+|---|---|---|
+| Timeout 8 s, retries 3 with jittered backoff, 429 honors `Retry-After` | All | `http.ts` |
+| A `Retry-After` over 10 s isn't slept through; the run fails, keeps its cursor and an operator resumes | All | `http.ts` |
+| 401, 403 and validation errors don't retry | All | `FAILURE_POLICY` in `types.ts` |
+| A page and the cursor after it commit in one transaction; the connection's own cursor moves only when the run succeeds | All | `stepRun` in `repo/sync.ts` |
+| No transaction stays open across a network call | All | `stepRun` |
+| Unknown fields are dropped and counted, never stored raw | All | `mappers.ts` |
+| A field that looks like authority (`workspace_id`, `role`, `token` and so on) rejects that record | All | `mappers.ts` |
+| Fault modes: every PRD 8.4 fault, plus malformed payload, unknown field, privileged field and a long 429 | Simulators | `scenarios.ts`, closed list |
+| OAuth with PKCE, owner-started, refresh token server-side and encrypted | Salesforce adapter | `salesforce.ts` |
+| Item code, quantity, unit, location, external version, source timestamp; read-only | Inventory simulator | `simulators.ts` |
+
+Which adapter runs comes from the connection row, which comes from the workspace, and never from the request. `simulatedAdapter` is the only constructor on the guest path, and it can't build a live adapter.
+
+## Failure classes
+
+| Class | Examples | Retried | Run ends as | Operator |
+|---|---|---|---|---|
+| `transient` | 5xx, 408, timeout, network | Yes, 3 times | `failed` | Resume from the saved cursor |
+| `rate_limited` | 429 | Yes, honoring `Retry-After` up to 10 s | `failed` | Resume shortly |
+| `auth` | 401, revoked token | No | `dead_letter` | Fix credentials, resume |
+| `permission` | 403 | No | `dead_letter` | Fix the role, resume |
+| `invalid_payload` | Malformed JSON, wrong shape, other 4xx | No | `dead_letter` | Fix the source, resume |
+| `cursor` | Saved position unreadable | No | `dead_letter` | Start a full sync |
+
+A resume is bounded at 5 per run. Errors carry a class and a code; provider text never reaches a run, a log, an audit row or a response.
+
+## ERP Simulator and SuiteTalk REST conventions
+
+The job posting names NetSuite as a strong plus, so the simulator follows Oracle's public help pages closely. This is a simulator of documented conventions built on original data. It is not NetSuite and has never been compared with a real account, and JOB-03 keeps real NetSuite as an experience gap.
+
+| Convention | Simulator | Source |
+|---|---|---|
+| Base paths | `/services/rest/record/v1/...`, `/services/rest/query/v1/suiteql` | Oracle NetSuite help, REST web services |
+| Collection shape | `links` (self, next, prev), `count`, `hasMore`, `items`, `offset`, `totalResults` | "Collection Paging" |
+| Collections return stubs | `items` hold `links` and `id` only | "Collection Paging", use case for listing customers |
+| Paging rule | `limit` and `offset`, and offset must be divisible by limit, or 400 | "Collection Paging" |
+| Bulk read | `POST .../suiteql?limit&offset` with `Prefer: transient` and `{ q, params }`, one page of rows | "Executing SuiteQL Queries Through REST Web Services" |
+| Single record | `/customer/{id}` and `/customer/eid:{externalId}` | REST record API |
+| Errors | `type`, `title`, `status`, `o:errorDetails[].detail` and `o:errorCode`: `INVALID_LOGIN`, `NONEXISTENT_ID`, `CONCURRENCY_LIMIT_EXCEEDED`, `UNEXPECTED_ERROR` | "Error Handling in REST Web Services" |
+| Customer record | One record type holds leads, prospects and customers, told apart by `stage`; `parent` for sub-customers; custom fields use the `custentity_` prefix | "Understanding Leads, Prospects, and Customers", "Customer Statuses" |
+
+Why SuiteQL for the sync: a record collection only gives IDs, so reading fields that way costs one request per row against a concurrency-limited account. One SuiteQL page reads everything for that page in a single call, ordered by `lastmodifieddate, id` so paging stays stable. Oracle's concurrency sample shows no `Retry-After`, so a 429 without one falls back to backoff. A unit test covers that.
+
+Known gaps from the real thing, on purpose: no TBA or OAuth 2.0 machine-to-machine handshake, only a small allowlist of query shapes, no real date-literal handling in `q`, and ISO timestamps where a real account returns its configured date format. An owner-authorized sandbox would be the place to close them.
+
+## Salesforce test connection
+
+Built from Salesforce's public OAuth and REST documentation, and tested only against the labeled double in `tests/integration/salesforce-double.ts`. **P3-D stays Pending Owner Credentials.** `docs/runbooks/CONNECTORS.md` has setup and revocation.
+
+Salesforce has no read-only OAuth scope. The connector requests `api refresh_token`, and read-only holds in two other places: the adapter refuses any non-GET to the data API, and the runbook has the owner connect an integration user with read-only permissions. A token goes only to an https host under `salesforce.com`, whatever a token response claims, and a stored page cursor can only be a path on that host.
 
 ## Sink adapter
 

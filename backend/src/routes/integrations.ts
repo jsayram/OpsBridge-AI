@@ -19,6 +19,7 @@ import {
   claimRun,
   loadConnection,
   PROVIDER_LABEL,
+  pagesPerCall,
   requireScenario,
   runDto,
   startRun,
@@ -114,8 +115,13 @@ export async function runSync(c: Context<AppEnv>, adapterFor: AdapterFor = simul
     });
     const fresh = started.run as Row | null;
     if (fresh) {
-      const finished = await stepRun(db, ctx, fresh, () =>
-        adapterFor.build(db, started.connection, fresh),
+      const finished = await stepRun(
+        db,
+        ctx,
+        fresh,
+        () => adapterFor.build(db, started.connection, fresh),
+        {},
+        pagesPerCall(c.env.SYNC_PAGES_PER_CALL),
       );
       return { run: runDto(finished), replayed: false };
     }
@@ -132,8 +138,13 @@ export async function runSync(c: Context<AppEnv>, adapterFor: AdapterFor = simul
   return c.json(out.run);
 }
 
-// Operator recovery: continue from the saved cursor, the only way to continue a failed run.
-export async function resumeSync(c: Context<AppEnv>, adapterFor: AdapterFor = simulatedOnly) {
+// Resume is operator recovery of a failed run. Continue only carries on a healthy run that ran
+// out of pages for one request, so the person who started a sync can finish it.
+export async function moveRun(
+  c: Context<AppEnv>,
+  intent: "continue" | "resume",
+  adapterFor: AdapterFor = simulatedOnly,
+) {
   const actor = c.get("actor");
   const id = canonicalId(c.req.param("id") as string);
   const runId = canonicalId(c.req.param("runId") as string);
@@ -142,9 +153,18 @@ export async function resumeSync(c: Context<AppEnv>, adapterFor: AdapterFor = si
     const { connection, claimed } = await inWorkspaceTx(db, actor.workspaceId, async () => {
       const connection = await loadConnection(db, actor.workspaceId, id);
       if (connection.mode !== "simulated" && !adapterFor.live) throw forbidden();
-      return { connection, claimed: await claimRun(ctx, id, runId) };
+      return { connection, claimed: await claimRun(ctx, id, runId, intent) };
     });
-    return runDto(await stepRun(db, ctx, claimed, () => adapterFor.build(db, connection, claimed)));
+    return runDto(
+      await stepRun(
+        db,
+        ctx,
+        claimed,
+        () => adapterFor.build(db, connection, claimed),
+        {},
+        pagesPerCall(c.env.SYNC_PAGES_PER_CALL),
+      ),
+    );
   });
   return c.json(run);
 }
@@ -192,6 +212,12 @@ integrations.get("/:id/runs", requireCapability("integrations:read"), async (c) 
 // they can't touch a real system whoever calls them (P3-E).
 integrations.post("/:id/sync", requireCapability("integrations:sync_simulated"), (c) => runSync(c));
 
+integrations.post(
+  "/:id/runs/:runId/continue",
+  requireCapability("integrations:sync_simulated"),
+  (c) => moveRun(c, "continue"),
+);
+
 integrations.post("/:id/runs/:runId/resume", requireCapability("integrations:recover"), (c) =>
-  resumeSync(c),
+  moveRun(c, "resume"),
 );

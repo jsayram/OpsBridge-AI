@@ -302,3 +302,56 @@ describe("P3-A evidence through replay", () => {
     expect(Math.abs(Date.now() - at)).toBeLessThan(5 * 86_400_000);
   });
 });
+
+describe("one page per request, for the Workers Free CPU limit", () => {
+  const env = { SYNC_PAGES_PER_CALL: "1" };
+  const post = (cookie: string, path: string) =>
+    call(path, { method: "POST", cookie, env, body: {}, headers: idempotencyKey() });
+
+  it("an analyst finishes a run by continuing it, with the same result as one call", async () => {
+    const { guest, list } = await fresh();
+    await setRole(guest.cookie, "analyst");
+    const id = (list.erp_simulator as Source).id;
+    let run = (await post(guest.cookie, `/api/v1/integrations/${id}/sync`)).json;
+    let calls = 1;
+    while (run.status === "running") {
+      expect(run.pages).toBe(calls);
+      run = (await post(guest.cookie, `/api/v1/integrations/${id}/runs/${run.id}/continue`)).json;
+      calls++;
+    }
+    expect(calls).toBe(5);
+    expect(run.status).toBe("succeeded");
+    expect(run.counts.seen).toBe(17);
+    expect((await counts(guest.workspaceId, ["invoices"])).invoices).toBe(12);
+    expect(run.resumes).toBe(0);
+  });
+
+  it("continue can't reopen a failed run, and a finished one refuses too", async () => {
+    const { guest, list } = await fresh();
+    const id = (list.erp_simulator as Source).id;
+    const failed = await sync(guest.cookie, id, { scenario: "http_403" });
+    const res = await post(
+      guest.cookie,
+      `/api/v1/integrations/${id}/runs/${failed.json.id}/continue`,
+    );
+    expect(res.json.code).toBe("resume_required");
+    const good = await sync(guest.cookie, (list.crm_simulator as Source).id);
+    const done = await post(
+      guest.cookie,
+      `/api/v1/integrations/${(list.crm_simulator as Source).id}/runs/${good.json.id}/continue`,
+    );
+    expect(done.json.code).toBe("run_finished");
+  });
+
+  it("a bad page setting falls back to the default", async () => {
+    const { guest, list } = await fresh();
+    const res = await call(`/api/v1/integrations/${(list.erp_simulator as Source).id}/sync`, {
+      method: "POST",
+      cookie: guest.cookie,
+      env: { SYNC_PAGES_PER_CALL: "9000" },
+      headers: idempotencyKey(),
+      body: {},
+    });
+    expect(res.json.status).toBe("succeeded");
+  });
+});

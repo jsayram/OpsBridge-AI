@@ -37,7 +37,9 @@ Reopen reuses `case.needs_review`, so the five-event allowlist in PRD 9.1 does n
 | Open, Investigating, Proposed | Deferred | reviewer, Defer | `defer_until` required, at most 90 days out |
 | Deferred | Open | sweep, or analyst with `POST /advance` | Sweep acts when `defer_until` has passed |
 
-Automatic reopening of a resolved finding is not allowed. New source evidence opens a new finding that links the old one.
+Automatic reopening of a resolved finding is not allowed. New source evidence opens a new finding that links the old one. The old finding can't then be approved (`finding_superseded`); a reviewer can still reject or defer it. Replaying the same facts adds nothing, because `dedupe_key` is the kind, the subject and a fingerprint of the compared values, without timestamps.
+
+Implemented at P3.4 in `backend/src/domain/findingStatus.ts`. Approve applies one server-built resolution from the evidence, never a value from the request, except `targetCustomerId`, which a person must supply wherever the link rests only on a normalized name.
 
 ## AI review
 
@@ -82,7 +84,20 @@ Label derivation: PRD 7.2. A Mode A event stays **Accepted** until the owner rec
 
 ## Integration status
 
-Not Configured → Simulated or Connected Test → Degraded or Disconnected. Degraded → Connected Test on a successful health check. Disconnected → Not Configured when the owner removes the connection.
+Not Configured → Simulated or Connected Test → Degraded or Disconnected. A failed run sets Degraded and emits `integration.degraded` once per transition. A successful run returns the connection to Simulated or Connected Test. Disconnected → Connected Test when the owner connects again; a disconnected connection refuses a sync.
+
+## Sync run
+
+| From | To | Who | Note |
+|---|---|---|---|
+| (start) | running | analyst, manager or owner | One running run per connection, by unique index. A lease of 60 s, renewed with each page |
+| running | succeeded | system | Last page committed. Connection cursor moves here and nowhere else. Findings are detected in this transaction |
+| running | failed | system | Transient or rate limited after bounded retries. Saved cursor kept |
+| running | dead_letter | system | Auth, permission, payload or cursor. Saved cursor kept, no retry |
+| failed, dead_letter | running | manager or owner, `resume` | Bounded at 5. Continues from the saved cursor |
+| running, lease expired | failed | next start | Code `lease_expired` |
+
+A run that reaches the per-call page limit stays running with a released lease, and `POST /continue` carries it on. Continue needs only the sync capability and refuses a failed run, so it can never stand in for an operator's resume.
 
 ## Demo session and workspace
 

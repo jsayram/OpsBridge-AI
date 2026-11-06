@@ -97,11 +97,11 @@ Local mode does not run Hyperdrive, so transaction tests must repeat against rea
 
 | Path | Contents |
 |---|---|
-| `backend/` | Worker entry, routes, auth, domain rules, repositories (`src/repo`), SQL migrations |
+| `backend/` | Worker entry, routes, auth, domain rules, repositories (`src/repo`), source adapters and simulators (`src/integrations`), SQL migrations |
 | `frontend/` | React SPA |
 | `tests/` | Unit, integration on real Postgres, query profile, Playwright on real workerd |
 | `infra/` | Local Docker, role bootstrap, Wrangler staging template |
-| `sample-data/` | Seed manifest and fixtures |
+| `sample-data/` | Seed manifest, fixtures and the data the simulators serve |
 | `scripts/` | Local CI and helpers |
 | `spikes/` | Throwaway P0.2 proofs; not application code |
 | `docs/` | Design, runbooks, environment reference, briefs, reports, evidence |

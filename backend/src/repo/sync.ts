@@ -18,8 +18,13 @@ const LEASE_SECONDS = 60;
 const MAX_RESUMES = 5;
 const REJECT_SAMPLE = 10;
 // Keeps one request inside the platform's limits. A longer run returns "running" and the client
-// calls resume, which picks up at the saved cursor.
+// calls continue, which picks up at the saved cursor. Hosted Workers Free sets this to 1, because
+// a whole ERP sync measured about 20 ms of CPU under Node against a 10 ms limit.
 export const PAGES_PER_CALL = 8;
+export const pagesPerCall = (value: string | undefined) => {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 1 && n <= PAGES_PER_CALL ? n : PAGES_PER_CALL;
+};
 
 type Row = Record<string, unknown>;
 type Counts = {
@@ -166,7 +171,12 @@ export async function startRun(
   return rows[0] as Row;
 }
 
-export async function claimRun(ctx: CommandContext, connectionId: string, runId: string) {
+export async function claimRun(
+  ctx: CommandContext,
+  connectionId: string,
+  runId: string,
+  intent: "continue" | "resume" = "resume",
+) {
   await lockConnection(ctx.db, ctx.workspaceId, connectionId);
   const { rows } = await ctx.db.query(
     `SELECT *, lease_expires_at > now() AS lease_live FROM app.sync_runs
@@ -187,6 +197,10 @@ export async function claimRun(ctx: CommandContext, connectionId: string, runId:
       [ctx.workspaceId, runId, token, LEASE_SECONDS],
     );
     return taken[0] as Row;
+  }
+  // Continuing only carries on a healthy run. Reopening a failed one is an operator's decision.
+  if (intent === "continue") {
+    throw new ApiError(409, "resume_required", "This run failed. An operator has to resume it.");
   }
   if ((run.resumes as number) >= MAX_RESUMES) {
     throw new ApiError(
@@ -455,7 +469,7 @@ const lockRun = async (ctx: CommandContext, runId: string, token: unknown) => {
   );
   const run = rows[0] as Row | undefined;
   // Someone else took over after our lease ran out. Stop without writing anything.
-  if (!run || run.status !== "running" || run.lease_token !== token) throw stale();
+  if (run?.status !== "running" || run.lease_token !== token) throw stale();
   return run;
 };
 

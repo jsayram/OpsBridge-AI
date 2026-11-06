@@ -27,6 +27,11 @@ Set in the Wrangler config. Not secret.
 | `ACCESS_TEAM_DOMAIN` | `<team>.cloudflareaccess.com`. Sets the issuer and JWKS URL | Unset | Required for owner identity |
 | `ACCESS_AUD` | Access application audience tag | Unset | Required for owner identity |
 | `DEMO_LAUNCH_PAUSED` | `true` stops launch and reset | Unset | Unset, flip in an incident |
+| `SYNC_PAGES_PER_CALL` | Source pages one request handles, 1 to 8. The client continues a longer run | Unset, 8 | `1` on Workers Free |
+| `SALESFORCE_ENABLED` | `true` turns on the owner-only connector. Off unless every Salesforce value is set | Unset | Unset until P3-D is authorized |
+| `SALESFORCE_LOGIN_URL` | `https://` host under `salesforce.com`. Anything else keeps the connector off | Unset | Owner's org |
+| `SALESFORCE_CLIENT_ID` | External client app consumer key | Unset | Owner's app |
+| `SALESFORCE_REDIRECT_URI` | `<origin>/api/v1/admin/integrations/salesforce/callback` | Unset | Must match the app |
 
 Demo limits are not variables. They live in `app.demo_limits`, which only a migration can change: 5 new workspaces an hour per client network (launch and reset share it), 5 resets a session, 150 workspaces and a 2-hour TTL that a CHECK constraint keeps at or below 2 hours. An IPv6 client counts as its /64.
 

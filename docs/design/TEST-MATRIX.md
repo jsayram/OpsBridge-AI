@@ -18,8 +18,8 @@ Layers from PRD 13.1. "Now" means a real check exists at the end of local P2. Ev
 | Case queries | Integration + profile | ID swap, mass assignment, keyset walk, 1,000-case plans | P2.2, P2.5 | `tests/integration/cases-api.test.ts`, `tests/profile/query-profile.test.ts` |
 | Schema | Integration | Composite keys, CHECKs, purge sweep over every table, write cap | P2.1 | `tests/integration/schema.test.ts` |
 | Expiry races | Integration | Reset meeting purge | P2 | `tests/integration/expiry-race.test.ts` |
-| Reconciliation | Unit + integration | ID-first match, no fuzzy merge, replay | P3.4 | No |
-| Sync faults | Contract | All PRD 8.4 faults | P3.6 | No |
+| Reconciliation | Unit + integration | ID-first match, no fuzzy merge, replay | P3.4 | Local, `tests/unit/reconcile.test.ts`, `tests/integration/reconciliation.test.ts` |
+| Sync faults | Contract | All PRD 8.4 faults | P3.6 | Local, `tests/integration/faults.test.ts`, `tests/unit/integration-http.test.ts`, `tests/unit/erp-simulator.test.ts` |
 | Sheet bridge | Integration | Check-before-append, formula guard, 403 dead letter | P4.3 | Simulated only |
 | AI schema and citations | Unit + eval | Invalid output, adversarial suite | P5.2, P5.5 | No |
 | Edits to suggestions | Unit | Field limits, revalidation | P5.4 | No |

@@ -158,13 +158,13 @@ erDiagram
     int business_rows }
 ```
 
-Tables without a line in the diagram but with the same conventions: `consultant_handoffs`, `case_checklist_items`, `external_connections`, `external_record_links`, `sync_runs`, `workflow_rules`, `metric_snapshots`, `inventory_items`, `inventory_snapshots`, `source_definition_mappings`, `customer_source_relationships`. Their fields are in PRD 7 and 7.3 and are not repeated here, so the PRD stays the single list.
+Tables without a line in the diagram but with the same conventions: `source_records`, `invoices`, `contacts`, `connection_secrets`, `oauth_states`, `consultant_handoffs`, `case_checklist_items`, `external_connections`, `external_record_links`, `sync_runs`, `workflow_rules`, `metric_snapshots`, `inventory_items`, `inventory_snapshots`, `source_definition_mappings`, `customer_source_relationships`. Their fields are in PRD 7 and 7.3 and are not repeated here, so the PRD stays the single list.
 
 Additions not in the diagram: `users.sessions_valid_after` (owner revocation), `workspaces.seed_clock_shift` (recorded date shift), and `pack_key` on the tables a pack copies, which marks template rows that belong to the scenario pack. `demo_limits.write_cap` bounds what one demo workspace can write.
 
 **`assignees` is not `memberships`.** Memberships describe real sign-ins and the runtime role can't read them (D-018). A demo workspace has no real people, so its fictional consultants live in their own workspace-scoped table with the same composite keys. The manifest's old `memberships` pack row is now `assignees` (D-029).
 
-Grants are narrower than PRD 7.4 allows: documents, AI reviews, links, relationships, findings, inventory, rules and assignees are read-only for the runtime role until the phase that writes them (D-028). A later phase widens them in its own migration.
+Grants are narrower than PRD 7.4 allows: documents, AI reviews, rules, assignees and inventory items are read-only for the runtime role until a phase writes them (D-028), and inventory snapshots are insert-only. A later phase widens them in its own migration.
 
 ## Constraints that carry weight
 

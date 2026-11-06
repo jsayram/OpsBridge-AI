@@ -19,7 +19,7 @@ import { isScenario } from "../integrations/scenarios";
 import { AdapterError } from "../integrations/types";
 import { commandContext } from "../repo/records";
 import { loadConnection } from "../repo/sync";
-import { adapterForSimulated, resumeSync, runSync } from "./integrations";
+import { adapterForSimulated, moveRun, runSync } from "./integrations";
 
 // Everything here sits behind ownerGate, mounted in app.ts ahead of this router.
 export const admin = new Hono<AppEnv>();
@@ -129,7 +129,10 @@ const ownerAdapter = (c: Context<AppEnv>) => ({
 });
 
 admin.post("/integrations/:id/sync", (c) => runSync(c, ownerAdapter(c)));
-admin.post("/integrations/:id/runs/:runId/resume", (c) => resumeSync(c, ownerAdapter(c)));
+admin.post("/integrations/:id/runs/:runId/continue", (c) =>
+  moveRun(c, "continue", ownerAdapter(c)),
+);
+admin.post("/integrations/:id/runs/:runId/resume", (c) => moveRun(c, "resume", ownerAdapter(c)));
 
 admin.post("/integrations/:id/disconnect", async (c) => {
   const actor = c.get("actor") as OwnerActor;

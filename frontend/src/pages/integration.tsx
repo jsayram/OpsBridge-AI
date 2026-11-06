@@ -538,12 +538,19 @@ function ConnectionCard({ connection, onDone }: { connection: Connection; onDone
     e.preventDefault();
     void act(async () => {
       try {
-        await api(`/integrations/${connection.id}/sync`, {
+        let current = await api<Run>(`/integrations/${connection.id}/sync`, {
           method: "POST",
           idempotencyKey: keys.keyFor(`${connection.id}:${scenario}:${run?.id ?? "first"}`),
           body: { scenario },
         });
         keys.settle();
+        // A long run comes back part way. Its cursor is saved, so this just carries on.
+        while (current.status === "running") {
+          current = await api<Run>(`/integrations/${connection.id}/runs/${current.id}/continue`, {
+            method: "POST",
+            body: {},
+          });
+        }
       } catch (err) {
         keys.settle(err);
         throw err;
