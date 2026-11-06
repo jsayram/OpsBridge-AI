@@ -28,6 +28,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P2:** Local run on `phase/p2-core` from `94c43fc`, waiting for coordinator review. P2-A to P2-E are met locally on Docker Postgres. Hyperdrive, Neon and hosted restore are not in any check. The P1 open item is closed: reset racing purge at the expiry boundary was a real deadlock, reproduced and fixed. DEC-007 covers starting P2 with P1-E pending. Owner Accepted stays empty. Nothing from P2 is pushed, merged or deployed.
 
+**P2:** Coordinator accepted for limited scope under delegation on 2026-11-06, at `21dfc35`. The master read the report and reran `npm run ci:local`, which passed: 62 Playwright passed, 6 skipped, 0 vulnerabilities, no leaks. P2-A to P2-E are met locally, and the P1 reset and purge race was confirmed and fixed. Hyperdrive proofs and hosted restore are pending, and the deferral from DEC-007 still applies. Owner Accepted stays empty. Nothing from P2 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
