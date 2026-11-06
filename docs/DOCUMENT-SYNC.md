@@ -1,16 +1,16 @@
 # OpsBridge AI documentation synchronization inventory
 
-Verified: 2026-11-06T15:15:48-05:00. Vault: `Jose-Ramirez-Vault`. All writes used the official Obsidian CLI, and every note was read back through the CLI and compared with the exact bytes intended. Destination bytes were checked against the previous mirrors before overwriting, and no concurrent edit was found. A later source edit invalidates the matching row.
+Verified: 2026-11-06T15:24:20-05:00. Vault: `Jose-Ramirez-Vault`. All writes used the official Obsidian CLI, and every note was read back through the CLI and compared with the exact bytes intended. Destination bytes were checked against the previous mirrors before overwriting, and no concurrent edit was found. A later source edit invalidates the matching row.
 
 | Source | Vault destination | SHA-256 (source = read-back) | Bytes | Outcome |
 |---|---|---|---:|---|
-| `PRD.md` | `Projects/OpsBridge AI/PRD.md` | `0824eca4972f8eb449c713578b22c89856a63a518e8300cb21a4d1c4602f35b6` | 174672 | Verified |
+| `PRD.md` | `Projects/OpsBridge AI/PRD.md` | `95b85b6a6e817d9aabdadf8534f3cb7a0e196ec0408e733c6771752ef2ef5785` | 174870 | Verified |
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
-| `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `8c0bf287b79d7a30f90a50bdacc89dba8074d24b0a49bb460455917f1cfc11ea` | 17844 | Verified |
+| `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `dcf59fbf7f8e17346c955744f55d7935e6e934a6bacd7ed4f30d3a48fd706ecd` | 17883 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `be05ea069c8b3850cd2bb182813530bcb63a94771e9c73a08daaee6bd8cde754` | 9841 | Verified |
-| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `a1f2d722d38a8f95b6023fd85584f80f40eb041c142bf209b09dc55e58fa2405` | 12026 | Verified |
-| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `23cbdcd75d7002cb6e783877d4da96ce156d5e75fa93ed5b2ea93d0041a354e9` | 8100 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `78c103a0c04979379469dabb0e05293e0c6fe10efc847db58cb978f6b4955557` | 10627 | Verified |
+| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `a6e769f182724dbcae81559801630c0213ce7ee072bed91b7780b98801b3e68b` | 12575 | Verified |
+| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `7673fe81f8207308d7e31255a9a60c03a3b3c49adfdac9c7a1e7bc569cd8f544` | 8100 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |
 | `templates/work-package-report.md` | `Projects/OpsBridge AI/Templates/work-package-report.md` | `5ef61afc8dab62d10dc37f052e56e2be679020fe0d9e48adb84587da26be671e` | 2406 | Verified |
 | `templates/phase-review.md` | `Projects/OpsBridge AI/Templates/phase-review.md` | `bdbb64ff92f86d1f9b6ffcea9ff51ba90b897d76715b0a823a6f51d19bbc3734` | 1785 | Verified |

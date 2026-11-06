@@ -55,36 +55,36 @@ Updated: 2026-11-06 (America/New_York), P1 phase session. The coordinator reads 
 
 ### DEC-005 — Employer name in the public repository
 
-- State: open.
+- State: answered 2026-11-06.
 - Package and blocking dependency: none blocked. Raised because the repository went public under DEC-004.
 - Decision needed and why: DEC-004's recommendation said to re-check employer-name references before any public flip. `PRD.md` and the v1.0 to v1.3 snapshots name the target employer, in lines that say the project must not touch or copy that employer's systems or branding. They are public now on `main`. Nothing suggests a secret or real record; the question is only how Jose wants to appear to that employer.
 - Options with consequence/cost: (a) leave it, in line with his earlier “public repo is fine”. (b) Say “the target employer” in the next PRD revision, leaving old snapshots and history as they are. The name stays findable. (c) Also rewrite history. That needs a force push, which `main` protection blocks, and it is a destructive stop point.
 - Recommendation: (b) when the master next revises the PRD. Low effort and no destructive step. The master owns the PRD, so this session changed nothing.
 - Decision needed by: before P8 at the latest; sooner is better since the repository is public.
-- Actual owner answer: none.
-- Authorized scope: none.
+- Actual owner answer: 2026-11-06, in the master thread: “Say 'target employer' (Recommended)”.
+- Authorized scope: done by the master in PRD v1.4 and `docs/JOB-ALIGNMENT.md`. Old snapshots and Git history stay unchanged.
 
 ### DEC-006 — How P1 reaches staging
 
-- State: open.
+- State: answered 2026-11-06.
 - Package and blocking dependency: hosted P1.1 and P1.5.
 - Decision needed and why: `.github/workflows/release.yml` runs only from protected `main`, and P1 is on `phase/p1-shell`, which isn't pushed or merged.
 - Options with consequence/cost: (a) Push `phase/p1-shell`, let CI run on a draft PR, review, then Jose approves merging into `main` and releases from there. The cleanest record, and it needs a merge approval. (b) Allow the workflow on the phase branch for the first staging deploy. No merge, but unmerged code reaches a host. (c) Jose deploys from his machine with Wrangler. No workflow evidence, so P1-E's pipeline half stays open.
 - Recommendation: (a). The push alone also gets P1's checks onto real GitHub Actions.
 - Decision needed by: before hosted P1.1.
-- Actual owner answer: none.
-- Authorized scope: none. `phase/p1-shell` stays unpushed until the master says so.
+- Actual owner answer: 2026-11-06, in the master thread: “Push, then merge (Recommended)”.
+- Authorized scope: push `phase/p1-shell` and open a draft PR. Merging into `main` still needs Jose's separate approval. Staging releases from `main` afterward.
 
 ### DEC-007 — P1-E pending and the P2 start
 
-- State: open.
+- State: answered 2026-11-06.
 - Package and blocking dependency: start of P2.
 - Decision needed and why: PRD 14 says a missing live configuration blocks full acceptance, and moving on needs Jose's explicit, recorded deferral naming the pending criterion.
 - Options with consequence/cost: (a) Do the account steps first and close P1-E, then start P2. The smallest risk of a surprise from Hyperdrive or Neon before more is built on them. (b) Accept P1 for limited scope with P1-E pending and start P2 locally. Faster, and P2 needs no account, but transaction behavior through Hyperdrive stays unproven longer.
 - Recommendation: (a) if Jose can do `docs/runbooks/HOSTED-SETUP.md` steps 1 to 5 soon, since those take minutes and the Hyperdrive repeat is the largest unknown left. Otherwise (b).
 - Decision needed by: before P2.
-- Actual owner answer: none.
-- Authorized scope: none.
+- Actual owner answer: 2026-11-06, in the master thread: “Start P2 locally”.
+- Authorized scope: P1 accepted for limited scope with P1-E pending. Start P2 locally. Hyperdrive and hosted proofs stay pending and are carried into later phases.
 
 ## Recorded user direction
 

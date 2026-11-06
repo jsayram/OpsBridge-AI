@@ -6,7 +6,7 @@ Updated: 2026-11-06 (America/New_York), end of the local P1 phase session.
 
 Build an honest, secure enterprise operations portfolio aligned to the Development & Automation Lead posting. Application implementation resumed on 2026-11-06 as phased sessions. P0 is coordinator accepted for limited scope. The local part of P1 has run on `phase/p1-shell`, which is not pushed. A guest can launch, reset and browse a private workspace on a local machine. Nothing is deployed, owner identity has only met a test double, and no business workflow exists yet.
 
-The source PRD is `OpsBridge_AI_Phased_PRD_v1.0.md`, unchanged. The maintained revision is `PRD.md` version 1.3, with an exact matching `OpsBridge_AI_Phased_PRD_v1.3.md` snapshot. The v1.1 and v1.2 snapshots are kept as history. The original source is preserved unchanged. A source document or scaffold plan is not a working app. No build phase is owner-accepted by this handoff.
+The source PRD is `OpsBridge_AI_Phased_PRD_v1.0.md`, unchanged. The maintained revision is `PRD.md` version 1.4, with an exact matching `OpsBridge_AI_Phased_PRD_v1.4.md` snapshot. The v1.1 and v1.2 snapshots are kept as history. The original source is preserved unchanged. A source document or scaffold plan is not a working app. No build phase is owner-accepted by this handoff.
 
 ## Current architecture decision
 
