@@ -10,6 +10,8 @@ export type EventData = {
   "case.created": { caseRef: string; caseType: string };
   "case.needs_review": { caseRef: string; reason: "intake" | "returned" | "reopened" };
   "approval.completed": { caseRef: string; decision: "approved" | "rejected" };
+  "reconciliation.resolved": { findingRef: string; kind: string };
+  "integration.degraded": { provider: string; status: "degraded" };
 };
 
 export type WorkspaceMode = "owner" | "demo";
@@ -23,9 +25,12 @@ export const eventEnvelope = <T extends keyof EventData>(input: {
   data: EventData[T];
 }) => ({ ...input, version: 1 as const });
 
-// A short display reference. Events leave the system later, so they never carry internal IDs.
-export async function caseRef(id: string): Promise<string> {
+async function shortRef(prefix: string, id: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(id));
   const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  return `CASE-${hex.slice(0, 8).toUpperCase()}`;
+  return `${prefix}-${hex.slice(0, 8).toUpperCase()}`;
 }
+
+// A short display reference. Events leave the system later, so they never carry internal IDs.
+export const caseRef = (id: string) => shortRef("CASE", id);
+export const findingRef = (id: string) => shortRef("FIND", id);

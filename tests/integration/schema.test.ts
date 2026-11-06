@@ -254,6 +254,7 @@ describe("P2.1 schema", () => {
       inventory_items: "canonical_item_code",
       inventory_snapshots: "external_id, source_version, quantity",
       workflow_rules: "name, trigger_event",
+      external_connections: "provider, mode, status",
     };
     let total = 0;
     for (const [table, count] of Object.entries(manifest.scenarioPack.rows) as [string, number][]) {
@@ -286,6 +287,15 @@ describe("P2.1 schema", () => {
       cookie: victim.cookie,
       body: { toQueue: "Seasonal Staffing", reason: "x", expectedCaseVersion: 1 },
     });
+    const sources = await call("/api/v1/integrations", { cookie: victim.cookie });
+    for (const source of sources.json.items) {
+      await call(`/api/v1/integrations/${source.id}/sync`, {
+        method: "POST",
+        cookie: victim.cookie,
+        headers: idempotencyKey(),
+        body: {},
+      });
+    }
     const ready = await call(`/api/v1/cases/${pack["case-3"]?.id}`, { cookie: victim.cookie });
     await call(`/api/v1/approvals/${ready.json.approval.id}/decision`, {
       method: "POST",
@@ -297,6 +307,10 @@ describe("P2.1 schema", () => {
       "consultant_handoffs",
       "outbox",
       "idempotency_keys",
+      "sync_runs",
+      "source_records",
+      "invoices",
+      "reconciliation_findings",
     ]);
     for (const [table, n] of Object.entries(filled)) expect(n, table).toBeGreaterThan(0);
     const mig = await connect("opsbridge_migrator");

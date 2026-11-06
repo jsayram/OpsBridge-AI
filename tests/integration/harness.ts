@@ -191,3 +191,32 @@ export async function counts(workspaceId: string, tables: string[]) {
   await mig.end();
   return out;
 }
+
+export type Source = { id: string; provider: string; status: string; [k: string]: any };
+
+export async function sources(cookie: string): Promise<Record<string, Source>> {
+  const res = await call("/api/v1/integrations", { cookie });
+  return Object.fromEntries(res.json.items.map((s: Source) => [s.provider, s]));
+}
+
+export const sync = (cookie: string, connectionId: string, body: Record<string, unknown> = {}) =>
+  call(`/api/v1/integrations/${connectionId}/sync`, {
+    method: "POST",
+    cookie,
+    headers: idempotencyKey(),
+    body,
+  });
+
+export async function syncAll(cookie: string) {
+  const list = await sources(cookie);
+  const out = [];
+  for (const provider of ["crm_simulator", "erp_simulator", "inventory_simulator"]) {
+    out.push(await sync(cookie, (list[provider] as Source).id));
+  }
+  return out;
+}
+
+export async function findings(cookie: string, query = "limit=100") {
+  const res = await call(`/api/v1/reconciliation?${query}`, { cookie });
+  return res.json.items as any[];
+}

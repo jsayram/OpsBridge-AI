@@ -2,7 +2,7 @@ import { Client, type ClientBase, type QueryResultRow } from "pg";
 import { ApiError } from "./http/errors";
 
 export type Db = Pick<ClientBase, "query">;
-export type { QueryResultRow };
+export type { Client, QueryResultRow };
 
 const CONNECT_TIMEOUT_MS = 10_000;
 
@@ -58,6 +58,14 @@ export const withWorkspace = <T>(
       return fn(db);
     }),
   );
+
+// The same scoping on an open client, for work that spans several short transactions. A sync
+// must never hold a transaction across a network call to a source.
+export const inWorkspaceTx = <T>(db: Client, workspaceId: string, fn: () => Promise<T>) =>
+  inTransaction(db, async () => {
+    await db.query("SELECT set_config('app.workspace_id', $1, true)", [workspaceId]);
+    return fn();
+  });
 
 export const pgCode = (e: unknown): string | undefined =>
   typeof e === "object" && e !== null && "code" in e ? String(e.code) : undefined;

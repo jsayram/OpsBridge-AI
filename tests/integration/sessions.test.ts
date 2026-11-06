@@ -16,7 +16,7 @@ describe("P1-A launch", () => {
     expect(raw).toContain("Path=/");
     expect(raw).toContain("Max-Age=7200");
     expect(raw).not.toContain("Domain");
-    expect(res.json.packVersion).toBe("pack-2");
+    expect(res.json.packVersion).toBe("pack-3");
   });
 
   it("stores only a hash of the token", async () => {

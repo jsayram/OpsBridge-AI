@@ -10,15 +10,36 @@ export type Capability =
   | "cases:review"
   | "cases:reopen"
   | "approvals:decide"
+  | "reconciliation:read"
+  | "reconciliation:advance"
+  | "reconciliation:resolve"
+  | "integrations:read"
+  | "integrations:sync_simulated"
+  | "integrations:recover"
+  | "integrations:live"
+  | "inventory:read"
   | "demo:reset"
   | "demo:switch_role"
   | "admin:access";
 
-const GUEST_BASE: readonly Capability[] = ["cases:read", "demo:reset", "demo:switch_role"];
+const GUEST_BASE: readonly Capability[] = [
+  "cases:read",
+  "reconciliation:read",
+  "integrations:read",
+  "inventory:read",
+  "demo:reset",
+  "demo:switch_role",
+];
 
 const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
   viewer: GUEST_BASE,
-  analyst: [...GUEST_BASE, "cases:edit", "cases:handoff"],
+  analyst: [
+    ...GUEST_BASE,
+    "cases:edit",
+    "cases:handoff",
+    "reconciliation:advance",
+    "integrations:sync_simulated",
+  ],
   manager: [
     ...GUEST_BASE,
     "cases:edit",
@@ -26,6 +47,10 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "cases:review",
     "cases:reopen",
     "approvals:decide",
+    "reconciliation:advance",
+    "reconciliation:resolve",
+    "integrations:sync_simulated",
+    "integrations:recover",
   ],
 };
 
@@ -36,6 +61,14 @@ const OWNER: readonly Capability[] = [
   "cases:review",
   "cases:reopen",
   "approvals:decide",
+  "reconciliation:read",
+  "reconciliation:advance",
+  "reconciliation:resolve",
+  "integrations:read",
+  "integrations:sync_simulated",
+  "integrations:recover",
+  "integrations:live",
+  "inventory:read",
   "admin:access",
 ];
 

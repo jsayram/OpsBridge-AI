@@ -1,6 +1,6 @@
 import type pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { connect, launch, type Guest } from "./harness";
+import { connect, type Guest, launch } from "./harness";
 
 // The P0 proof checks P3.a to P3.u, repeated against the real migrations. Checks on
 // approvals and outbox wait for those tables (P2.4, P4.2).
@@ -240,7 +240,7 @@ describe("isolation and least privilege", () => {
       "SELECT audit_rows, business_rows FROM app.retention_log WHERE workspace_id = $1",
       [victim.workspaceId],
     );
-    expect(rl.rows[0]).toEqual({ audit_rows: 1, business_rows: 37 });
+    expect(rl.rows[0]).toEqual({ audit_rows: 1, business_rows: 39 });
     const survivors = await mig.query(
       "SELECT count(*)::int AS n FROM app.cases WHERE workspace_id = $1",
       [B.workspaceId],
