@@ -20,12 +20,17 @@
   },
   "dependencies": {
     "hono": "4.13.16",
+    "jose": "6.2.15",
+    "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@biomejs/biome": "2.6.6",
     "@cloudflare/workers-types": "5.20261106.1",
+    "@playwright/test": "1.65.0",
+    "@types/pg": "8.15.5",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.2.1",

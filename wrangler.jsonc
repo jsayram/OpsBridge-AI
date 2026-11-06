@@ -8,7 +8,30 @@
     "directory": "dist/client",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/health/*"]
+    "run_worker_first": ["/api/*", "/health/*", "/admin", "/admin/*"]
   },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "vars": { "ENVIRONMENT": "local" },
+  // Local only. The password is a throwaway Docker value and the IDs are placeholders.
+  // Staging config starts from infra/wrangler.staging.template.jsonc after DEC-002.
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "00000000000000000000000000000001",
+      "localConnectionString": "postgres://opsbridge_app:local_dev_only@127.0.0.1:54330/opsbridge_dev?sslmode=disable"
+    },
+    {
+      "binding": "HYPERDRIVE_CLEANUP",
+      "id": "00000000000000000000000000000002",
+      "localConnectionString": "postgres://opsbridge_cleanup:local_dev_only@127.0.0.1:54330/opsbridge_dev?sslmode=disable"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 120, "period": 60 }
+    }
+  ],
+  "triggers": { "crons": ["*/30 * * * *"] }
 }
