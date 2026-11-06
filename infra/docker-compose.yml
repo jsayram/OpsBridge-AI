@@ -1,0 +1,22 @@
+# Local development database only. Bound to loopback, never exposed.
+# The password below is a throwaway local value, not a credential.
+name: opsbridge
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: opsbridge-postgres
+    environment:
+      POSTGRES_USER: opsbridge_admin
+      POSTGRES_PASSWORD: local_dev_only
+      POSTGRES_DB: opsbridge
+    ports:
+      - "127.0.0.1:54330:5432"
+    volumes:
+      - opsbridge-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U opsbridge_admin -d opsbridge"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+volumes:
+  opsbridge-pgdata:

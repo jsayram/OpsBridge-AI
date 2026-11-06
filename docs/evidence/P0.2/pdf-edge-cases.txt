@@ -1,0 +1,7 @@
+# PDF edge behaviour, 2026-11-06T17:17:39Z, wrangler dev local
+synthetic-1p: 200 0.009671s {"totalPages":1,"chars":7414,"head":"Northstar Operations synthetic intake sheet line 0: Fictional Client Ltd, intern"}
+synthetic-imageonly: 200 0.003944s {"totalPages":1,"chars":0,"head":""}
+synthetic-100p: 200 0.157189s {"totalPages":100,"chars":313549,"head":"Synthetic line 0-0 for a fictional operations record, no real data.\nSynthetic li"}
+malformed: 500 0.006343s Internal Server Error
+0.007603s
+note: 'malformed' returned a generic 500 from the spike's unhandled throw; application code must map this to a typed failed-extraction state. Cold-isolate PDF cost is in cpu-profile-run1.json firstTwoActiveMs.

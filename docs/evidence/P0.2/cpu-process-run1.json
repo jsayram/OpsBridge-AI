@@ -1,0 +1,55 @@
+{
+  "takenAt": "2026-11-06T17:16:10.170Z",
+  "method": "ps cputime delta of the user workerd process across N sequential requests; profiler detached",
+  "host": "Apple M1 Max",
+  "results": {
+    "noop": {
+      "n": 300,
+      "processCpuMsPerRequest": 1.3,
+      "wallMsPerRequest": 3.44,
+      "non200": 0
+    },
+    "connect_only": {
+      "n": 300,
+      "processCpuMsPerRequest": 3.1,
+      "wallMsPerRequest": 8.72,
+      "non200": 0
+    },
+    "read_single_statement": {
+      "n": 300,
+      "processCpuMsPerRequest": 3.3,
+      "wallMsPerRequest": 10.43,
+      "non200": 0
+    },
+    "read_explicit_tx": {
+      "n": 300,
+      "processCpuMsPerRequest": 3.77,
+      "wallMsPerRequest": 11.99,
+      "non200": 0
+    },
+    "approve_full_command": {
+      "n": 295,
+      "processCpuMsPerRequest": 4.41,
+      "wallMsPerRequest": 15.97,
+      "non200": 0
+    },
+    "pdf_1p": {
+      "n": 300,
+      "processCpuMsPerRequest": 4.67,
+      "wallMsPerRequest": 5.45,
+      "non200": 0
+    },
+    "pdf_5p": {
+      "n": 300,
+      "processCpuMsPerRequest": 13.07,
+      "wallMsPerRequest": 14.25,
+      "non200": 0
+    },
+    "pdf_20p": {
+      "n": 300,
+      "processCpuMsPerRequest": 45.93,
+      "wallMsPerRequest": 46.14,
+      "non200": 0
+    }
+  }
+}

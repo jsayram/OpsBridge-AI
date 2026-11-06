@@ -1,0 +1,13 @@
+{
+  "name": "opsbridge-spike-p0-2",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "triggers": { "crons": ["*/30 * * * *"] },
+  "hyperdrive": [
+    { "binding": "HYPERDRIVE", "id": "00000000000000000000000000000001",
+      "localConnectionString": "postgres://opsbridge_app:local_dev_only@127.0.0.1:54330/opsbridge?sslmode=disable" },
+    { "binding": "HYPERDRIVE_CLEANUP", "id": "00000000000000000000000000000002",
+      "localConnectionString": "postgres://opsbridge_cleanup:local_dev_only@127.0.0.1:54330/opsbridge?sslmode=disable" }
+  ]
+}
