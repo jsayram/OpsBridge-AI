@@ -1,6 +1,6 @@
 # Deterministic fixture plan
 
-`sample-data/seed-manifest.json` is the contract. `scripts/check-fixtures.mjs` enforces it and runs in CI. `scripts/lib/template-data.mjs` generates the first records at P1.3: the 6 organizations and 120 cases. Everything else arrives with its table, through P2.5.
+`sample-data/seed-manifest.json` is the contract. `scripts/check-fixtures.mjs` enforces it and runs in CI. `scripts/lib/template-data.mjs` generates everything that has a table at P2.5: 6 organizations, 120 cases, assignees, the pack checklists, an approval for every Ready case, 40 document records, 15 findings, 20 inventory snapshots, 30 activity rows and 20 automation rows. Contacts, invoices and dashboard snapshots wait for their tables in P3 and P6. Document rows are metadata only, status Pending with no hash, until P5 generates the fixture PDFs.
 
 ## Rules
 
@@ -17,7 +17,7 @@ See PRD 16.1. The template holds every count below, once. A session gets the pac
 | Layer | Rows | Who writes | When |
 |---|---:|---|---|
 | Template workspace | about 1,500 | Migrator role | Release step |
-| Scenario pack, per session | 35 planned; 5 at P1 (2 customers, 3 cases), the only pack tables that exist yet | `seed_demo_workspace` | Launch and Reset |
+| Scenario pack, per session | 36 at P2.5, one more than planned because a known-item snapshot needs its item row | `seed_demo_workspace` | Launch and Reset |
 
 Local timing: about 2 ms for 35 rows, about 20 ms for 1,500, on Docker Postgres (`docs/evidence/P0.2/db-proofs-run3.json`). At 300 bytes a row, the pack is about 10 KB a session before indexes, so 1 GB of Neon storage isn't the limit that matters. Compute is.
 

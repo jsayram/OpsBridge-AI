@@ -1,6 +1,6 @@
 # Requirements traceability
 
-Updated 2026-11-06 at local P1. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
+Updated 2026-11-06 at local P2. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
 
 Each row points to the artifact that covers the requirement today. Later phases replace "Planned" with code paths, test names and run evidence.
 
@@ -15,16 +15,16 @@ Classification of every posting clause, from the four-page posting re-read on 20
 
 | ID | Requirement | Class | P0 evidence | Status | Owning phases |
 |---|---|---|---|---|---|
-| JOB-01 | Shipping production apps or integrations | Product + Real-experience | Local shell, `docs/reports/P1.md`; nothing shipped | Local only | P1, P2, P7, P8 |
+| JOB-01 | Shipping production apps or integrations | Product + Real-experience | Local app with persistent workflow, `docs/reports/P2.md`; nothing shipped | Local only | P1, P2, P7, P8 |
 | JOB-02 | One modern language | Product | `backend/`, `frontend/` TypeScript scaffold | Scaffold verified locally | P0-P8 |
 | JOB-03 | REST APIs, CRM/ERP, NetSuite a plus | Product; live NetSuite stays an experience gap | `docs/design/openapi.yaml`, `docs/design/INTEGRATION-CONTRACTS.md` | Designed | P0, P3, P7 |
-| JOB-04 | Strong SQL and data modeling | Product | `backend/migrations/0001_foundation.sql`, `tests/integration/`, `docs/evidence/P1.0/` | First migration verified locally | P0, P2, P3, P6 |
+| JOB-04 | Strong SQL and data modeling | Product | `backend/migrations/`, `tests/integration/schema.test.ts`, `tests/integration/approvals.test.ts`, `docs/evidence/P2.5/query-profile.txt` | Verified locally on real Postgres, not Neon | P0, P2, P3, P6 |
 | JOB-05 | Git, code review, agile | Artifact + Real-experience | Branch history, `docs/BACKLOG.md`, package reports | In use | P0-P8 |
 | JOB-06 | Leading or mentoring developers | Real-experience | Engineering standards only; no people-leadership claim | Planned | P0, P7, P8 + interview |
 | JOB-07 | AI tools in the dev workflow | Artifact | Package reports name AI work, review and checks | In use | Every package |
 | JOB-08 | Communication for non-technical people | Artifact | `docs/BUSINESS-BRIEF.md`, teach-backs in package reports | Drafted | P0, P6, P8 |
 | JOB-09 | Ambiguity, iterating quickly | Artifact | `DECISIONS.md`, P0.2 proofs that changed the design | In use | P0-P8 |
-| JOB-10 | Internal tools for consultant workflows | Product | `docs/design/STATE-MACHINES.md`, cases prototype, journey map | Designed | P0, P2, P3 |
+| JOB-10 | Internal tools for consultant workflows | Product | Case queue, checklist, handoff and history: `frontend/src/pages/cases.tsx`, `tests/integration/workflow.test.ts`, `tests/e2e/core.spec.ts` | Verified locally; fictional workflow only | P0, P2, P3 |
 | JOB-11 | Connect an inventory platform | Product (synthetic, read-only) | `docs/design/INTEGRATION-CONTRACTS.md`, fixture plan | Designed | P0, P3, P6 |
 | JOB-12 | Eliminate manual workflow and reporting | Product + Artifact | `docs/BUSINESS-BRIEF.md` before/after map (assumed baseline) | Designed | P0, P3, P4, P6 |
 | JOB-13 | Pilot generative AI | Product (small synthetic pilot) | PRD 10 revisions, eval plan in `docs/design/FIXTURE-PLAN.md` | Designed | P5, P7 |

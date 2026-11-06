@@ -501,7 +501,10 @@ function HandoffSection({
           <div className="form-grid">
             <label className="field">
               Hand off to
-              <select name="target" required>
+              <select name="target" required defaultValue="">
+                <option value="" disabled>
+                  Choose a person or queue
+                </option>
                 {people.data?.items.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
@@ -590,7 +593,7 @@ function WorkflowSection({
     ).then(() => setReason(""));
 
   return (
-    <section className="card">
+    <section className="card stack">
       <h2>Next step</h2>
       {showReason && (
         <label className="field">

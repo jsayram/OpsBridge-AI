@@ -80,7 +80,7 @@ Nothing security-critical is unspecified. These are pending configuration, each 
 | Owner identity provider (DEC-002) | Admin paths return 404. Verifier built against a local test double | P1.5 |
 | `sub` and `iat` in real Access tokens | Unknown subject or missing claim is refused | First real sign-in, see `docs/runbooks/IDENTITY.md` |
 | Rate-limit binding on Workers Free | App runs without it; database quotas remain the hard limit | P1.5 |
-| Hyperdrive repeat of proofs 2 and 3 | Stay local, no release | P1.5 |
+| Hyperdrive repeat of proofs 2 and 3, including the row locks and multi-statement transactions P2 added | Stay local, no release | P1.5 |
 | Neon exposure review | No hosted database | P1.1 |
 | Live AI provider | Fixtures only | P5.3 |
 | PDF extraction location (DEC-003) | No owner upload | P5.1 |

@@ -15,6 +15,14 @@ Transitions not listed here return `409 invalid_transition`. Every transition wr
 | Approved | Closed | reviewer | | |
 | Closed | Needs Review | reviewer, `POST /cases/{id}/reopen` | Reason required, version matches | case.needs_review, payload reason `reopened` |
 
+`POST /cases` creates a case in Intake in one transaction, which is the Draft to Intake step and its `case.created` event. `draft: true` stops at Draft, with no event until the case moves on.
+
+**Checklist states:** `open`, `flagged`, `done`, `not_applicable`. Leaving Intake needs every required item answered or flagged, so a flagged item can reach a reviewer. Entering Ready needs every required item `done` or `not_applicable`. The checklist locks at Ready, and a return to Needs Review unlocks it. Failures return `409 checklist_incomplete` or `409 checklist_locked`.
+
+**Approval statuses:** `pending`, `approved`, `rejected`, `withdrawn`. A PATCH return from Ready withdraws the pending row. Every workflow command takes the case row lock first, so prerequisites can't change between the check and the update.
+
+**Handoff:** any non-closed case, to one person or one queue. An outstanding checklist item does not block it; the history records how many were open.
+
 Reopen reuses `case.needs_review`, so the five-event allowlist in PRD 9.1 does not grow. A reopened or returned case gets a new approval row each time it enters Ready, and the idempotency key uses that row's ID, so a later approval is a new business event and not a duplicate. PATCH can never reach Approved, and only the reopen endpoint leaves Closed.
 
 ## Exception (reconciliation finding)

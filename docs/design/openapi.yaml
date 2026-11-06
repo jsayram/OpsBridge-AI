@@ -3,8 +3,9 @@ info:
   title: OpsBridge AI API
   version: 0.1.0
   description: >
-    P0 outline of the PRD 8.2 surface. Only /health/* exists in the scaffold.
-    Every operation is design until a phase implements it. All records are synthetic.
+    PRD 8.2 surface. Implemented through P2: health, demo, me, summary, cases and their
+    workflow routes, approvals, customers, assignees, and admin status and logout.
+    Every other operation is design until a phase implements it. All records are synthetic.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -133,6 +134,11 @@ paths:
         - { $ref: "#/components/parameters/Limit" }
         - { $ref: "#/components/parameters/Cursor" }
         - { name: status, in: query, schema: { $ref: "#/components/schemas/CaseStatus" } }
+        - { name: queue, in: query, schema: { $ref: "#/components/schemas/Queue" } }
+        - { name: caseType, in: query, schema: { $ref: "#/components/schemas/CaseType" } }
+        - { name: assignee, in: query, description: An assignee ID or the word unassigned, schema: { type: string } }
+        - { name: overdue, in: query, schema: { const: "true" } }
+        - { name: q, in: query, description: Text in the title or client name, schema: { type: string, maxLength: 100 } }
       responses:
         "200":
           description: Page of cases
@@ -160,25 +166,27 @@ paths:
             schema: { $ref: "#/components/schemas/CaseCreate" }
       responses:
         "201":
-          description: Created
+          description: Created, or the stored result of the same key with Idempotency-Replayed
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Case" }
         "400": { $ref: "#/components/responses/Error" }
         "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/v1/cases/{id}:
     parameters:
       - { $ref: "#/components/parameters/Id" }
     get:
       tags: [cases]
       operationId: getCase
-      summary: Read one case
+      summary: One case with checklist, handoffs, latest approval and documents
       responses:
         "200":
-          description: Case
+          description: Case detail
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Case" }
+              schema: { $ref: "#/components/schemas/CaseDetail" }
         "404": { $ref: "#/components/responses/Error" }
     patch:
       tags: [cases]
@@ -196,6 +204,44 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Case" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/v1/cases/{id}/activity:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [cases]
+      operationId: caseActivity
+      summary: Newest first. Empty for shared template cases, whose audit rows are private
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: Page of activity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Activity" }
+                  nextCursor: { type: string }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/customers:
+    get:
+      tags: [cases]
+      operationId: listCustomers
+      summary: Own-workspace pick list for the create form, at most 100
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/assignees:
+    get:
+      tags: [cases]
+      operationId: listAssignees
+      summary: Own-workspace pick list of fictional consultants, at most 100
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
   /api/v1/cases/{id}/reopen:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -248,8 +294,9 @@ paths:
               additionalProperties: false
               required: [state, version]
               properties:
-                state: { enum: [open, done, not_applicable] }
+                state: { enum: [open, flagged, done, not_applicable] }
                 version: { type: integer }
+                evidenceRef: { type: string, maxLength: 200 }
       responses:
         "200": { $ref: "#/components/responses/Accepted" }
         "409": { $ref: "#/components/responses/Error" }
@@ -707,18 +754,49 @@ components:
         caseType: { type: string }
         customer: { type: string }
         status: { $ref: "#/components/schemas/CaseStatus" }
+        queue: { $ref: "#/components/schemas/Queue" }
         assigneeId: { type: [string, "null"], format: uuid }
+        assignee: { type: [string, "null"] }
         dueAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        overdue: { type: boolean }
+        ageDays: { type: integer }
         version: { type: integer }
         readOnly: { type: boolean, description: True for shared template rows }
+    CaseDetail:
+      allOf:
+        - { $ref: "#/components/schemas/Case" }
+        - type: object
+          required: [checklist, handoffs, approval, documents]
+          properties:
+            checklist: { type: array, items: { type: object } }
+            handoffs: { type: array, items: { type: object } }
+            approval: { type: [object, "null"] }
+            documents: { type: array, items: { type: object } }
+    Activity:
+      type: object
+      required: [id, action, actor, occurredAt]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        actor: { type: string, description: The role that acted. Session and user IDs stay server-side }
+        summary: { type: [string, "null"] }
+        occurredAt: { type: string, format: date-time }
+    Queue:
+      enum: [Field Services, Seasonal Staffing]
+    CaseType:
+      enum: [Onboarding, Billing, Renewal, Field issue]
     CaseCreate:
       type: object
       additionalProperties: false
-      required: [customerId, caseType]
+      required: [title, customerId, caseType]
       properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
         customerId: { type: string, format: uuid }
-        caseType: { type: string, maxLength: 32 }
+        caseType: { $ref: "#/components/schemas/CaseType" }
+        queue: { $ref: "#/components/schemas/Queue" }
         dueAt: { type: string, format: date-time }
+        draft: { type: boolean, description: Stay in Draft. Otherwise the case starts in Intake }
     CaseUpdate:
       type: object
       additionalProperties: false
@@ -729,12 +807,11 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-          description: P1 implements title and version only. The other fields arrive with P2.
         status:
           enum: [Intake, Needs Review, Ready, Closed]
           description: Approved is reachable only through the approval command.
         reason: { type: string, maxLength: 500, description: Required for Ready to Needs Review }
-        dueAt: { type: string, format: date-time }
+        dueAt: { type: [string, "null"], format: date-time }
     Reopen:
       type: object
       additionalProperties: false
@@ -745,9 +822,11 @@ components:
     Handoff:
       type: object
       additionalProperties: false
-      required: [toAssigneeId, reason, expectedCaseVersion]
+      required: [reason, expectedCaseVersion]
+      description: Name exactly one of toAssigneeId and toQueue.
       properties:
         toAssigneeId: { type: string, format: uuid }
+        toQueue: { $ref: "#/components/schemas/Queue" }
         reason: { type: string, maxLength: 500 }
         dueAt: { type: string, format: date-time }
         expectedCaseVersion: { type: integer }

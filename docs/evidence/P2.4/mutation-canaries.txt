@@ -1,0 +1,31 @@
+CAUGHT   M1 approval skips the outbox insert: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > approve commits the decision, state, audit and outbox
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > the outbox row matches the published envelope schema 
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > ADR proof 2 repeat: 20 concurrent decisions, 30 round
+CAUGHT   M2 approval skips the audit row: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > approve commits the decision, state, audit and outbox
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > ADR proof 2 repeat: 20 concurrent decisions, 30 round
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > the same key concurrently gives one effect and the sa
+CAUGHT   M3 decision commits before the state change (split transaction): ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > the same key concurrently gives one effect and the sa
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > injected failure at outbox (BEFORE INSERT, the last i
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > injected failure at audit_events (BEFORE INSERT, the 
+CAUGHT   M4 approval drops both version checks: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > a stale case version rolls back the approval too
+CAUGHT   M5 approval drops the already-decided check: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/approvals.test.ts > P2.4 atomic approval > deciding twice with different keys is a typed conflic
+CAUGHT   M6 idempotency ignores a changed body: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/cases-api.test.ts > P2.2 create > same key with a different body is a 409, and a failed command 
+CAUGHT   M8 checklist gate removed: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/workflow.test.ts > P2.3 transitions through the API > required checklist items gate Needs Review
+    FAIL  tests/integration/workflow.test.ts > P2.3 transitions through the API > a checklist change can't slip past a trans
+CAUGHT   M9 handoff accepts any assignee: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/workflow.test.ts > P2.3 handoffs, JOB-TEST-02 > an observer, another workspace's person and a ra
+    FAIL  tests/integration/workflow.test.ts > P2.3 handoffs, JOB-TEST-02 > moves to a queue, clears the assignee, and refus
+CAUGHT   M10 commands stop taking the case lock: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/workflow.test.ts > P2.3 transitions through the API > a checklist change can't slip past a trans
+CAUGHT   M11 purge takes the workspace lock first again: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadloc
+CAUGHT   M12 runtime role can rewrite the outbox: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+    FAIL  tests/integration/schema.test.ts > P2.1 schema > runtime role can't write the template, another workspace, or hist
+survivors: 0

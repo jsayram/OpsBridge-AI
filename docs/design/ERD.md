@@ -1,6 +1,6 @@
 # Entity relationship design
 
-This is the schema the migrations must implement. `backend/migrations/0001_foundation.sql` (P1) covers workspaces, users, memberships, demo sessions, demo quota, customers, cases, audit events and retention log. P2.1 adds the rest with new migrations. `spikes/p0.2/sql/001_schema.sql` was the earlier proof on a subset.
+This is the schema the migrations implement. `backend/migrations/0001_foundation.sql` (P1) covers workspaces, users, memberships, demo sessions, demo quota, customers, cases, audit events and retention log. `0002_expiry_lock_order.sql` fixes the reset and purge lock order. `0003_core_records.sql` (P2.1) adds everything below except `external_connections`, `sync_runs`, `source_definition_mappings` and `metric_snapshots`, which arrive with P3 and P6. `spikes/p0.2/sql/001_schema.sql` was the earlier proof on a subset.
 
 Conventions: UUID keys, UTC `timestamptz`, `workspace_id` on every business table, composite primary keys `(workspace_id, id)` so child foreign keys carry the workspace. Field lists match PRD 7 and 7.3.
 
@@ -10,6 +10,8 @@ erDiagram
   users ||--o{ memberships : joins
   workspaces ||--o{ demo_sessions : has
   workspaces ||--o{ customers : owns
+  workspaces ||--o{ assignees : has
+  assignees ||--o{ cases : holds
   workspaces ||--o{ cases : owns
   customers ||--o{ cases : for
   cases ||--o{ documents : has
@@ -64,12 +66,21 @@ erDiagram
     uuid customer_id FK
     text case_type
     text status
-    uuid assignee_id
+    text queue
+    uuid assignee_id FK
     timestamptz due_at
     int version }
+  assignees { uuid workspace_id PK
+    uuid id PK
+    text display_name
+    text team
+    bool can_receive_cases
+    bool active }
   documents { uuid workspace_id PK
     uuid id PK
     uuid case_id FK
+    text title
+    text category
     text object_key "owner uploads"
     text fixture_id "guest path"
     bytea sha256
@@ -81,8 +92,9 @@ erDiagram
     uuid case_id FK
     text proposed_action
     jsonb proposed_payload
-    text status
-    uuid actor_id
+    text status "pending, approved, rejected, withdrawn"
+    text requested_by
+    text actor_id
     timestamptz decided_at
     text reason }
   ai_reviews { uuid workspace_id PK
@@ -112,7 +124,8 @@ erDiagram
   outbox { uuid workspace_id PK
     uuid id PK
     text event_type
-    text payload_ref
+    text payload_ref "short case or finding reference"
+    jsonb payload "the event envelope"
     text idempotency_key UK
     text dispatch_state
     text delivery_evidence
@@ -124,8 +137,10 @@ erDiagram
     uuid workspace_id FK
     text actor_type
     text actor_id
+    text actor_role
     text action
     text target
+    text summary
     text before_hash
     text after_hash
     text request_id
@@ -145,7 +160,11 @@ erDiagram
 
 Tables without a line in the diagram but with the same conventions: `consultant_handoffs`, `case_checklist_items`, `external_connections`, `external_record_links`, `sync_runs`, `workflow_rules`, `metric_snapshots`, `inventory_items`, `inventory_snapshots`, `source_definition_mappings`, `customer_source_relationships`. Their fields are in PRD 7 and 7.3 and are not repeated here, so the PRD stays the single list.
 
-P1 additions not in the diagram: `users.sessions_valid_after` (owner revocation), `workspaces.seed_clock_shift` (recorded date shift), and `pack_key` on customers and cases, which marks template rows that belong to the scenario pack. `cases.assignee_id` has no foreign key yet because assignees arrive in P2.3.
+Additions not in the diagram: `users.sessions_valid_after` (owner revocation), `workspaces.seed_clock_shift` (recorded date shift), and `pack_key` on the tables a pack copies, which marks template rows that belong to the scenario pack. `demo_limits.write_cap` bounds what one demo workspace can write.
+
+**`assignees` is not `memberships`.** Memberships describe real sign-ins and the runtime role can't read them (D-018). A demo workspace has no real people, so its fictional consultants live in their own workspace-scoped table with the same composite keys. The manifest's old `memberships` pack row is now `assignees` (D-029).
+
+Grants are narrower than PRD 7.4 allows: documents, AI reviews, links, relationships, findings, inventory, rules and assignees are read-only for the runtime role until the phase that writes them (D-028). A later phase widens them in its own migration.
 
 ## Constraints that carry weight
 
@@ -157,8 +176,15 @@ P1 additions not in the diagram: `users.sessions_valid_after` (owner revocation)
 | `UNIQUE (workspace_id, provider, external_type, external_id)` | Repeat sync can't duplicate |
 | `CHECK ((object_key IS NULL) <> (fixture_id IS NULL))` on documents | A document is an upload or a fixture |
 | `CHECK (status <> 'Deferred' OR defer_until IS NOT NULL)` | A deferral always has a date |
+| `UNIQUE (workspace_id, case_id) WHERE status = 'pending'` on approvals | One open approval per case |
+| `UNIQUE (workspace_id, provider, external_id, source_version)` on inventory snapshots | A replayed source fact can't duplicate |
+| `CHECK ((item_id IS NULL) <> (unresolved_source_ref IS NULL))` on snapshots | A snapshot names an item or says it couldn't |
+| `CHECK (status <> 'Ready' OR (sha256 IS NOT NULL AND verified_type IS NOT NULL))` on documents | Ready means the bytes were checked |
+| `CHECK (delivery_evidence <> 'confirmed' OR evidence_ref IS NOT NULL)` on outbox | Confirmed always names its evidence |
 | Status and enum CHECKs | The database rejects vocabulary drift |
 
 ## Indexes from day one
 
 `outbox (next_attempt_at) WHERE dispatch_state IN ('pending','retry_scheduled','processing')`, `cases (workspace_id, status, created_at)`, `documents (workspace_id, case_id)`, `workspaces (expires_at) WHERE mode = 'demo'`. Others wait for `EXPLAIN ANALYZE` evidence (PRD 7.1).
+
+Added in P2 with that evidence, `docs/evidence/P2.5/query-profile.txt`: `cases (workspace_id, created_at DESC, id DESC)` for keyset pages, `audit_events (workspace_id, target, id)` for case activity, and `consultant_handoffs (workspace_id, case_id, occurred_at)`.

@@ -431,6 +431,7 @@ tr[aria-selected="true"] .chip {
 /* ---------- controls ---------- */
 button,
 select,
+input[type="date"],
 input[type="search"],
 input[type="text"] {
   font: inherit;
@@ -860,4 +861,21 @@ textarea {
   gap: 12px;
   justify-content: space-between;
   align-items: center;
+}
+.facts dd {
+  margin: 0;
+}
+.filters {
+  margin-bottom: var(--s-3);
+}
+input[type="date"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"] input[type="date"] {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) input[type="date"] {
+    color-scheme: light;
+  }
 }

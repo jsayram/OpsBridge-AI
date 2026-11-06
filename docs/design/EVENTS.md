@@ -1,6 +1,6 @@
 # Event outline
 
-The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON Schema is `docs/design/event-envelope.schema.json`.
+The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON Schema is `docs/design/event-envelope.schema.json`. From P2.4 the outbox stores the whole envelope in `payload`, written in the business transaction, and a test holds its keys to the schema. Nothing is sent before P4.
 
 ## Envelope
 

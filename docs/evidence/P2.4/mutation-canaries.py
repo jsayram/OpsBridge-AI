@@ -27,8 +27,6 @@ M = [
      'if (approval?.status !== "pending") {', 'if (false) {', "approvals"),
     ("M6 idempotency ignores a changed body", RECS,
      'if (rows[0]?.hash !== requestHash) {', 'if (false) {', "cases-api"),
-    ("M7 idempotency stores no response", RECS,
-     'return { ...result, replayed: false };', 'return { ...result, replayed: false, status: result.status };\n  // mutated', None),
     ("M8 checklist gate removed", CMDS,
      'if (checklistBlocks(to, items)) {', 'if (false && checklistBlocks(to, items)) {', "workflow"),
     ("M9 handoff accepts any assignee", CMDS,
@@ -45,8 +43,6 @@ M = [
 
 survived = 0
 for name, path, old, new, target in M:
-    if target is None:
-        continue
     src = open(path).read()
     if old not in src:
         print(f"SETUP ERROR {name}: pattern not found")
