@@ -8,7 +8,7 @@ Verified: 2026-11-06T16:35:00-05:00, P2 rows and every row they replaced; PRD an
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
 | `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `dcf59fbf7f8e17346c955744f55d7935e6e934a6bacd7ed4f30d3a48fd706ecd` | 17883 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `1bd0ec2d79684eda654de22a184ffab3f3b27d4ece07acf49c0e0939e3489be1` | 11866 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `cb1cd2b79fffdfc41b2797dde19ca736c6db47cb1a72cd3e933a9f6e7e6cde45` | 12350 | Verified 2026-11-06, P3 session start; prior note matched `21dfc35` before overwrite |
 | `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `afd648111c819933a6d547f349a882fd8b639070eb4516be5750c93b4def5f86` | 12621 | Verified |
 | `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `4fd1ebdb8cef596130cceef69dce8c731a8185ae8e77bf23ae631285cd1e83ac` | 8390 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |
