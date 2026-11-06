@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-06 (America/New_York), end of the local P1 phase session.
+Updated: 2026-11-06 (America/New_York), end of the local P2 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -8,7 +8,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 |---|---|---:|---|---|---|---|---|---|
 | P0 Foundation/design | P0.1–P0.6 | 6 | Run | Docs, spike, scaffold on `phase/p0-foundation` | Local checks passed; P0-C partial; hosted proofs pending; see `docs/reports/P0.md` | | No | No |
 | P1 Hosted shell/identity | P1.1–P1.5 | 5 | Run locally | Local shell, sessions, identity boundary on `phase/p1-shell` | Local checks passed at `5c4c18c`; P1-E pending; identity against a test double only; see `docs/reports/P1.md` | | No | No |
-| P2 Records/audit | P2.1–P2.5 | 5 | Planned | No | No | No | No | No |
+| P2 Records/audit | P2.1–P2.5 | 5 | Run locally | Case workflow, approvals, audit and outbox insert on `phase/p2-core` | Local checks passed; P2-A to P2-E met locally, hosted repeats pending; see `docs/reports/P2.md` | | No | No |
 | P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Planned | No | No | No | No | No |
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Planned | No | No | No | No | No |
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Planned | No | No | No | No | No |
@@ -26,6 +26,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P1:** Local scope reviewed by the master on 2026-11-06 at `12d1172`, and `npm run ci:local` was rerun and passed: 48 Playwright passed, 6 skipped. P1-A to P1-D and P1-F are met locally, P1-C against a labeled test double. P1-E is pending. Coordinator accepted for limited scope under Jose's DEC-007 answer, “Start P2 locally”, which is the recorded deferral naming P1-E. Reset racing purge at the expiry boundary is unconfirmed and carries forward. Owner Accepted stays empty. Nothing from P1 is pushed, merged or deployed.
 
+**P2:** Local run on `phase/p2-core` from `94c43fc`, waiting for coordinator review. P2-A to P2-E are met locally on Docker Postgres. Hyperdrive, Neon and hosted restore are not in any check. The P1 open item is closed: reset racing purge at the expiry boundary was a real deadlock, reproduced and fixed. DEC-007 covers starting P2 with P1-E pending. Owner Accepted stays empty. Nothing from P2 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
@@ -41,11 +43,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P1.3 | Local run | Done: sessions, reset, quotas, seed, scoped reads, cron purge | Two guests plus owner matrix, P3 checks on real migrations, mutation canaries; Hyperdrive not in path | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
 | P1.4 | Local run | Done: shell, states, request IDs, logs, CSP | Playwright on workerd in Chromium, axe, keyboard, reduced motion, phone; no Safari or screen reader | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
 | P1.5 | Local preparation only | Partial: reports, setup steps, P2 brief | Clean-copy CI on Node 22; no staging proof | Master reviewed 2026-11-06; clean-copy CI rerun passed at 12d1172 | | No | No |
-| P2.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P2.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P2.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P2.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P2.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P2.1 | Local run | Done: migrations 0002 and 0003, pack-2, repository layer base | Empty-database migrate, constraints, keys, grants, purge sweep, two-seed comparison on real Postgres; Hyperdrive not in path | Not reviewed | | No | No |
+| P2.2 | Local run | Done: list, search, create, update, keyset pages, idempotent create, screens | ID swap, mass assignment, stale, concurrent edit, pagination, E2E-05, Chromium | Not reviewed | | No | No |
+| P2.3 | Local run | Done: state machine, checklist gates, handoffs, reopen, queues, aging | Legal and illegal moves, prerequisites, JOB-TEST-02, race with checklist | Not reviewed | | No | No |
+| P2.4 | Local run | Done: atomic approval, envelope, audit, outbox insert; dispatcher stays in P4 | ADR proof 2 on real migrations, 30 of 30; injected failure at 4 points; 14 canaries; Hyperdrive not in path | Not reviewed | | No | No |
+| P2.5 | Local run | Done: 1,000-case profile, restart and restore proofs, core E2E, recovery runbook, reports, P3 brief | Local only; hosted restore is P7.3 | Not reviewed | | No | No |
 | P3.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P3.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P3.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
