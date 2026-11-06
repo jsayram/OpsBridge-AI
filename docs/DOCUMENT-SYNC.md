@@ -1,6 +1,6 @@
 # OpsBridge AI documentation synchronization inventory
 
-Verified: 2026-11-06T16:35:00-05:00, P2 rows and every row they replaced; PRD and other rows unchanged since 2026-11-06T15:24:20-05:00. Vault: `Jose-Ramirez-Vault`. All writes used the official Obsidian CLI, and every note was read back through the CLI and compared with the exact bytes intended. Destination bytes were checked against the previous mirrors before overwriting, and no concurrent edit was found. A later source edit invalidates the matching row.
+Verified: 2026-11-06T17:55:00-05:00, P3 rows and every row they replaced; PRD and other rows unchanged since 2026-11-06T15:24:20-05:00. Vault: `Jose-Ramirez-Vault`. All writes used the official Obsidian CLI, one note at a time with a hard timeout, and every note was read back through the CLI and compared with the exact bytes intended. The ledger, hub, phase guide and both logs were read and matched to known content before overwriting. The master inbox, handoff and P3 phase brief were read but not compared byte for byte first; no other writer is known. A later source edit invalidates the matching row.
 
 | Source | Vault destination | SHA-256 (source = read-back) | Bytes | Outcome |
 |---|---|---|---:|---|
@@ -8,9 +8,9 @@ Verified: 2026-11-06T16:35:00-05:00, P2 rows and every row they replaced; PRD an
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
 | `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `dcf59fbf7f8e17346c955744f55d7935e6e934a6bacd7ed4f30d3a48fd706ecd` | 17883 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `cb1cd2b79fffdfc41b2797dde19ca736c6db47cb1a72cd3e933a9f6e7e6cde45` | 12350 | Verified 2026-11-06, P3 session start; prior note matched `21dfc35` before overwrite |
-| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `afd648111c819933a6d547f349a882fd8b639070eb4516be5750c93b4def5f86` | 12621 | Verified |
-| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `4fd1ebdb8cef596130cceef69dce8c731a8185ae8e77bf23ae631285cd1e83ac` | 8390 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `127f94922922a99a31dd8e9baab77d6a2b5a552400b7a6420b85070ad91504d1` | 14159 | Verified |
+| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `bc7ec5d3a08cbd254929f5a9a5fcaa1f3b66516671ace25d02de16fa81896ac6` | 13773 | Verified |
+| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `d5bc222c10f1037af40eac58bd58b64c1ac31edb001e830a88d19cf9834ee061` | 8773 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |
 | `templates/work-package-report.md` | `Projects/OpsBridge AI/Templates/work-package-report.md` | `5ef61afc8dab62d10dc37f052e56e2be679020fe0d9e48adb84587da26be671e` | 2406 | Verified |
 | `templates/phase-review.md` | `Projects/OpsBridge AI/Templates/phase-review.md` | `bdbb64ff92f86d1f9b6ffcea9ff51ba90b897d76715b0a823a6f51d19bbc3734` | 1785 | Verified |
@@ -24,11 +24,11 @@ Verified: 2026-11-06T16:35:00-05:00, P2 rows and every row they replaced; PRD an
 | `docs/briefs/P1.md` | `Projects/OpsBridge AI/Phases/P1/P1 - Phase brief.md` | `d84ab74e37066d5fc981861e61ada9bc318a19d799d9621bcd44bb42b7a2f7eb` | 5180 | Verified |
 | PRD Section 14 P0; generated phase guide | `Projects/OpsBridge AI/Phases/P0.md` | `8e5ee5b0473119a2ea1e9fabea0698739fcf07d82b573f45a28e589d961f7d93` | 5544 | Verified |
 | PRD Section 14 P1; generated phase guide | `Projects/OpsBridge AI/Phases/P1.md` | `3df879acd3dee92c1ff1362f5e78e622c6bafa9a17ebb9913af43c8fa27a846c` | 5400 | Verified |
-| Generated coordinator project hub | `Projects/OpsBridge AI/OpsBridge AI.md` | `41850e43e1887fa682e99eabc0ef66a9a295dfda740748ece55ed02f318c3ba7` | 4427 | Verified |
-| Generated decision log, appended | `Projects/OpsBridge AI/Decision log.md` | `eae6da39a7830953f2f66fa90eadd59491b0465ce669c0eed45637aaa926bd0d` | 5125 | Verified |
-| Generated session log, appended | `Projects/OpsBridge AI/Session log.md` | `b41fa690aba6a5716502301f664452bedecda0d6630fa0da21bec0e577f8689b` | 9209 | Verified |
+| Generated coordinator project hub | `Projects/OpsBridge AI/OpsBridge AI.md` | `bf8233c9d6bc87b14cb42c4464fabbeb6dba8d86aa2e7ecb65083cd7b5807e78` | 4751 | Verified |
+| Generated decision log, appended | `Projects/OpsBridge AI/Decision log.md` | `ee7a61ab199301b14df7dbdbf7ad331777e255b5d41e6004f80c7dc2a4ae19c0` | 5829 | Verified |
+| Generated session log, appended | `Projects/OpsBridge AI/Session log.md` | `e5bb592a4a7587c82f19550c04e8b1026255eab144b1c8316735def4443e0879` | 11429 | Verified |
 | PRD Section 14 P2; generated phase guide | `Projects/OpsBridge AI/Phases/P2.md` | `11b559ef6dd21a0b0c5772486fc7ee422d9f35a654c4ee6e4f8b3b6868226770` | 4261 | Verified |
-| PRD Section 14 P3; generated phase guide | `Projects/OpsBridge AI/Phases/P3.md` | `1cc66d4c6918ac993a87db9c3f5f82025aa7ab5add163998357adbcedc428511` | 5415 | Verified, unchanged content |
+| PRD Section 14 P3; generated phase guide | `Projects/OpsBridge AI/Phases/P3.md` | `598a90a9cefefb228fd2e19df509160736a605513306fdea0223c84559bd0844` | 6239 | Verified |
 | PRD Section 14 P4; generated phase guide | `Projects/OpsBridge AI/Phases/P4.md` | `2f9ccd4fa240ec24eba3b5f56bc7802e4c74df3bec672e7c8a44db263526578e` | 4316 | Verified, unchanged content |
 | PRD Section 14 P5; generated phase guide | `Projects/OpsBridge AI/Phases/P5.md` | `165990f1ede76a62154a593bafa648e078023abc3f626a5e796e24d9f3bb9562` | 4366 | Verified, unchanged content |
 | PRD Section 14 P6; generated phase guide | `Projects/OpsBridge AI/Phases/P6.md` | `beaf2e1e3743a82d142804d2ca1a74c184d6c6cabc3d4cf670218da102121011` | 4219 | Verified, unchanged content |
@@ -48,6 +48,15 @@ Verified: 2026-11-06T16:35:00-05:00, P2 rows and every row they replaced; PRD an
 | `docs/briefs/P2.4.md` + `docs/reports/P2.4.md` | `Projects/OpsBridge AI/Phases/P2/P2.4 - Atomic approvals and audit events.md` | `74d9bfaa02fb2634242c0faaebb2ccd3f623cf48eb788226d8c04f3405f23aa1` | 6303 | Verified |
 | `docs/briefs/P2.5.md` + `docs/reports/P2.5.md` | `Projects/OpsBridge AI/Phases/P2/P2.5 - Reproducibility and core gate.md` | `bf70fb376b333bc708bf832c7aa5fb05993069232dd2e7b05dee984448b31275` | 6340 | Verified |
 | `docs/reports/P2.md` | `Projects/OpsBridge AI/Phases/P2/P2 - Phase review.md` | `4513b1f58d3af1056a348dff27163103b5df0960c52121255ed4f988b76bba79` | 7145 | Verified |
-| `docs/briefs/P3.md` | `Projects/OpsBridge AI/Phases/P3/P3 - Phase brief.md` | `ec32d71c53a5288070651e92c968d577f46a937617bd90a663102c3ff5ef705e` | 6511 | Verified |
+| `docs/briefs/P3.md` | `Projects/OpsBridge AI/Phases/P3/P3 - Phase brief.md` | `ef569fc54b0e3195d9d8665c9e1bc2665198a17e983f5197783088bb0306acb3` | 6554 | Verified |
+| `docs/briefs/P3.1.md` + `docs/reports/P3.1.md` | `Projects/OpsBridge AI/Phases/P3/P3.1 - Source contracts and business definitions.md` | `e0b8b0c36d5e00ff255862c46da651380dae1d92ca7b368579460a69b1c27ad4` | 6491 | Verified |
+| `docs/briefs/P3.2.md` + `docs/reports/P3.2.md` | `Projects/OpsBridge AI/Phases/P3/P3.2 - Simulated source ingestion.md` | `71745f9d9f52d748a97a32209b5fac0966c0eb23b59953e8460143ae7407c381` | 6547 | Verified |
+| `docs/briefs/P3.3.md` + `docs/reports/P3.3.md` | `Projects/OpsBridge AI/Phases/P3/P3.3 - Salesforce read-only test connection.md` | `700d9c6d5c1dadcde4659c795603d3a366ff0984a0b317da6604e85911b2e17b` | 6304 | Verified |
+| `docs/briefs/P3.4.md` + `docs/reports/P3.4.md` | `Projects/OpsBridge AI/Phases/P3/P3.4 - Evidence-led reconciliation.md` | `50388ac4228e8de8c9b265cc00b248f723fa1f87d8d58308550b4726713283c0` | 6773 | Verified |
+| `docs/briefs/P3.5.md` + `docs/reports/P3.5.md` | `Projects/OpsBridge AI/Phases/P3/P3.5 - Inventory and consultant integration slice.md` | `c25e0a9cca121dbf22e0b52da220b446a73f80694fca2ed615678daf003453d9` | 5991 | Verified |
+| `docs/briefs/P3.6.md` + `docs/reports/P3.6.md` | `Projects/OpsBridge AI/Phases/P3/P3.6 - Failure recovery and integration gate.md` | `9179f59cfcc8e6cd96d2cab5019946cfc1def9e3ca23d22fc5015b38d4522e25` | 5672 | Verified |
+| `docs/reports/P3.md` | `Projects/OpsBridge AI/Phases/P3/P3 - Phase review.md` | `86357fe186ccb8a96fc37662c031df4d446bf3de3d94b73625e77980d4a3442a` | 10531 | Verified |
+| `docs/briefs/P4.md` | `Projects/OpsBridge AI/Phases/P4/P4 - Phase brief.md` | `8c8da4357b48d60167702876cd97a0a3fb39bb6c4c43309cc7b46f4613df89ab` | 6488 | Verified |
+| `docs/runbooks/CONNECTORS.md` | `Projects/OpsBridge AI/Phases/P3/Connector runbook.md` | `5c9127ff95f617906f8d958184b4f91dc730e868e77b67ef45d3e283ee3df1d0` | 6931 | Verified |
 
 Package notes join the brief and report for that package, separated by a rule. The separate vault `Sync Manifest.md` holds this same table and is not listed in itself. PRD source of truth is the project `PRD.md`, and `OpsBridge_AI_Phased_PRD_v1.4.md` is byte-identical. See `docs/VAULT-WORKFLOW.md` for the procedure.
