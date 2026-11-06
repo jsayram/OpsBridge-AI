@@ -1,0 +1,13 @@
+# P0.3 checks, 2026-11-06T17:27:20Z
+$ redocly lint docs/design/openapi.yaml
+Woohoo! Your API description is valid. 🎉
+You have 8 warnings.
+
+$ event schema: 5 valid, 3 invalid samples
+good [ true, true, true, true, true ]
+bad [ false, false, false ]
+$ mermaid parse
+ok ARCHITECTURE.md flowchart-v2
+ok ERD.md er
+$ grep TBD in security design
+none
