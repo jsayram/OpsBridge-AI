@@ -1,4 +1,4 @@
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, type ReactNode, useRef, useState } from "react";
 import { ApiFailure, api, intentKeys } from "../api";
 import { ErrorCard, SimBadge, Skeleton, StatusChip } from "../components/ui";
 import { Link, useRouteFocus } from "../router";
@@ -124,6 +124,14 @@ const FRESHNESS: Record<string, string> = {
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString() : "Not yet");
 const kindLabel = (kind: string) => KIND_LABEL[kind] ?? kind;
 
+// A table that scrolls sideways and holds no link still has to be reachable from the keyboard.
+const ScrollRegion = ({ label, children }: { label: string; children: ReactNode }) => (
+  // biome-ignore lint/a11y/noNoninteractiveTabindex: the region scrolls, so it needs focus
+  <section className="tscroll" tabIndex={0} aria-label={label}>
+    {children}
+  </section>
+);
+
 function useCapability(capability: string) {
   const { state } = useSession();
   return state.status === "ready" && can(state.me, capability);
@@ -214,12 +222,7 @@ export function Reconciliation() {
         <details className="card">
           <summary>Business dictionary: what each source means by these words</summary>
           {dictionary.data && (
-            <div
-              className="tscroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Business dictionary table"
-            >
+            <ScrollRegion label="Business dictionary table">
               <table>
                 <caption>Stewards are fictional roles.</caption>
                 <thead>
@@ -245,7 +248,7 @@ export function Reconciliation() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           )}
         </details>
       </div>
@@ -713,12 +716,7 @@ export function Inventory() {
             {item.snapshots.length === 0 ? (
               <p className="muted">No source snapshot yet.</p>
             ) : (
-              <div
-                className="tscroll"
-                tabIndex={0}
-                role="region"
-                aria-label={`${item.code} snapshots`}
-              >
+              <ScrollRegion label={`${item.code} snapshots`}>
                 <table>
                   <caption>Newest source version of each record.</caption>
                   <SnapshotHead />
@@ -726,7 +724,7 @@ export function Inventory() {
                     <SnapshotRows rows={item.snapshots} />
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
             )}
           </section>
         ))}
@@ -734,7 +732,7 @@ export function Inventory() {
           <section className="card">
             <h2>Not matched to an item</h2>
             <p className="muted">Kept as source facts. No item was invented for them.</p>
-            <div className="tscroll" tabIndex={0} role="region" aria-label="Unmatched snapshots">
+            <ScrollRegion label="Unmatched snapshots">
               <table>
                 <caption>Each one has a finding in Reconciliation.</caption>
                 <SnapshotHead />
@@ -742,7 +740,7 @@ export function Inventory() {
                   <SnapshotRows rows={data.unresolved} />
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
           </section>
         )}
       </div>
