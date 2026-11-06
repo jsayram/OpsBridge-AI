@@ -1,0 +1,9 @@
+title = "OpsBridge AI"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Loopback-only throwaway Postgres value used by local Docker and the P0.2 spike"
+regexes = ['''local_dev_only''']
+paths = ['''package-lock\.json''', '''spikes/p0\.2/package-lock\.json''']

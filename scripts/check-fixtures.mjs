@@ -8,27 +8,42 @@ const m = JSON.parse(readFileSync("sample-data/seed-manifest.json", "utf8"));
 const t = m.template;
 const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
 const errors = [];
-const need = (ok, msg) => { if (!ok) errors.push(msg); };
+const need = (ok, msg) => {
+  if (!ok) errors.push(msg);
+};
 
 need(t.organizations >= 6, "6 organizations");
 need(t.contacts >= 40, "40 contacts");
 need(t.cases.total >= 120 && sum(t.cases.byStatus) === t.cases.total, "120 cases across statuses");
 need(Object.keys(t.cases.byStatus).length === 6, "cases span all six statuses");
 need(t.cases.needingReview >= 20, "20 cases needing review");
-need(t.documents.total >= 40 && t.documents.standard + t.documents.messy + t.documents.adversarial === t.documents.total, "40 documents");
-need(t.documents.standard >= 20 && t.documents.messy >= 10 && t.documents.adversarial >= 10, "document categories");
+need(
+  t.documents.total >= 40 &&
+    t.documents.standard + t.documents.messy + t.documents.adversarial === t.documents.total,
+  "40 documents",
+);
+need(
+  t.documents.standard >= 20 && t.documents.messy >= 10 && t.documents.adversarial >= 10,
+  "document categories",
+);
 need(t.invoices >= 80, "80 invoices");
 need(t.inventoryReferences >= 20, "20 inventory references");
 need(t.reconciliationDiscrepancies >= 15, "15 discrepancies");
 need(t.activityEvents >= 30, "30 activity events");
-need(t.automationEvents.total >= 20 && sum(t.automationEvents.byLabel) === t.automationEvents.total, "20 automation events");
+need(
+  t.automationEvents.total >= 20 && sum(t.automationEvents.byLabel) === t.automationEvents.total,
+  "20 automation events",
+);
 need(!("Delivered" in t.automationEvents.byLabel), "no Delivered label");
 need(t.snapshotDays >= 90, "90 days of snapshots");
 need(t.teams.length >= 2, "two teams");
 need(new Set(m.namedFixtures.map((f) => f.prd)).size === 8, "named fixtures 1 to 8");
 const packRows = sum(m.scenarioPack.rows);
 need(packRows <= 40, `scenario pack stays small, got ${packRows}`);
-need(m.organizationNames.every((n) => n.endsWith("(fictional)")), "organization names marked fictional");
+need(
+  m.organizationNames.every((n) => n.endsWith("(fictional)")),
+  "organization names marked fictional",
+);
 
 const banned = [
   [/\b\d{3}-\d{2}-\d{4}\b/, "SSN pattern"],
@@ -38,11 +53,20 @@ const banned = [
   [/m[aá]s ?labor/i, "employer name"],
   [/\b(?:Salesforce|NetSuite) (?:connected|live)\b/i, "false live claim"],
 ];
-const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? walk(p) : [p]; });
+const walk = (d) =>
+  readdirSync(d).flatMap((f) => {
+    const p = join(d, f);
+    return statSync(p).isDirectory() ? walk(p) : [p];
+  });
 const files = [...walk("sample-data"), ...walk("docs/prototypes")];
 for (const f of files) {
   const text = readFileSync(f, "utf8");
   for (const [re, name] of banned) if (re.test(text)) errors.push(`${f}: ${name}`);
 }
-if (errors.length) { console.error("Fixture check FAILED:\n- " + errors.join("\n- ")); process.exit(1); }
-console.log(`Fixture check passed: ${files.length} files scanned, pack ${packRows} rows, template ${t.cases.total} cases.`);
+if (errors.length) {
+  console.error(`Fixture check FAILED:\n- ${errors.join("\n- ")}`);
+  process.exit(1);
+}
+console.log(
+  `Fixture check passed: ${files.length} files scanned, pack ${packRows} rows, template ${t.cases.total} cases.`,
+);
