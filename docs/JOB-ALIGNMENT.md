@@ -1,6 +1,6 @@
 # OpsBridge AI: job alignment and evidence plan
 
-Reviewed: November 5, 2026 (America/New_York). Planning audit only; application implementation remains paused.
+Reviewed: November 5, 2026 (America/New_York), and re-read against the posting on November 6 at P0.1. `docs/REQUIREMENTS-TRACEABILITY.md` holds the current per-ID state; the build resumed on November 6.
 
 Source: the owner-supplied four-page `Development_Automation_Lead_JD.pdf`, for Development & Automation Lead at másLabor. Source SHA-256: `b29b7d3adf1455107cb41949a864cdd36d107e9b2325cd97b8b681a5262d0a4b`. Essential duties are on pages 2–3; qualifications are on page 3. The document supplies role requirements, not permission to access company systems or contact anyone.
 

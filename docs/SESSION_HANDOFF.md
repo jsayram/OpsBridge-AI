@@ -1,16 +1,16 @@
 # OpsBridge AI session handoff
 
-Updated: 2026-11-06 (America/New_York).
+Updated: 2026-11-06 (America/New_York), end of P0 phase session.
 
 ## Objective and actual state
 
-Build an honest, secure enterprise operations portfolio aligned to the Development & Automation Lead posting. The active request is **planning/documentation only**: audit job coverage, revise the PRD, subdivide its nine phases, and establish project/vault continuity. Application implementation resumed on 2026-11-06 as phased sessions.
+Build an honest, secure enterprise operations portfolio aligned to the Development & Automation Lead posting. Application implementation resumed on 2026-11-06 as phased sessions. P0 has run on local branch `phase/p0-foundation` and is waiting for coordinator review. A skeleton, proofs and design exist; there is no working application.
 
-The source PRD is `OpsBridge_AI_Phased_PRD_v1.0.md`, unchanged. The maintained revision is `PRD.md` version 1.2, with an exact matching `OpsBridge_AI_Phased_PRD_v1.2.md` snapshot. The v1.1 snapshot is kept as history. The original source is preserved unchanged. A source document or scaffold plan is not a working app. No build phase is owner-accepted by this handoff.
+The source PRD is `OpsBridge_AI_Phased_PRD_v1.0.md`, unchanged. The maintained revision is `PRD.md` version 1.3, with an exact matching `OpsBridge_AI_Phased_PRD_v1.3.md` snapshot. The v1.1 and v1.2 snapshots are kept as history. The original source is preserved unchanged. A source document or scaffold plan is not a working app. No build phase is owner-accepted by this handoff.
 
 ## Current architecture decision
 
-Jose chose the stack direction on 2026-11-06 (DEC-001, `ADR/000-stack-and-hosting.md`): React/TypeScript/Vite and a TypeScript API on one Cloudflare Worker, PostgreSQL through Hyperdrive, with Neon Free as the planned provider, starting on Workers Free. C#, Railway, Containers, D1, PlanetScale and Convex were rejected. Private R2 storage, Cloudflare Access, Hono, Drizzle and Vitest are proposals. No account, provisioning, spending, deployment or publication is approved. The ADR's proof items are open, and PDF extraction inside Workers limits is the biggest unknown.
+Jose chose the stack direction on 2026-11-06 (DEC-001, `ADR/000-stack-and-hosting.md`): React/TypeScript/Vite and a TypeScript API on one Cloudflare Worker, PostgreSQL through Hyperdrive, with Neon Free as the planned provider, starting on Workers Free. C#, Railway, Containers, D1, PlanetScale and Convex were rejected. Hono, Drizzle and Vitest are approved for local use. Private R2 storage and Cloudflare Access are proposals. No account, provisioning, spending, deployment or publication is approved. ADR-000 records each proof: local proofs passed; PDF extraction does not fit the Workers Free 10 ms limit, which DEC-003 holds; Hyperdrive and Neon items are pending credentials.
 
 ## Build status and how to run it
 
@@ -57,16 +57,15 @@ Read `docs/MASTER_INBOX.md` first on return. Route required owner questions ther
 
 ## Actual verification and unresolved findings
 
-Three bounded agents completed the job audit, PRD/roadmap revision and documentation workflow; the job auditor independently reviewed the final PRD. The coordinator inspected the artifacts and executed document assertions: all 25 numbered sections, all 50 original phase acceptance texts, all 28 original E2E IDs and 9 goals retained; 47 package IDs and order match PRD/roadmap/ledger; all 25 JOB IDs and 8 supplementary job scenarios are embedded. Maintained PRD and revision snapshot are byte-identical. Original v1.0 SHA-256 remains `ecf61e30f8fabcfdaa13d3621c1b8d858bb2880b7ff5a5f187f31e6bb83eda69`. See `docs/PLANNING-VERIFICATION.md` for actual review scope and current PRD hash.
+`docs/reports/P0.md` is the current record. In short: local proofs passed for approval concurrency, isolation, roles, audit cleanup, outbox replay and restore (31 checks, `docs/evidence/P0.2/`). The scaffold passes all checks from a clean copy on Node 22 and 26, and a deliberate failing canary and a secret canary both failed as they should (`docs/evidence/P0.5/`). GitHub Actions has never run because no remote exists, so P0-C is partial. Nothing has run through Hyperdrive, Neon, R2, Sheets, Access or on Cloudflare hardware. Open decisions: DEC-002, DEC-003, DEC-004.
 
-The coordinator saved and read-back verified 23 planning notes through the official Obsidian CLI. Initial sandbox access and one uncertain create response were recovered; existing note bytes were checked before safe resumption, with no duplicate note created. Read `docs/DOCUMENT-SYNC.md` and the vault `Sync Manifest.md` for the actual final per-note source/read-back hashes and timestamps; do not infer synchronization from this handoff. No application tests, cloud operations, migrations, app services, account connections, pushes or merges were performed. No build phase is accepted.
-The project folder currently inherits `/Users/jramirez/Git` as the Git root. Before implementing, inspect the intended repository boundary; do not stage or mutate sibling projects. No project commit/base/branch has been established by this planning task. No temporary app services or task-owned locks were started by this documentation subagent.
+The repository root is this project folder; it no longer inherits `/Users/jramirez/Git`. Docker volume `opsbridge_opsbridge-pgdata` holds only disposable proof data. No services are running.
 
 ## Exact restart steps
 
 1. Read fresh `/Users/jramirez/Library/Application Support/CodexUsageMonitor/status.json`. Unknown/stale telemetry is not zero remaining. If a fresh signal requires handoff, finish the safe step and wait for Jose; do not schedule a continuation.
 2. Read the master inbox, this handoff, maintained PRD, roadmap, job alignment, ledger, and relevant ADRs. Confirm source/mirror version and hashes; repair any documented sync gap through the official Obsidian CLI.
 3. Inspect actual files and `git status` scoped to this project. Preserve other writers' changes and unrelated parent-repository content. Check for task-owned services before claiming none remain.
-4. Check the current phase and branch in `docs/PHASE-LEDGER.md`.
+4. Check the current phase and branch in `docs/PHASE-LEDGER.md`. The next brief is `docs/briefs/P1.md`.
 5. When resumed, prepare the next bounded package brief with real branch/base identifiers, acceptance checks, ownership, dependencies, approvals and vault note path. Use `templates/work-package-brief.md`.
 6. Execute only that authorized scope, collect real verification, update the package report/ledger/handoff/vault, and return the phase gate to Jose when due.

@@ -44,3 +44,7 @@ Completed 2026-11-05T23:03:10-05:00: 23 notes saved and verified by full CLI rea
 Completed 2026-11-06T11:40:41-05:00. `PRD.md` and `OpsBridge_AI_Phased_PRD_v1.2.md` are byte-identical, SHA-256 `d63b0c6b5b6c1f1b50e6fdb46031616bd7395584b19abe98646367f285c3c45b`. The v1.1 snapshot is unchanged. Automated counts: 47 packages, 55 acceptance IDs, 28 E2E IDs, 25 JOB IDs. The job posting's SHA-256 matched the recorded value and all four pages were read. This checks documents only. No prototype, application test, account or deployment was run.
 
 Local-first development was added 2026-11-06T12:06:49-05:00. Current PRD and v1.2 snapshot SHA-256: `9b081d6c40344f2ea637aa7e37b885bd340b2a9a1cd7a1c5d22fbec76909486b`.
+
+## v1.3 design revision
+
+Completed at P0.3, 2026-11-06. See `docs/reports/P0.3.md` for the retained-ID comparison and `docs/DOCUMENT-SYNC.md` for the current hash.
