@@ -31,6 +31,8 @@ export function databaseError(code: string | undefined): ApiError | null {
         "demo_write_limit",
         "This demo workspace has reached its limit. Reset it to keep going.",
       );
+    case "P0009":
+      return new ApiError(403, "forbidden", "You can't do that here");
     case "23505":
       return new ApiError(409, "conflict", "That was already done. Reload and check.");
     case "55P03": // lock_timeout

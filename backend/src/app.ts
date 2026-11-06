@@ -13,7 +13,10 @@ import { approvals } from "./routes/approvals";
 import { cases } from "./routes/cases";
 import { demo } from "./routes/demo";
 import { directory } from "./routes/directory";
+import { integrations } from "./routes/integrations";
+import { inventory } from "./routes/inventory";
 import { me } from "./routes/me";
+import { reconciliation } from "./routes/reconciliation";
 
 export type { Bindings } from "./env";
 
@@ -71,6 +74,9 @@ app.route("/api/v1/admin", admin);
 app.route("/api/v1/demo", demo);
 app.route("/api/v1/cases", cases);
 app.route("/api/v1/approvals", approvals);
+app.route("/api/v1/reconciliation", reconciliation);
+app.route("/api/v1/integrations", integrations);
+app.route("/api/v1/inventory", inventory);
 app.route("/api/v1", directory);
 app.route("/api/v1", me);
 

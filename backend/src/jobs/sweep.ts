@@ -18,6 +18,8 @@ export async function sweepDemoWorkspaces(env: Bindings): Promise<number> {
     }
     await db.query("SELECT app.purge_stale_demo_quota()");
     await db.query("SELECT app.purge_expired_idempotency_keys()");
+    // Deferred findings return to the queue on their date (PRD 7.2).
+    await db.query("SELECT app.release_deferred_findings(50)");
     log({ level: "info", event: "sweep", purged });
     return purged;
   });
