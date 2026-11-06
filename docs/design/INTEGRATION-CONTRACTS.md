@@ -48,7 +48,7 @@ The Sheets API offers no idempotency key on `values.append`, so an event ID colu
 
 **Sheet.** Tab `Events`, columns `event_id`, `event_type`, `occurred_at`, `case_ref`, `summary`, `mode`. Mode is always `TEST`. Row 1 is the header.
 
-**Sequence.** Dispatcher holds a 60-second lease for the event.
+**Sequence.** Dispatcher holds a 130-second lease for the event.
 
 1. `values.get` on `Events!A2:A` with a 10-second timeout.
 2. If the event ID is present, go to step 4 and skip the append.
@@ -63,9 +63,9 @@ The Sheets API offers no idempotency key on `values.append`, so an event ID colu
 | 429 | Retry Scheduled, honoring `Retry-After` |
 | 401 | One token refresh, then Retry Scheduled |
 | 403 or 404 | Dead Letter: the sheet share is broken and retrying won't fix it |
-| Worker dies mid-attempt | Lease expires; next tick reclaims; check finds any row already written |
+| Worker dies mid-attempt | Lease expires; next tick reclaims, up to 6 attempts, then Dead Letter; check finds any row already written |
 
-**Why two dispatchers can't race.** Only the lease holder works on an event. Both calls together take at most 20 s, so they end well inside the 60-second lease, and `claim_due_outbox` uses `SKIP LOCKED`. All time comparisons use the database clock.
+**Why two dispatchers can't race.** Only the lease holder works on an event. Both calls together take at most 20 s, so they end well inside the 130-second lease, and `claim_due_outbox` uses `SKIP LOCKED`. The lease is longer than the 120-second retry floor so a Worker that dies mid-append waits at least as long as a timed-out one. All time comparisons use the database clock.
 
 **Residual risk.** A timed-out append that Google processes more than 120 s later could land after the retry's check, which would produce a second row and a second email. The 120-second gap makes that unlikely but can't rule it out, because the Sheets API gives no way to cancel a request. Worst case is one duplicate test email to an owner mailbox. P4.2 tests the replay paths, and the claim is "no duplicate under the tested failures", not "exactly once".
 

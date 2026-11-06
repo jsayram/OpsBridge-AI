@@ -23,7 +23,7 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
 |---|---|---|---|---|---|---|---|
 | P0.1 | Run | Done: Docs at branch head | Document review; all 25 JOB IDs present | Pending master | | No | No |
-| P0.2 | Run | Done; proof 1b failed, DEC-003: `spikes/p0.2`, ADR-000, cost inventory | 31 local DB checks passed; CPU measured two ways; Hyperdrive and Neon not run | Pending master | | No | No |
+| P0.2 | Run | Done; proof 1b failed, DEC-003: `spikes/p0.2`, ADR-000, cost inventory | 42 local DB checks passed; CPU measured two ways; Hyperdrive and Neon not run | Pending master | | No | No |
 | P0.3 | Run | Done: Architecture, threat model, design docs, PRD v1.3 | OpenAPI lint, schema samples, diagram parse, ID retention check | Pending master | | No | No |
 | P0.4 | Run | Done: Prototypes, journey, fixture plan, manifest | Browser and script checks; no full keyboard or screen-reader run | Pending master | | No | No |
 | P0.5 | Run | Done; P0-C partial: Scaffold and workflow | Clean-copy CI on Node 22 and 26, canaries failed as intended; GitHub Actions never run | Pending master | | No | No |

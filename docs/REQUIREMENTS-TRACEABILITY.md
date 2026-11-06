@@ -18,7 +18,7 @@ Classification of every posting clause, from the four-page posting re-read on 20
 | JOB-01 | Shipping production apps or integrations | Product + Real-experience | Scaffold and proofs only | Planned | P1, P2, P7, P8 |
 | JOB-02 | One modern language | Product | `backend/`, `frontend/` TypeScript scaffold | Scaffold verified locally | P0-P8 |
 | JOB-03 | REST APIs, CRM/ERP, NetSuite a plus | Product; live NetSuite stays an experience gap | `docs/design/openapi.yaml`, `docs/design/INTEGRATION-CONTRACTS.md` | Designed | P0, P3, P7 |
-| JOB-04 | Strong SQL and data modeling | Product | `docs/design/ERD.md`, `spikes/p0.2/sql/001_schema.sql`, `docs/evidence/P0.2/db-proofs-run2.json` | Designed; proof schema verified locally | P0, P2, P3, P6 |
+| JOB-04 | Strong SQL and data modeling | Product | `docs/design/ERD.md`, `spikes/p0.2/sql/001_schema.sql`, `docs/evidence/P0.2/db-proofs-run3.json` | Designed; proof schema verified locally | P0, P2, P3, P6 |
 | JOB-05 | Git, code review, agile | Artifact + Real-experience | Branch history, `docs/BACKLOG.md`, package reports | In use | P0-P8 |
 | JOB-06 | Leading or mentoring developers | Real-experience | Engineering standards only; no people-leadership claim | Planned | P0, P7, P8 + interview |
 | JOB-07 | AI tools in the dev workflow | Artifact | Package reports name AI work, review and checks | In use | Every package |

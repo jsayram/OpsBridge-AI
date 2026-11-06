@@ -9,9 +9,11 @@ Short records of decisions made while building. Owner decisions live in `docs/MA
 | D-003 | 2026-11-06 | Runtime role has no DELETE anywhere; a separate cleanup role purges | Reset and expiry never need destructive rights in the request path | None planned |
 | D-004 | 2026-11-06 | Demo reset creates a new workspace and expires the old one | No delete on the request path, and reset costs the same as launch | Revisit if reset abuse grows storage |
 | D-005 | 2026-11-06 | RLS on top of scoped queries | Defense in depth. A missed `WHERE` returns nothing rather than another visitor's data | Drop only if Hyperdrive testing shows it can't work |
-| D-006 | 2026-11-06 | Purge function does not use `FOR UPDATE` | The first proof run failed: row locks need UPDATE privilege, which the cleanup role must not have. Expiry is one-way, so a plain read is safe | None |
+| D-006 | 2026-11-06 | ~~Purge function does not use `FOR UPDATE`~~ Superseded by D-012 | The first proof run failed: row locks need UPDATE privilege, which the cleanup role lacked | D-012 |
 | D-007 | 2026-11-06 | Google service account, not an owner OAuth token | It can only reach the one sheet shared with it. RS256 signing is cheap enough to do in the Worker | Owner refresh token if signing proves too slow in production |
 | D-008 | 2026-11-06 | Biome for format and lint | One tool, one config, no plugin chain | Move to ESLint if a rule is missing |
 | D-009 | 2026-11-06 | npm with a committed lockfile | Already installed, and pnpm would add a tool for no benefit here | None |
 | D-010 | 2026-11-06 | ERP and CRM simulators live in the same Worker | PRD 2.7: fewest runtime services | Split if simulated faults ever affect app latency |
+| D-012 | 2026-11-06 | Purge and workspace changes run in `SECURITY DEFINER` functions; cleanup role has no table rights; runtime role can't write `workspaces` | Independent review showed that table-level DELETE let cleanup reach owner rows, and UPDATE let a bug turn an owner workspace into a purgeable demo | None |
+| D-013 | 2026-11-06 | One approval row per entry to Ready | Keeps the idempotency key simple and gives each decision its own record | None |
 | D-011 | 2026-11-06 | Postgres 17 locally | Current Neon default range; recheck the major version when the project exists | Change the compose image |

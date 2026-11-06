@@ -79,7 +79,7 @@ Dashed lines stay disabled and show **Not configured** or **Simulated** until Jo
 
 **Dispatch (TB3, TB7).** `claim_due_outbox` leases rows with `FOR UPDATE SKIP LOCKED`. Demo events go to the simulated transport and become Simulated. Owner events go through check-before-append. See `docs/design/INTEGRATION-CONTRACTS.md`.
 
-**Cleanup (TB10).** Every 30 minutes the sweep finds up to 5 expired demo workspaces and calls `purge_demo_workspace` as `opsbridge_cleanup`. Rule in PRD 7.4.
+**Cleanup (TB10).** Every 30 minutes the sweep calls `expired_demo_workspaces` and `purge_demo_workspace` as `opsbridge_cleanup`, at most 5 a run. Rule in PRD 7.4. The same sweep returns due Deferred findings to Open, fails AI reviews stuck in Processing, and removes old idempotency keys.
 
 **Document review (TB4, TB8).** Guests pick a fixture whose text shipped with the seed, so public requests never parse a PDF. The result is labeled **Deterministic demonstration fixture**. Owner uploads and live model calls wait for DEC-002 and DEC-003.
 

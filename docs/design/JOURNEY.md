@@ -6,7 +6,7 @@ The five-minute story from PRD 5.3, step by step, with the time budget and every
 |---|---:|---|---|---|---|
 | 1 | 0:30 | Clicks Launch Guided Demo on `/` | Creates session, workspace and pack | Onboarding notice, five-step checklist, Overview | Simulated banner, synthetic KPIs |
 | 2 | 0:45 | Clicks Create Sample Case | Case Draft → Intake, audit row, `case.created` event | Case in the list, activity entry | CRM Simulator: Simulated |
-| 3 | 0:45 | Clicks Detect Mismatch | Runs matching on pack records | Finding with CRM and ERP values, timestamps, "related, not interchangeable" | ERP Simulator: Simulated |
+| 3 | 0:45 | Clicks Detect Mismatch | Runs matching on pack records; the guided action advances the seeded finding to Proposed | Finding with CRM and ERP values, timestamps, "related, not interchangeable" | ERP Simulator: Simulated |
 | 4 | 1:00 | Opens Review Document, picks a fixture | Fixture review keyed by document hash | Two missing fields with page references; accept, edit or reject | Deterministic demonstration fixture |
 | 5 | 1:00 | Clicks Approve Resolution | Atomic decision, audit, outbox; simulated dispatch | State changes, delivery label Simulated | Simulated |
 | 6 | 1:00 | Reads recap, optionally Reset | Reset swaps in a fresh workspace | Steps, before and after, audit list, real versus simulated, hypothetical time savings | Illustrative projection |
@@ -15,7 +15,7 @@ No step waits for Zapier, an external provider or a live model.
 
 ## Personas in the story
 
-The visitor switches between Analyst (steps 2 to 4) and Manager (step 5) with a labeled control. The label says this visualizes roles inside the demo and grants nothing else.
+The visitor switches between Analyst (steps 2 to 4) and Manager (step 5) with a labeled control backed by `POST /api/v1/demo/role`. The label says this visualizes roles inside the demo and grants nothing else.
 
 ## States
 

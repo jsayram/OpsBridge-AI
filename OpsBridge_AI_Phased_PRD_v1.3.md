@@ -275,13 +275,14 @@ The schema must be generated through versioned migrations with explicit primary 
 | external_connections | id, workspace_id, provider, mode, scopes, secret_reference, status | No raw access/refresh tokens in app tables; only server-owned references. |
 | external_record_links | workspace_id, provider, external_type, external_id, canonical_type, canonical_id, last_seen | Unique per provider/type/external ID; proven mapping. |
 | sync_runs | id, workspace_id, provider, cursor, started_at, ended_at, status, counts, error_code | Resume safely, preserve last successful cursor. |
-| reconciliation_findings | id, workspace_id, entity_type, entity_id, kind, severity, source_values, status, defer_until, resolved_at | Resolution is auditable; source evidence retained without secrets. |
+| reconciliation_findings | id, workspace_id, entity_type, entity_id, kind, severity, source_values, status, defer_until, version, resolved_at | Resolution is auditable; source evidence retained without secrets. |
 | workflow_rules | id, workspace_id, trigger, condition, action, enabled, version | No arbitrary code execution or user-supplied destination URLs. |
 | workflow_events/outbox | id, workspace_id, event_type, payload_ref, idempotency_key, dispatch_state, delivery_evidence, evidence_ref, attempts, next_attempt_at, lease_expires_at | One business effect via an idempotent sink; at-least-once delivery assumed. Delivery evidence is never inferred from dispatch state. |
 | approvals | id, workspace_id, case_id, proposed_action, proposed_payload, status, actor_id, decided_at, reason | Author and reviewer separation where applicable; state changes atomic. |
 | ai_reviews | id, workspace_id, document_id, model_version, prompt_version, extraction, citations, reviewer_edits, status, cost_units | Model output never directly mutates records. The original suggestion is immutable; reviewer edits are stored beside it and revalidated. |
 | audit_events | id, workspace_id, actor_type, actor_id, action, target, before_hash, after_hash, request_id, occurred_at | Append-only for every role; the only exception is the Section 7.4 cleanup rule. No raw secrets or sensitive prompt payloads. |
-| retention_log | id, workspace_id, purged_at, audit_rows, business_rows | Written by the cleanup role in the purge transaction. Holds counts and the workspace ID only. |
+| retention_log | id, workspace_id, purged_at, audit_rows, business_rows | Written by the purge function in the purge transaction. Holds counts and the workspace ID only. |
+| idempotency_keys | workspace_id, key, request_hash, response_status, response_body, created_at | Unique per workspace and key; written in the same transaction as the command; a repeat returns the stored response; a different body with the same key returns 409. Kept 24 hours. |
 | metric_snapshots | workspace_id, period, metric_key, numerator, denominator, assumptions_version | Must identify synthetic, measured, or estimated provenance. |
 
 ## 7.1 Database rules
@@ -299,10 +300,10 @@ The schema must be generated through versioned migrations with explicit primary 
 
 ## 7.2 Canonical statuses
 
-Case: Draft -> Intake -> Needs Review -> Ready -> Approved -> Closed. Closed -> Needs Review is the reopen path, for an authorized role with a reason.  
+Case: Draft -> Intake -> Needs Review -> Ready -> Approved -> Closed. Entering Ready creates a pending approval, and only the approval command reaches Approved. Ready -> Needs Review needs a reason, by reviewer return or by a rejected approval. Closed -> Needs Review is the reopen path, for an authorized role with a reason.  
 Exception: Open -> Investigating -> Proposed -> Resolved / Dismissed. Open, Investigating or Proposed -> Deferred -> Open; a deferred finding carries defer_until and returns to the queue on that date or by operator action.  
-AI review: Queued -> Processing -> Needs Human Review -> Accepted / Accepted with Edits / Rejected. Queued or Processing -> Failed; Failed -> Queued on retry. An abstention still reaches Needs Human Review.  
-Outbox dispatch_state: Pending -> Processing -> Accepted / Simulated / Retry Scheduled / Dead Letter. Retry Scheduled -> Processing. Dead Letter -> Pending only by an audited operator retry.  
+AI review: Queued -> Processing -> Needs Human Review -> Accepted / Accepted with Edits / Rejected. Queued or Processing -> Failed, including a sweep that fails anything in Processing for more than 5 minutes; Failed -> Queued on retry. An abstention still reaches Needs Human Review.  
+Outbox dispatch_state: Pending -> Processing -> Accepted / Simulated / Retry Scheduled / Dead Letter. Retry Scheduled -> Processing. Processing is reclaimed after its lease expires and goes to Dead Letter at the attempt cap of 6. Dead Letter -> Pending only by an audited operator retry.  
 Outbox delivery_evidence: None -> Provider Accepted -> Confirmed. This is a separate field from dispatch_state. Confirmed requires an evidence reference.  
 Integration: Not Configured -> Simulated / Connected Test -> Degraded / Disconnected.
 
@@ -332,12 +333,12 @@ Three database roles exist, with separate credentials and, in hosted environment
 | Role | Used by | May | May not |
 |---|---|---|---|
 | opsbridge_migrator | Controlled release step only | Own the schema, apply migrations, seed the template | Serve requests |
-| opsbridge_app | Worker request path and dispatcher | SELECT, INSERT and UPDATE on business tables; SELECT and INSERT on audit_events; EXECUTE the outbox claim functions | DELETE or TRUNCATE anything; UPDATE audit_events; run the purge |
-| opsbridge_cleanup | Cron cleanup path only | SELECT and DELETE needed for the purge; EXECUTE purge_demo_workspace; INSERT into retention_log | INSERT or UPDATE business rows; UPDATE audit_events; touch owner or template workspaces |
+| opsbridge_app | Worker request path and dispatcher | SELECT, INSERT and UPDATE on business tables; SELECT and INSERT on audit_events; SELECT on workspaces; EXECUTE the outbox and demo lifecycle functions | DELETE or TRUNCATE anything; UPDATE audit_events; INSERT or UPDATE workspaces directly; run the purge |
+| opsbridge_cleanup | Cron cleanup path only | EXECUTE expired_demo_workspaces and purge_demo_workspace | Any direct table access; touch owner or template workspaces |
 
-**Rule.** audit_events rejects UPDATE, DELETE and TRUNCATE for every role, including the table owner, through a trigger. One case passes: a DELETE by opsbridge_cleanup of rows whose workspace has mode demo and an expires_at in the past. Owner and template audit rows can never be removed by the application. The purge runs one workspace at a time in one transaction, refuses anything else, and records counts in retention_log, so a purge is itself accountable.
+**Rule.** audit_events rejects UPDATE, DELETE and TRUNCATE for every role, including the table owner, through a trigger. One case passes: a DELETE inside purge_demo_workspace, called by opsbridge_cleanup, of rows whose workspace has mode demo and an expires_at in the past. That function is the only path, so the cleanup role holds no table privileges. Owner and template audit rows can never be removed by the application. The purge runs one workspace at a time in one transaction, refuses anything else, and records counts in retention_log, so a purge is itself accountable.
 
-Demo reset never deletes. It creates a fresh workspace, points the session at it and sets the old workspace's expires_at to now, so the request path needs no destructive right. The cron sweep purges at most 5 expired workspaces per run. retention_log rows are kept 90 days and removed by the migrator role. Purged demo data can remain in backups until those backups rotate, which is at most 7 days.
+Demo reset never deletes. It creates a fresh workspace, points the session at it and sets the old workspace's expires_at to now, through functions that act only on demo workspaces, so the request path needs no destructive right and cannot change a workspace's mode. The cron sweep purges at most 5 expired workspaces per run, or 10 an hour. Launch and reset refuse new workspaces once 150 unpurged demo workspaces exist, expired ones included, so a backlog clears in 15 hours and a workspace is gone within 24 hours of launch even under abuse. The dispatcher never claims template rows. Expired idempotency keys are removed by the same sweep. retention_log rows are kept 90 days and removed by the migrator role. Purged demo data can remain in backups until those backups rotate, which is at most 7 days.
 
 
 ---
@@ -362,6 +363,7 @@ Demo reset never deletes. It creates a fresh workspace, points the session at it
 |---|---|---|
 | POST /api/v1/demo/sessions | Anonymous, rate-limited | Create isolated synthetic workspace and cookie. |
 | POST /api/v1/demo/reset | Demo session | Reset only the current demo workspace. |
+| POST /api/v1/demo/role | Demo session | Switch the simulated role among viewer, analyst and manager; stored server-side; never reaches owner capability. |
 | GET /api/v1/me | Any session | Return server-authorized capabilities, not editable roles. |
 | GET/POST /api/v1/cases | Scoped viewer/editor | List/create fictional cases. |
 | GET/PATCH /api/v1/cases/{id} | Scoped actor | Read/update with version checking. |
@@ -371,11 +373,13 @@ Demo reset never deletes. It creates a fresh workspace, points the session at it
 | POST /api/v1/ai-reviews/{id}/decision | Authorized reviewer | Accept, accept with edits or reject; edits are revalidated. |
 | POST /api/v1/approvals/{id}/decision | Authorized reviewer | Accept/reject approved actions with audit/outbox. |
 | GET /api/v1/reconciliation | Scoped viewer | List mismatches and source evidence. |
+| POST /api/v1/reconciliation/{id}/advance | Scoped analyst | Version-checked move to Investigating, Proposed or back to Open from Deferred. |
 | POST /api/v1/reconciliation/{id}/resolve | Authorized reviewer | Approve, reject or defer; approve applies a safe mapped correction. |
 | GET /api/v1/integrations | Scoped viewer | Redacted provider state and sync health. |
 | POST /api/v1/admin/integrations/{id}/sync | Owner only | Start read-only controlled sync. |
 | GET /api/v1/automations/runs | Scoped viewer | Status, attempts, delivery uncertainty. |
 | POST /api/v1/admin/automations/runs/{id}/confirm | Owner only | Record evidence reference that moves an event to Confirmed. |
+| POST /api/v1/admin/automations/runs/{id}/retry | Owner only | Audited Dead Letter -> Pending. |
 | POST /api/v1/cases/{id}/reopen | Authorized reviewer | Version-checked Closed -> Needs Review with a required reason. |
 | GET /api/v1/analytics/overview | Scoped viewer | Deterministic metrics with provenance. |
 | POST /api/v1/cases/{id}/handoffs | Scoped analyst/reviewer | Version-checked assignment/queue transfer with checklist and audit history. |
@@ -441,7 +445,7 @@ Zapier is a meaningful integration, not a decorative badge. However, an external
 **Mode A, persistent low-cost demonstration (mandatory):**
 
 - Application emits a sanitized approved event to an owner-controlled Google Sheet through an authenticated server-side integration, using a Google service account that can reach only that sheet.
-- A Sheets append has no idempotency key, so duplicate prevention happens on the application side. Each attempt reads the sheet's event ID column first. If the event ID is present, the attempt records Provider Accepted and appends nothing. Otherwise it appends one row with the event ID in column A. A dispatcher holds a 60-second lease; Sheets calls time out at 10 seconds; a timed-out append is retried no sooner than 120 seconds later so a late write lands before the next check. docs/design/INTEGRATION-CONTRACTS.md has the full sequence and the residual risk.
+- A Sheets append has no idempotency key, so duplicate prevention happens on the application side. Each attempt reads the sheet's event ID column first. If the event ID is present, the attempt records Provider Accepted and appends nothing. Otherwise it appends one row with the event ID in column A. A dispatcher holds a 130-second lease; Sheets calls time out at 10 seconds; a timed-out append is retried no sooner than 120 seconds later, and a crashed attempt can't be reclaimed for 130 seconds, so a late write lands before the next check. docs/design/INTEGRATION-CONTRACTS.md has the full sequence and the residual risk.
 - Zapier uses a supported non-premium Google Sheets trigger and one non-premium action, such as sending an email to an owner-controlled test mailbox.
 - Free-tier polling can take up to the plan's documented interval, so the public five-minute tour never waits for this Zap.
 - Demonstration evidence includes a real execution record, visible timestamp, destination, and video; the public environment displays the mode honestly.
@@ -1482,6 +1486,7 @@ Produced in P0.3 from the P0.2 proofs and the phase brief. No phase, package ID,
 - Seeding: Section 16.1 replaces a per-session full copy with a shared template and a pack of about 35 rows.
 - Scans: Sections 10.2 and 10.4 state there is no OCR or vision path, and image-only documents test abstention.
 - Missing states: case reopen, exception Deferred, and AI Accepted with Edits (Sections 7.2, 8.2, 10.2).
+- Independent review of the design found further gaps, now closed: workspace changes only through narrow functions, a cleanup role with no table rights, template events excluded from dispatch, a launch capacity that counts unpurged workspaces, stored idempotency responses, an attempt cap on reclaim, a longer lease, approvals created on entry to Ready, and endpoints for finding moves, role switching and dead-letter retry.
 - Credentials and cost: Google service account added to Section 12.1 and Section 17.
 - First visit: Section 13.2 adds a first-visit target and waking behavior.
 - Neon compute: Sections 6.2 and 17 fix the sweep at 30 minutes and cap the compute at 0.25 CU. "Compute hours" corrected to CU-hours.

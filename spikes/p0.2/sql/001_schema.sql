@@ -87,12 +87,15 @@ CREATE TRIGGER audit_no_truncate BEFORE TRUNCATE ON app.audit_events
   FOR EACH STATEMENT EXECUTE FUNCTION app.audit_no_truncate();
 
 -- RLS: app role sees its own workspace; template rows are read-only for everyone.
+ALTER TABLE app.workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.approvals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.outbox ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.audit_events ENABLE ROW LEVEL SECURITY;
 CREATE FUNCTION app.current_workspace() RETURNS uuid LANGUAGE sql STABLE AS
   $$ SELECT nullif(current_setting('app.workspace_id', true), '')::uuid $$;
+CREATE POLICY ws_read ON app.workspaces FOR SELECT TO opsbridge_app USING (
+  id = app.current_workspace() OR mode = 'template');
 CREATE POLICY cases_read ON app.cases FOR SELECT TO opsbridge_app USING (
   workspace_id = app.current_workspace()
   OR workspace_id IN (SELECT id FROM app.workspaces WHERE mode='template'));
@@ -105,30 +108,33 @@ CREATE POLICY outbox_all ON app.outbox FOR ALL TO opsbridge_app
   USING (workspace_id = app.current_workspace()) WITH CHECK (workspace_id = app.current_workspace());
 CREATE POLICY audit_read ON app.audit_events FOR SELECT TO opsbridge_app USING (workspace_id = app.current_workspace());
 CREATE POLICY audit_ins ON app.audit_events FOR INSERT TO opsbridge_app WITH CHECK (workspace_id = app.current_workspace());
-CREATE POLICY cleanup_c ON app.cases FOR ALL TO opsbridge_cleanup USING (true);
-CREATE POLICY cleanup_a ON app.approvals FOR ALL TO opsbridge_cleanup USING (true);
-CREATE POLICY cleanup_o ON app.outbox FOR ALL TO opsbridge_cleanup USING (true);
-CREATE POLICY cleanup_e ON app.audit_events FOR ALL TO opsbridge_cleanup USING (true);
 
 -- Grants. No DELETE or TRUNCATE for the runtime role anywhere.
-GRANT SELECT, INSERT, UPDATE ON app.workspaces TO opsbridge_app;
+-- Workspaces change only through the narrow functions below: never a direct UPDATE,
+-- so no bug in the request path can flip a mode or expire an owner workspace.
+GRANT SELECT ON app.workspaces TO opsbridge_app;
 GRANT SELECT, INSERT, UPDATE ON app.cases, app.approvals, app.outbox TO opsbridge_app;
 GRANT SELECT, INSERT ON app.audit_events TO opsbridge_app;
-GRANT SELECT, DELETE ON app.workspaces, app.cases, app.approvals, app.outbox, app.audit_events TO opsbridge_cleanup;
-GRANT INSERT, SELECT ON app.retention_log TO opsbridge_cleanup;
+-- The cleanup role has no table rights at all, only EXECUTE on the purge functions.
 
 -- Dispatcher runs across workspaces but only through this narrow definer function.
 CREATE FUNCTION app.claim_due_outbox(batch int, lease_seconds int)
-RETURNS SETOF app.outbox LANGUAGE sql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+RETURNS SETOF app.outbox LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+BEGIN
+  -- A Worker killed on every attempt must still end: reclaims stop at the attempt cap.
+  UPDATE app.outbox SET dispatch_state='dead_letter', lease_expires_at=NULL
+   WHERE dispatch_state='processing' AND lease_expires_at < now() AND attempts >= 6;
+  RETURN QUERY
   UPDATE app.outbox o SET dispatch_state='processing', attempts=attempts+1,
          lease_expires_at = now() + make_interval(secs => lease_seconds)
   WHERE (o.workspace_id, o.id) IN (
-    SELECT workspace_id, id FROM app.outbox
-    WHERE (dispatch_state IN ('pending','retry_scheduled') AND next_attempt_at <= now())
-       OR (dispatch_state='processing' AND lease_expires_at < now())
-    ORDER BY next_attempt_at LIMIT batch FOR UPDATE SKIP LOCKED)
+    SELECT x.workspace_id, x.id FROM app.outbox x JOIN app.workspaces w ON w.id = x.workspace_id
+    WHERE w.mode <> 'template'
+      AND ((x.dispatch_state IN ('pending','retry_scheduled') AND x.next_attempt_at <= now())
+        OR (x.dispatch_state='processing' AND x.lease_expires_at < now()))
+    ORDER BY x.next_attempt_at LIMIT batch FOR UPDATE OF x SKIP LOCKED)
   RETURNING o.*;
-$$;
+END $$;
 CREATE FUNCTION app.finish_outbox(ws uuid, oid uuid, new_state text, retry_seconds int DEFAULT 0)
 RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = app, pg_temp AS $$
   UPDATE app.outbox SET dispatch_state=new_state, lease_expires_at=NULL,
@@ -138,11 +144,41 @@ $$;
 REVOKE ALL ON FUNCTION app.claim_due_outbox(int,int), app.finish_outbox(uuid,uuid,text,int) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION app.claim_due_outbox(int,int), app.finish_outbox(uuid,uuid,text,int) TO opsbridge_app;
 
--- Bounded purge of one expired demo workspace, run as the cleanup role.
-CREATE FUNCTION app.purge_demo_workspace(ws uuid) RETURNS int LANGUAGE plpgsql AS $$
+-- Demo lifecycle. The runtime role calls these and cannot do anything else to workspaces.
+-- Capacity counts every unpurged demo workspace, expired ones included, so launches
+-- cannot outrun the purge and breach the 24-hour retention rule.
+CREATE FUNCTION app.create_demo_workspace(ttl_seconds int, cap int) RETURNS uuid
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+DECLARE ws uuid;
+BEGIN
+  PERFORM pg_advisory_xact_lock(727001);
+  IF (SELECT count(*) FROM app.workspaces WHERE mode='demo') >= cap THEN
+    RAISE EXCEPTION 'demo_capacity' USING ERRCODE='P0003';
+  END IF;
+  INSERT INTO app.workspaces(name,mode,expires_at) VALUES ('demo','demo',now()+make_interval(secs=>ttl_seconds)) RETURNING id INTO ws;
+  RETURN ws;
+END $$;
+CREATE FUNCTION app.expire_demo_workspace() RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+BEGIN
+  UPDATE app.workspaces SET expires_at = now()
+   WHERE id = app.current_workspace() AND mode='demo' AND expires_at > now();
+  RETURN FOUND;
+END $$;
+REVOKE ALL ON FUNCTION app.create_demo_workspace(int,int), app.expire_demo_workspace() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app.create_demo_workspace(int,int), app.expire_demo_workspace() TO opsbridge_app;
+
+-- Bounded purge of one expired demo workspace. Definer rights live here so the cleanup
+-- role needs no table privilege, and owner or template rows are out of its reach.
+CREATE FUNCTION app.expired_demo_workspaces(batch int) RETURNS SETOF uuid
+LANGUAGE sql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+  SELECT id FROM app.workspaces WHERE mode='demo' AND expires_at < now() ORDER BY expires_at LIMIT batch;
+$$;
+CREATE FUNCTION app.purge_demo_workspace(ws uuid) RETURNS int
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
 DECLARE a int; b int := 0; n int; w record;
 BEGIN
-  SELECT mode, expires_at INTO w FROM app.workspaces WHERE id = ws; -- FOR UPDATE would need UPDATE privilege; expiry is one-way so no lock is needed
+  SELECT mode, expires_at INTO w FROM app.workspaces WHERE id = ws FOR UPDATE;
   IF NOT FOUND OR w.mode <> 'demo' OR w.expires_at >= now() THEN
     RAISE EXCEPTION 'refusing to purge workspace %', ws USING ERRCODE='P0002';
   END IF;
@@ -154,5 +190,5 @@ BEGIN
   INSERT INTO app.retention_log(workspace_id, audit_rows, business_rows) VALUES (ws, a, b);
   RETURN a + b;
 END $$;
-REVOKE ALL ON FUNCTION app.purge_demo_workspace(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app.purge_demo_workspace(uuid) TO opsbridge_cleanup;
+REVOKE ALL ON FUNCTION app.purge_demo_workspace(uuid), app.expired_demo_workspaces(int) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app.purge_demo_workspace(uuid), app.expired_demo_workspaces(int) TO opsbridge_cleanup;

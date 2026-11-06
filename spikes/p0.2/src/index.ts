@@ -90,7 +90,7 @@ async function tick(env: Env, fail?: string) {
   await client.connect();
   const out = { claimed: 0, written: 0, skippedDuplicate: 0, crashed: 0 };
   try {
-    const { rows } = await client.query("SELECT * FROM app.claim_due_outbox(10, 60)");
+    const { rows } = await client.query("SELECT * FROM app.claim_due_outbox(10, 130)");
     out.claimed = rows.length;
     for (const ev of rows) {
       const seen = await client.query("SELECT 1 FROM sim.sheet_rows WHERE event_id=$1", [ev.id]);

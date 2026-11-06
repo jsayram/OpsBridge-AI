@@ -57,7 +57,7 @@ Read `docs/MASTER_INBOX.md` first on return. Route required owner questions ther
 
 ## Actual verification and unresolved findings
 
-`docs/reports/P0.md` is the current record. In short: local proofs passed for approval concurrency, isolation, roles, audit cleanup, outbox replay and restore (31 checks, `docs/evidence/P0.2/`). The scaffold passes all checks from a clean copy on Node 22 and 26, and a deliberate failing canary and a secret canary both failed as they should (`docs/evidence/P0.5/`). GitHub Actions has never run because no remote exists, so P0-C is partial. Nothing has run through Hyperdrive, Neon, R2, Sheets, Access or on Cloudflare hardware. Open decisions: DEC-002, DEC-003, DEC-004.
+`docs/reports/P0.md` is the current record. In short: local proofs passed for approval concurrency, isolation, roles, audit cleanup, outbox replay and restore (42 checks, `docs/evidence/P0.2/`). The scaffold passes all checks from a clean copy on Node 22 and 26, and a deliberate failing canary and a secret canary both failed as they should (`docs/evidence/P0.5/`). GitHub Actions has never run because no remote exists, so P0-C is partial. Nothing has run through Hyperdrive, Neon, R2, Sheets, Access or on Cloudflare hardware. Open decisions: DEC-002, DEC-003, DEC-004.
 
 The repository root is this project folder; it no longer inherits `/Users/jramirez/Git`. Docker volume `opsbridge_opsbridge-pgdata` holds only disposable proof data. No services are running.
 

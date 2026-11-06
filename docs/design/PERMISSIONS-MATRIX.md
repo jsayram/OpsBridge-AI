@@ -23,6 +23,7 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | View public pages, health | A | A | A | A | A | Health leaks no env data |
 | Launch demo | A (rate-limited) | A | A | A | A | Quota exhaustion |
 | Reset demo | D | S | S | S | D | Other session's cookie, E2E-18 |
+| Switch demo role | D | S | S | S | D | Values outside viewer, analyst and manager rejected, E2E-04 |
 | `GET /me` | D | S | S | S | A | Role not editable, E2E-04 |
 | List and read cases | D | R | R | R | S | ID swap, E2E-02 |
 | Create and edit cases, checklist | D | D | S | S | S | Mass assignment, stale version |
@@ -36,13 +37,13 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | Decide AI review | D | D | D | S | S | Invalid edit, E2E-11 |
 | Decide approval | D | D | D | S | S | Duplicate decision, E2E-06 |
 | View reconciliation | D | R | R | R | S | |
-| Investigate, propose | D | D | S | S | S | |
+| Advance a finding (investigate, propose, un-defer) | D | D | S | S | S | Stale version |
 | Approve, reject, defer finding | D | D | D | S | S | Concurrent resolve |
 | View automations, integrations | D | R | R | R | S | Redacted, E2E-03 |
 | Change a workflow rule | D | D | D | D | S | Free-form URL rejected, E2E-17 |
 | Retry dead letter, record confirmation | D | D | D | D | S | Guest denied |
 | View analytics, reports | D | R | R | R | S | Cross-workspace export |
-| Export CSV | D | D | S | S | S | Formula injection, row limit |
+| Export CSV | D | S | S | S | S | Formula injection, row limit |
 | ROI calculator | D | S | S | S | S | Assumptions are per session |
 | Any `/admin` route | D | D | D | D | A | Edited cookie and body, E2E-03, E2E-04 |
 | Live sync | D | D | D | D | A | Guest denied, P3-E |
@@ -52,8 +53,8 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 
 | Layer | Rule |
 |---|---|
-| Grants | `opsbridge_app` has no DELETE or TRUNCATE. PRD 7.4 lists all three roles. |
+| Grants | `opsbridge_app` has no DELETE or TRUNCATE and only SELECT on `workspaces`. `opsbridge_cleanup` has no table rights. PRD 7.4 lists all three roles. |
 | RLS | Read: own workspace or template. Write: own workspace only. |
 | Composite FKs | Child rows reference `(workspace_id, id)`, so a row can't point across workspaces. |
 | Guard trigger | `audit_events` update and delete rules. |
-| Functions | `claim_due_outbox`, `finish_outbox`, `seed_demo_workspace` are narrow `SECURITY DEFINER` with a fixed `search_path`. |
+| Functions | `claim_due_outbox`, `finish_outbox`, `create_demo_workspace`, `expire_demo_workspace`, `seed_demo_workspace`, `expired_demo_workspaces` and `purge_demo_workspace` are narrow `SECURITY DEFINER` with a fixed `search_path`. |

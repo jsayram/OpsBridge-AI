@@ -19,7 +19,7 @@ See PRD 16.1. The template holds every count below, once. A session gets the pac
 | Template workspace | about 1,500 | Migrator role | Release step |
 | Scenario pack, per session | 35 | `seed_demo_workspace` | Launch and Reset |
 
-Local timing: 2 ms for 35 rows, 20 ms for 1,500, on Docker Postgres (`docs/evidence/P0.2/db-proofs-run2.json`). At 300 bytes a row, the pack is about 10 KB a session before indexes, so 1 GB of Neon storage isn't the limit that matters. Compute is.
+Local timing: 2 ms for 35 rows, 20 ms for 1,500, on Docker Postgres (`docs/evidence/P0.2/db-proofs-run3.json`). At 300 bytes a row, the pack is about 10 KB a session before indexes, so 1 GB of Neon storage isn't the limit that matters. Compute is.
 
 ## Section 16 coverage
 

@@ -1,7 +1,7 @@
 {
-  "takenAt": "2026-11-06T17:17:18.796Z",
+  "takenAt": "2026-11-06T17:37:13.633Z",
   "environment": "Docker postgres:17-alpine, wrangler dev local mode, Hyperdrive localConnectionString (Hyperdrive not in path)",
-  "passed": 31,
+  "passed": 42,
   "failed": 0,
   "results": [
     {
@@ -107,22 +107,67 @@
     {
       "id": "P3.p cleanup cannot purge an unexpired demo workspace",
       "pass": true,
-      "detail": "refusing to purge workspace 92769b17-9d2a-412b-869a-3cedbcd4ba87"
+      "detail": "refusing to purge workspace 40b3b70a-87ee-48d9-b22d-d09dcef1f38c"
     },
     {
-      "id": "P3.q cleanup cannot delete audit rows of an unexpired workspace directly",
+      "id": "P3.q cleanup has no direct DELETE on audit rows",
       "pass": true,
-      "detail": "audit_events is append-only (DELETE by opsbridge_cleanup)"
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.q2 cleanup has no direct DELETE on business rows",
+      "pass": true,
+      "detail": "permission denied for table cases"
     },
     {
       "id": "P3.r cleanup cannot purge an owner workspace",
       "pass": true,
-      "detail": "refusing to purge workspace c741c1e2-d9f4-4cf6-b4b4-7190c3ec9088"
+      "detail": "refusing to purge workspace 92ef9ba7-42f7-45c3-b89e-1e74b2ccb5b8"
     },
     {
-      "id": "P3.s cleanup cannot delete owner audit rows directly",
+      "id": "P3.s cleanup cannot delete owner cases directly",
       "pass": true,
-      "detail": "audit_events is append-only (DELETE by opsbridge_cleanup)"
+      "detail": "permission denied for table cases"
+    },
+    {
+      "id": "P3.s2 app cannot flip a workspace mode or expiry directly",
+      "pass": true,
+      "detail": "permission denied for table workspaces"
+    },
+    {
+      "id": "P3.s3 app cannot insert a workspace directly",
+      "pass": true,
+      "detail": "permission denied for table workspaces"
+    },
+    {
+      "id": "P3.s4 A cannot see B or owner in workspaces",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s5 expire function refuses an owner workspace",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s6 expire function works on own demo workspace only",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s7 launch refused at capacity, expired workspaces counted",
+      "pass": true,
+      "detail": "demo_capacity"
+    },
+    {
+      "id": "P3.s8 launch works under capacity",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.t0 cleanup lists expired demo workspaces only",
+      "pass": true,
+      "detail": ""
     },
     {
       "id": "P3.t expired demo purge removes every row and writes a retention record",
@@ -158,10 +203,20 @@
       "id": "P4.e cron sweep picks up committed events that were never dispatched after commit",
       "pass": true,
       "detail": "status=200 open=0 sheet=28"
+    },
+    {
+      "id": "P4.f dispatcher never claims template events",
+      "pass": true,
+      "detail": "{\"claimed\":0,\"written\":0,\"skippedDuplicate\":0,\"crashed\":0}"
+    },
+    {
+      "id": "P4.g event whose Worker keeps dying stops at the attempt cap",
+      "pass": true,
+      "detail": ""
     }
   ],
   "seedTiming": {
-    "rows35Ms": 2.03,
-    "rows1500Ms": 19.56
+    "rows35Ms": 2.28,
+    "rows1500Ms": 21.38
   }
 }

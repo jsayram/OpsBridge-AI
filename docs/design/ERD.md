@@ -30,6 +30,7 @@ erDiagram
   workspaces ||--o{ outbox : has
   workspaces ||--o{ audit_events : has
   workspaces ||--o{ metric_snapshots : has
+  workspaces ||--o{ idempotency_keys : has
 
   workspaces { uuid id PK
     text name
@@ -94,6 +95,7 @@ erDiagram
     jsonb reviewer_edits
     text status
     text abstain_reason
+    timestamptz processing_started_at
     int cost_units }
   reconciliation_findings { uuid workspace_id PK
     uuid id PK
@@ -104,6 +106,7 @@ erDiagram
     jsonb source_values
     text status
     timestamptz defer_until
+    int version
     timestamptz resolved_at
     uuid supersedes_id }
   outbox { uuid workspace_id PK
@@ -127,6 +130,12 @@ erDiagram
     text after_hash
     text request_id
     timestamptz occurred_at }
+  idempotency_keys { uuid workspace_id PK
+    text key PK
+    bytea request_hash
+    int response_status
+    jsonb response_body
+    timestamptz created_at }
   retention_log { bigint id PK
     uuid workspace_id "no FK, workspace is gone"
     timestamptz purged_at

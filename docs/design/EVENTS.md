@@ -32,7 +32,7 @@ The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON
 |---|---|
 | `case.created` | `case:{id}:created` |
 | `case.needs_review` | `case:{id}:review:{caseVersion}` |
-| `approval.completed` | `approval:{id}` |
+| `approval.completed` | `approval:{id}`; a new approval row exists for each entry to Ready |
 | `reconciliation.resolved` | `finding:{id}:resolved` |
 | `integration.degraded` | `integration:{id}:degraded:{hourBucket}` |
 

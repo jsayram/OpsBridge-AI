@@ -9,25 +9,25 @@ Transitions not listed here return `409 invalid_transition`. Every transition wr
 | (new) | Draft | analyst | | |
 | Draft | Intake | analyst | Customer linked | case.created |
 | Intake | Needs Review | analyst | Required checklist items answered or flagged | case.needs_review |
-| Needs Review | Ready | reviewer | No open required checklist item | |
-| Ready | Needs Review | reviewer | Reason required | case.needs_review |
-| Ready | Approved | reviewer, through an approval | Pending approval decided, version matches | approval.completed |
+| Needs Review | Ready | reviewer | No open required checklist item. Creates a new pending approval in the same transaction | |
+| Ready | Needs Review | reviewer, by PATCH or by rejecting the approval | Reason required | case.needs_review |
+| Ready | Approved | reviewer, approval command only | Pending approval decided, version matches | approval.completed |
 | Approved | Closed | reviewer | | |
 | Closed | Needs Review | reviewer, `POST /cases/{id}/reopen` | Reason required, version matches | case.needs_review, payload reason `reopened` |
 
-Reopen reuses `case.needs_review`, so the five-event allowlist in PRD 9.1 does not grow. A reopened case can reach Approved again; the approval idempotency key includes the case version, so a second approval is a new business event and not a duplicate.
+Reopen reuses `case.needs_review`, so the five-event allowlist in PRD 9.1 does not grow. A reopened or returned case gets a new approval row each time it enters Ready, and the idempotency key uses that row's ID, so a later approval is a new business event and not a duplicate. PATCH can never reach Approved, and only the reopen endpoint leaves Closed.
 
 ## Exception (reconciliation finding)
 
 | From | To | Who | Note |
 |---|---|---|---|
 | (detected) | Open | system | Replay of the same source snapshot does not reopen or duplicate |
-| Open | Investigating | analyst | |
-| Investigating | Proposed | analyst | Proposed resolution recorded |
+| Open | Investigating | analyst, `POST /advance` | |
+| Investigating | Proposed | analyst, `POST /advance` | Proposed resolution recorded |
 | Proposed | Resolved | reviewer, Approve | Applies the mapped correction, emits reconciliation.resolved |
 | Open, Investigating, Proposed | Dismissed | reviewer, Reject | Reason required |
 | Open, Investigating, Proposed | Deferred | reviewer, Defer | `defer_until` required, at most 90 days out |
-| Deferred | Open | sweep, or analyst | Sweep acts when `defer_until` has passed |
+| Deferred | Open | sweep, or analyst with `POST /advance` | Sweep acts when `defer_until` has passed |
 
 Automatic reopening of a resolved finding is not allowed. New source evidence opens a new finding that links the old one.
 
@@ -38,7 +38,7 @@ Automatic reopening of a resolved finding is not allowed. New source evidence op
 | (requested) | Queued | editor | |
 | Queued | Processing | system | |
 | Processing | Needs Human Review | system | Schema-valid output, including abstention |
-| Queued, Processing | Failed | system | Provider, schema or extraction failure |
+| Queued, Processing | Failed | system | Provider, schema or extraction failure; sweep fails anything in Processing over 5 minutes |
 | Failed | Queued | editor | Retry, within quota |
 | Needs Human Review | Accepted | reviewer | Suggestion taken as is |
 | Needs Human Review | Accepted with Edits | reviewer | `reviewer_edits` stored, original kept, edits revalidated by the same deterministic rules |
@@ -55,13 +55,14 @@ Abstention reasons: `no_extractable_text`, `ambiguous`, `adversarial_content`, `
 | From | To | Trigger |
 |---|---|---|
 | (insert) | Pending | Same transaction as the business change |
-| Pending, Retry Scheduled | Processing | Claim with a 60-second lease; `attempts` + 1 |
-| Processing | Processing | Lease expired, reclaimed by a later tick |
+| Pending, Retry Scheduled | Processing | Claim with a 130-second lease; `attempts` + 1. Template rows are never claimed |
+| Processing | Processing | Lease expired, reclaimed by a later tick, below the attempt cap |
+| Processing | Dead Letter | Lease expired at the attempt cap of 6 |
 | Processing | Accepted | Provider took it, or check-before-append found the event |
 | Processing | Simulated | Demo workspace or simulated transport |
 | Processing | Retry Scheduled | Retryable failure, backoff 120 s to 1 h with jitter |
 | Processing | Dead Letter | Attempts reach 6, or a non-retryable failure |
-| Dead Letter | Pending | Audited operator retry, owner only |
+| Dead Letter | Pending | Audited operator retry, owner only, `POST /admin/automations/runs/{id}/retry` |
 
 | Evidence | Meaning | Set when |
 |---|---|---|

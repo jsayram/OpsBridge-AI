@@ -32,7 +32,7 @@ Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 
 | Flow | Threat | Control | Test | Residual |
 |---|---|---|---|---|
-| Launch demo | Session flood burns Neon compute and storage | Per IP-hash hourly launch cap in `demo_quota` (5), global active cap (200), the Workers rate-limit binding as an approximate outer layer if the plan offers it, 2-hour TTL | Quota exhaustion, E2E-18 | Distributed flood could still wake Neon; emergency mode disables launch |
+| Launch demo | Session flood burns Neon compute and storage | Per IP-hash hourly launch cap in `demo_quota` (5), a cap of 150 unpurged demo workspaces that counts expired ones, the Workers rate-limit binding as an approximate outer layer if the plan offers it, 2-hour TTL | Quota exhaustion, E2E-18 | Distributed flood could still wake Neon. A separate launch-pause flag then stops new workspaces and shows the recorded walkthrough; emergency mode itself keeps the demo, per PRD 17 |
 | Launch demo | Token guessing | 256-bit random token, SHA-256 hash stored, `__Host-` cookie | Forged cookie test | None known |
 | Any read | Missing workspace filter | Query scoping, then RLS, then composite FKs | P3.a to P3.e proofs; ID-swap matrix in P1.3, P2.2 | A bug in `set_config` handling; tested by a canary query in integration tests |
 | Any read | Connection reuse leaks workspace | `set_config(..., true)` scope ends with the transaction | P3.e local; **must repeat through real Hyperdrive** | Pending Hyperdrive |
@@ -42,8 +42,12 @@ Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 | Dispatch | Replay sends twice | Lease plus check-before-append | P4.a to P4.e proofs with a simulated sheet | Late-landing append, see `docs/design/INTEGRATION-CONTRACTS.md` |
 | Dispatch | Guest reaches a live sink | Transport chosen from workspace mode read from the database | P4.1 denial, E2E-17 | None known |
 | Dispatch | Sheet formula injection | Prefix values starting with `= + - @` with a quote; `valueInputOption=RAW` | P4.3 test | None known |
-| Cleanup | Purge hits the wrong workspace | Role limited by trigger and function; refuses owner, template, unexpired | P3.p to P3.u proofs | None known |
-| Cleanup | Audit tampering through the cleanup role | No UPDATE grant; DELETE only for expired demo rows | P3.n to P3.q | A leaked cleanup credential could erase demo audit rows after expiry, which are disposable by policy |
+| Cleanup | Purge hits the wrong workspace | Cleanup role has no table rights; purge function refuses owner, template and unexpired | P3.n to P3.u proofs | None known |
+| Cleanup | A bug flips an owner workspace to demo so the purge takes it | Runtime role has no UPDATE on `workspaces`; expire function acts on demo rows only | P3.s2, P3.s5 | None known |
+| Cleanup | Audit tampering through the cleanup role | Only reaches rows via the purge function | P3.n, P3.q | A leaked cleanup credential could purge demo workspaces early only after they expire, which is the policy anyway |
+| Dispatch | Template rows claimed or sent | `claim_due_outbox` excludes template mode | P4.f | None known |
+| Dispatch | Poison event loops forever | Attempt cap inside the claim | P4.g | None known |
+| Any write | Retry repeats a create | `idempotency_keys` row in the same transaction | E2E-05 at P2.2 | None known |
 | Documents | Malicious upload | Guests can't upload. Owner path: byte sniffing, limits, quarantine | Guest denial now; P5.1 for the rest | PDF parser bugs on the owner path |
 | AI | Prompt injection | No tools, no secrets, strict schema, human decision, abstention | Adversarial suite in P5.5 | Quality of extraction is bounded by the fixture set |
 | Reports | CSV formula injection | Prefix neutralization, row and range caps | JOB-TEST-04 | None known |
