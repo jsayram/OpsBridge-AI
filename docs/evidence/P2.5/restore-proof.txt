@@ -1,10 +1,10 @@
-# Local backup and clean restore, 2026-11-06T20:49:43Z, source opsbridge_restart_test
-dump bytes: 149259
+# Local backup and clean restore, 2026-11-06T21:09:28Z, source opsbridge_restart_test
+dump bytes: 149370
 PASS data ai_reviews 2 rows
 PASS data approvals 16 rows
 PASS data assignees 7 rows
 PASS data audit_events 36 rows
-PASS data case_checklist_items 19 rows
+PASS data case_checklist_items 21 rows
 PASS data cases 125 rows
 PASS data consultant_handoffs 1 rows
 PASS data customer_source_relationships 6 rows
