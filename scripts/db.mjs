@@ -137,12 +137,16 @@ export async function seed(url) {
       ["approvals", t.approvals],
       ["documents", t.documents],
       ["ai_reviews", t.ai_reviews],
+      ["external_connections", t.external_connections],
       ["external_record_links", t.links],
       ["customer_source_relationships", t.relationships],
       ["reconciliation_findings", t.findings],
       ["inventory_items", t.inventory_items],
       ["inventory_snapshots", t.inventory_snapshots],
       ["workflow_rules", t.workflow_rules],
+      ["invoices", t.invoices],
+      ["contacts", t.contacts],
+      ["source_definition_mappings", t.source_definition_mappings],
       ["outbox", t.outbox],
     ];
     for (const [table, rows] of tables) await insertRows(c, table, TEMPLATE_WORKSPACE_ID, rows);
@@ -176,6 +180,15 @@ export async function seed(url) {
       },
     ]);
     await insertRows(c, "case_checklist_items", OWNER_WORKSPACE_ID, t.ownerChecklist);
+    // Simulators stay available to the owner beside any live connection. Their clock starts now.
+    for (const provider of ["crm_simulator", "erp_simulator", "inventory_simulator"]) {
+      await c.query(
+        `INSERT INTO app.external_connections (workspace_id, provider, mode, status, scopes, simulator_shift)
+         VALUES ($1, $2, 'simulated', 'Simulated', '{read}', now() - $3::timestamptz)
+         ON CONFLICT DO NOTHING`,
+        [OWNER_WORKSPACE_ID, provider, manifest.clock],
+      );
+    }
     await c.query("COMMIT");
   } catch (e) {
     await c.query("ROLLBACK");

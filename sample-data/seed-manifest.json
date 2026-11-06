@@ -1,7 +1,7 @@
 {
   "$comment": "Deterministic seed plan. All data is fictional. Counts are checked against PRD Section 16 by scripts/check-fixtures.mjs.",
   "manifestVersion": 1,
-  "packVersion": "pack-2",
+  "packVersion": "pack-3",
   "randomSeed": "northstar-v1",
   "clock": "2026-01-15T12:00:00Z",
   "template": {
@@ -21,10 +21,10 @@
   },
   "scenarioPack": {
     "rows": {
-      "customers": 2, "external_record_links": 4, "customer_source_relationships": 3,
+      "customers": 2, "external_record_links": 3, "customer_source_relationships": 1,
       "assignees": 3, "cases": 3, "case_checklist_items": 8, "documents": 3, "ai_reviews": 1,
-      "approvals": 1, "reconciliation_findings": 3, "inventory_items": 1, "inventory_snapshots": 2,
-      "workflow_rules": 2
+      "approvals": 1, "reconciliation_findings": 3, "inventory_items": 3, "inventory_snapshots": 2,
+      "workflow_rules": 2, "external_connections": 3
     }
   },
   "profile": { "cases": 1000, "auditRowsPerCase": 3 },

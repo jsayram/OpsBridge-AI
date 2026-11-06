@@ -30,6 +30,6 @@ describe("template data", () => {
     expect(customers.every((c) => c.canonical_name.endsWith("(fictional)"))).toBe(true);
     const text = JSON.stringify(template);
     expect(text).not.toMatch(/\b\d{3}-\d{2}-\d{4}\b/);
-    expect(text).not.toMatch(/@/);
+    expect(text).not.toMatch(/@(?!example\.com)/);
   });
 });

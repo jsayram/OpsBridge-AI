@@ -1,6 +1,9 @@
-// Deterministic template dataset: same manifest, same records, same IDs and dates. Contacts,
-// invoices and dashboard snapshots wait for their tables in P3 and P6.
+// Deterministic template dataset: same manifest, same records, same IDs and dates. Dashboard
+// snapshots wait for their table in P6.
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { detectFindings } from "../../backend/src/domain/reconcile.ts";
+import { mapCrmOrganization, mapErpCustomer } from "../../backend/src/integrations/mappers.ts";
 
 export const TEMPLATE_WORKSPACE_ID = "00000000-0000-4000-8000-000000000001";
 export const OWNER_WORKSPACE_ID = "00000000-0000-4000-8000-000000000002";
@@ -53,13 +56,18 @@ const FINDING_KINDS = [
   "name_mismatch",
   "duplicate_client",
   "missing_client",
-  "bill_to_review",
+  "definition_conflict",
   "unit_mismatch",
   "stale_snapshot",
   "unknown_sku",
 ];
 const SEVERITIES = ["high", "medium", "low"];
-const PACK_FINDING_STATUS = ["Open", "Investigating", "Proposed"];
+// The pack story: one to investigate, one waiting for a reviewer, one still open.
+const PACK_FINDINGS = [
+  ["definition_conflict", "Open", null],
+  ["name_mismatch", "Proposed", "Take the ERP legal name. Finance confirmed the suffix."],
+  ["missing_client", "Investigating", null],
+];
 const TEMPLATE_FINDING_STATUS = ["Open", "Investigating", "Proposed", "Resolved", "Dismissed"];
 
 const AUTOMATION_LABELS = {
@@ -69,6 +77,48 @@ const AUTOMATION_LABELS = {
   Queued: { dispatch_state: "pending", delivery_evidence: "none" },
   Failed: { dispatch_state: "dead_letter", delivery_evidence: "none" },
 };
+
+const snapshot = JSON.parse(
+  readFileSync(new URL("../../sample-data/simulator-snapshot.json", import.meta.url), "utf8"),
+);
+
+// Pack findings are the real engine's output on the simulator's data, so a first sync finds the
+// same keys and adds nothing. Only their timestamps depend on the clock.
+function detectPackFindings(customers, links, at) {
+  const fact = (provider, externalType, mapped) => ({
+    provider,
+    externalType,
+    externalId: mapped.value.externalId,
+    sourceModifiedAt: mapped.value.sourceModifiedAt,
+    externalVersion: mapped.value.externalVersion,
+    state: "active",
+    data: mapped.value.data,
+  });
+  const { findings } = detectFindings({
+    now: at(0),
+    sources: [
+      ...snapshot.crm.organizations.map((o) =>
+        fact("crm_simulator", "organization", mapCrmOrganization(o)),
+      ),
+      ...snapshot.erp.customers.map((c) => fact("erp_simulator", "customer", mapErpCustomer(c))),
+    ],
+    customers: customers.map((c) => ({
+      id: c.id,
+      canonicalName: c.canonical_name,
+      accountCode: c.account_code,
+      lifecycleStatus: c.lifecycle_status,
+    })),
+    links: links.map((l) => ({
+      provider: l.provider,
+      externalType: l.external_type,
+      externalId: l.external_id,
+      canonicalId: l.canonical_id,
+    })),
+    items: [],
+    snapshots: [],
+  });
+  return findings;
+}
 
 export const caseRefFor = (id) =>
   `CASE-${createHash("sha256").update(id).digest("hex").slice(0, 8).toUpperCase()}`;
@@ -177,13 +227,13 @@ export function buildTemplate(manifest) {
     },
   ];
 
-  // F1: one CRM organization, two legitimate ERP bill-tos, and one ERP spelling difference.
+  // F1: the CRM holds both organizations. Cedar Point has one approved bill-to, spelled
+  // differently. Harbor Ridge's two bill-tos stay unmapped until a reviewer decides.
   const [c1, c2] = customers;
   const links = [
     ["link-1", "crm_simulator", "organization", "CRM-ORG-1001", c1],
-    ["link-2", "erp_simulator", "bill_to", "ERP-BT-5001", c1],
-    ["link-3", "erp_simulator", "bill_to", "ERP-BT-5002", c1],
-    ["link-4", "erp_simulator", "bill_to", "ERP-BT-6001", c2],
+    ["link-2", "crm_simulator", "organization", "CRM-ORG-1002", c2],
+    ["link-3", "erp_simulator", "customer", "6001", c2],
   ].map(([pack_key, provider, external_type, external_id, customer]) => ({
     id: id(`link:${pack_key}`),
     provider,
@@ -194,7 +244,7 @@ export function buildTemplate(manifest) {
     last_seen: at(-1),
     pack_key,
   }));
-  const relationships = links.slice(1).map((l) => ({
+  const relationships = links.slice(2).map((l) => ({
     id: id(`relationship:${l.pack_key}`),
     customer_id: l.canonical_id,
     external_record_link_id: l.id,
@@ -204,9 +254,31 @@ export function buildTemplate(manifest) {
     approved_at: at(-20),
   }));
 
+  const packFindings = detectPackFindings(customers.slice(0, 2), links, at);
   const findings = Array.from({ length: manifest.template.reconciliationDiscrepancies }, (_, i) => {
-    const pack = i < 3;
-    const customer = pack ? customers[i % 2] : customers[i % customers.length];
+    const pack = PACK_FINDINGS[i];
+    if (pack) {
+      const found = packFindings.find(
+        (f) => f.kind === pack[0] && (f.kind !== "missing_client" || f.subject.startsWith("erp:")),
+      );
+      return {
+        id: id(`finding:${i}`),
+        entity_type: found.entityType,
+        entity_id: found.entityId,
+        kind: found.kind,
+        severity: found.severity,
+        source_values: JSON.stringify(found.evidence),
+        status: pack[1],
+        proposal: pack[2],
+        subject: found.subject,
+        dedupe_key: found.dedupeKey,
+        detected_at: at(-1),
+        resolved_at: null,
+        pack_key: `finding-${i + 1}`,
+      };
+    }
+    const customer = customers[i % customers.length];
+    const subject = `template:${i}`;
     return {
       id: id(`finding:${i}`),
       entity_type: "customer",
@@ -214,12 +286,40 @@ export function buildTemplate(manifest) {
       kind: FINDING_KINDS[i % FINDING_KINDS.length],
       severity: SEVERITIES[i % SEVERITIES.length],
       source_values: JSON.stringify({
-        crm: { name: customer.canonical_name, seenAt: at(-2) },
-        erp: { name: customer.canonical_name.replace("LLC", "L.L.C."), seenAt: at(-3) },
+        sources: [
+          {
+            system: "CRM (simulated)",
+            recordType: "organization",
+            externalId: `CRM-TPL-${i}`,
+            sourceTimestamp: at(-2),
+            externalVersion: at(-2),
+            fields: { Name: customer.canonical_name },
+          },
+          {
+            system: "ERP Simulator",
+            recordType: "customer",
+            externalId: `TPL-${i}`,
+            sourceTimestamp: at(-3),
+            externalVersion: at(-3),
+            fields: {
+              companyname: customer.canonical_name.replace("(fictional)", "Inc. (fictional)"),
+            },
+          },
+        ],
+        differences: [],
+        matchBasis: "exact_id",
+        explanation: "Shared sample finding, read-only.",
+        recommendedAction: "Work the findings in your own queue.",
+        ruleRef: null,
+        normalization: "name-norm-1",
+        resolution: { type: "acknowledge" },
       }),
-      status: pack ? PACK_FINDING_STATUS[i] : TEMPLATE_FINDING_STATUS[i % 5],
-      resolved_at: !pack && i % 5 >= 3 ? at(-1) : null,
-      pack_key: pack ? `finding-${i + 1}` : null,
+      status: TEMPLATE_FINDING_STATUS[i % 5],
+      subject,
+      dedupe_key: `template:${i}`,
+      detected_at: at(-i),
+      resolved_at: i % 5 >= 3 ? at(-1) : null,
+      pack_key: null,
     };
   });
 
@@ -229,7 +329,7 @@ export function buildTemplate(manifest) {
     description: `Field supply ${String.fromCharCode(65 + i)} (fictional)`,
     canonical_unit: i % 2 ? "box" : "each",
     lifecycle_status: "Active",
-    pack_key: i === 0 ? "item-1" : null,
+    pack_key: i < 3 ? `item-${i + 1}` : null,
   }));
   // F7: known, unknown SKU, mismatched unit, stale, and a second version of the same record.
   const inventory_snapshots = Array.from(
@@ -248,10 +348,96 @@ export function buildTemplate(manifest) {
         source_version: i < 18 ? 1 : 2,
         observed_at: at(i % 7 === 2 ? -40 : -1),
         ingested_at: at(0),
+        location: i < 2 ? ["North yard", "South yard"][i] : "Depot",
+        item_code: unknown ? `SKU-UNKNOWN-${i}` : item.canonical_item_code,
         pack_key: i < 2 ? `snapshot-${i + 1}` : null,
       };
     },
-  ).map((s, i) => (i === 1 ? { ...s, item_id: inventory_items[0].id, unit: "each" } : s));
+  ).map((s, i) =>
+    i === 1
+      ? {
+          ...s,
+          item_id: inventory_items[0].id,
+          item_code: inventory_items[0].canonical_item_code,
+          unit: "each",
+        }
+      : s,
+  );
+
+  const external_connections = [
+    ["crm_simulator", "connection-crm"],
+    ["erp_simulator", "connection-erp"],
+    ["inventory_simulator", "connection-inventory"],
+  ].map(([provider, pack_key]) => ({
+    id: id(`connection:${provider}`),
+    provider,
+    mode: "simulated",
+    status: "Simulated",
+    scopes: "{read}",
+    created_at: at(0),
+    pack_key,
+  }));
+
+  // PRD 16: read-only reference rows in the template. A sync adds a workspace's own.
+  const invoices = Array.from({ length: manifest.template.invoices }, (_, i) => {
+    const customer = customers[i % customers.length];
+    return {
+      id: id(`invoice:${i}`),
+      provider: "erp_simulator",
+      external_id: `TPL-INV-${String(i + 1).padStart(3, "0")}`,
+      tran_number: `INV-T${String(i + 1).padStart(4, "0")}`,
+      bill_to_external_id: `TPL-BT-${(i % customers.length) + 1}`,
+      customer_id: customer.id,
+      amount: (900 + i * 37).toFixed(2),
+      currency: "USD",
+      tran_date: at(-(i % 60)).slice(0, 10),
+      status: ["Open", "Paid Partially", "Paid In Full"][i % 3],
+      source_modified_at: at(-(i % 60)),
+    };
+  });
+
+  const GIVEN = ["Ana", "Theo", "Priya", "Sam", "Lena", "Omar", "Ivy", "Noah"];
+  const FAMILY = ["Reed", "Stone", "Vale", "Marsh", "Hale"];
+  const contacts = Array.from({ length: manifest.template.contacts }, (_, i) => {
+    const given = GIVEN[i % GIVEN.length];
+    const family = FAMILY[i % FAMILY.length];
+    return {
+      id: id(`contact:${i}`),
+      customer_id: customers[i % customers.length].id,
+      display_name: `${given} ${family} (fictional)`,
+      email_display: `${given}.${family}.${i}@example.com`.toLowerCase(),
+    };
+  });
+
+  const source_definition_mappings = [
+    [
+      "crm_simulator",
+      "crm-account-1",
+      "One organization in the sales relationship; may be a prospect",
+    ],
+    [
+      "erp_simulator",
+      "erp-customer-1",
+      "One billable legal entity; one organization may have many",
+    ],
+  ].map(([provider, source_definition_version, rationale]) => ({
+    id: id(`mapping:${provider}`),
+    provider,
+    entity_type: "customer",
+    source_definition_version,
+    canonical_definition_version: "customer-1",
+    mapping_rule_ref: "R-CUST-1",
+    field_authority: JSON.stringify({
+      legalName: "erp",
+      billing: "erp",
+      salesStage: "crm",
+      everythingElse: "steward",
+    }),
+    steward_role: "Finance lead (fictional role)",
+    approved_by: "seed",
+    approved_at: at(-30),
+    rationale,
+  }));
 
   const workflow_rules = [
     ["Notify ops sheet when approved", "approval.completed", "sheet_append"],
@@ -336,6 +522,10 @@ export function buildTemplate(manifest) {
     inventory_items,
     inventory_snapshots,
     workflow_rules,
+    external_connections,
+    invoices,
+    contacts,
+    source_definition_mappings,
     outbox,
     activity,
   };
