@@ -16,7 +16,13 @@
     "test": "vitest run",
     "check:fixtures": "node scripts/check-fixtures.mjs",
     "audit": "npm audit --audit-level=high",
-    "ci:local": "bash scripts/ci-local.sh"
+    "ci:local": "bash scripts/ci-local.sh",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "check:bundle": "node scripts/check-bundle.mjs",
+    "db:up": "docker compose -f infra/docker-compose.yml up -d --wait",
+    "db:setup": "node scripts/db.mjs setup-local opsbridge_dev && DATABASE_MIGRATOR_URL=postgres://opsbridge_migrator:local_dev_only@127.0.0.1:54330/opsbridge_dev node scripts/db.mjs migrate && DATABASE_MIGRATOR_URL=postgres://opsbridge_migrator:local_dev_only@127.0.0.1:54330/opsbridge_dev node scripts/db.mjs seed",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "hono": "4.13.16",

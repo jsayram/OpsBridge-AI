@@ -46,7 +46,10 @@ export const originCheck: MiddlewareHandler<AppEnv> = async (c, next) => {
     throw new ApiError(403, "origin_rejected", "This request came from another site");
   }
   const type = c.req.header("content-type")?.split(";")[0]?.trim().toLowerCase();
-  const hasBody = (c.req.header("content-length") ?? "0") !== "0" || c.req.raw.body !== null;
+  // Headers, not raw.body: workerd gives an empty POST a non-null body stream.
+  const hasBody =
+    (c.req.header("content-length") ?? "0") !== "0" ||
+    c.req.header("transfer-encoding") !== undefined;
   if (hasBody && type !== "application/json") {
     throw new ApiError(415, "unsupported_media_type", "Send JSON");
   }

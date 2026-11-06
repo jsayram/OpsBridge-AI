@@ -11,7 +11,22 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    # Same throwaway local values as infra/docker-compose.yml. Not a credential.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: opsbridge_admin
+          POSTGRES_PASSWORD: local_dev_only
+          POSTGRES_DB: opsbridge
+        ports:
+          - 54330:5432
+        options: >-
+          --health-cmd "pg_isready -U opsbridge_admin -d opsbridge"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -26,8 +41,12 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - run: npm run test:integration
       - run: npm run build
+      - run: npm run check:bundle
       - run: npm run check:fixtures
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
       - run: npm run audit
       - name: Install gitleaks
         run: |

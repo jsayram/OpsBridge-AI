@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
@@ -29,11 +29,15 @@ const apiHeaders = secureHeaders({
   contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
   referrerPolicy: "no-referrer",
   permissionsPolicy: PERMISSIONS,
+  // PRD 6.3: HSTS only after the domain is verified. Enabled at P1.5 with the real origin.
+  strictTransportSecurity: false,
 });
 const pageHeaders = secureHeaders({
   contentSecurityPolicy: PAGE_CSP,
   referrerPolicy: "no-referrer",
   permissionsPolicy: PERMISSIONS,
+  // PRD 6.3: HSTS only after the domain is verified. Enabled at P1.5 with the real origin.
+  strictTransportSecurity: false,
 });
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -69,8 +73,15 @@ app.route("/api/v1", me);
 // The SPA page for /admin is only served to a verified owner.
 app.use("/admin", ownerGate);
 app.use("/admin/*", ownerGate);
-app.get("/admin", (c) => c.env.ASSETS.fetch(new URL("/", c.req.url)));
-app.get("/admin/*", (c) => c.env.ASSETS.fetch(new URL("/", c.req.url)));
+const adminPage = async (c: Context<AppEnv>) => {
+  // Asset responses have immutable headers, so copy before the header middleware runs.
+  const page = new Response((await c.env.ASSETS.fetch(new URL("/", c.req.url))).body, {
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+  });
+  return page;
+};
+app.get("/admin", adminPage);
+app.get("/admin/*", adminPage);
 
 app.notFound((c) => {
   const e = notFound();

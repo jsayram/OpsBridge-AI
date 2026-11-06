@@ -20,8 +20,12 @@ step "format" npm run -s format:check
 step "lint" npm run -s lint
 step "typecheck" npm run -s typecheck
 step "unit tests" npm test --silent
+step "database" npm run -s db:up
+step "integration tests" npm run -s test:integration
 step "build" npm run -s build
+step "client bundle" npm run -s check:bundle
 step "fixtures" npm run -s check:fixtures
+step "browser tests" npm run -s test:e2e
 step "dependency audit" npm run -s audit
 step "secret scan" gitleaks dir --config .gitleaks.toml --redact --exit-code 1 --no-banner .
 echo; echo "ALL CHECKS PASSED"
