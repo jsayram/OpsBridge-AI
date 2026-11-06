@@ -1113,7 +1113,7 @@ Fixture generation must be idempotent. Demo reset may only operate on the curren
 The Section 16 minimums describe the dataset as a whole, not a per-session copy. Copying roughly 1,500 rows per visitor would use storage and compute that Neon Free does not have to spare.
 
 - **Template workspace:** one workspace with mode template holds the full dataset. The migrator role seeds it in the release step. Every runtime role can read it, and none can change it.
-- **Scenario pack:** Launch and Reset run one server-side function that copies about 35 rows into the new workspace: the guided client, its cases, findings, approvals and documents. Local measurement took 2 ms for 35 rows and 20 ms for 1,500.
+- **Scenario pack:** Launch and Reset run one server-side function that copies about 35 rows into the new workspace: the guided client, its cases, findings, approvals and documents. Local measurement took about 2 ms for 35 rows and about 20 ms for 1,500.
 - **Reads** combine the visitor's workspace with the template, and template rows are labeled read-only. **Writes** can only reach the visitor's workspace, enforced by row-level security and composite foreign keys.
 - Analytics for guests read the template's 90 days of snapshots plus the visitor's own changes.
 - Reset restores the pack exactly, and the same pack version always yields the same logical records.
