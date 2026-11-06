@@ -256,6 +256,34 @@ describe("P2.4 atomic approval", () => {
     expect(res.status).toBe(404);
   });
 
+  it("a shared template approval can't be decided", async () => {
+    const g = await launch();
+    await setRole(g.cookie, "manager");
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      `SELECT a.id FROM app.approvals a JOIN app.workspaces w ON w.id = a.workspace_id
+        WHERE w.mode = 'template' LIMIT 1`,
+    );
+    const res = await decide(g, rows[0].id, { decision: "approve", caseVersion: 1 });
+    expect(res.status).toBe(404);
+    const after = await mig.query("SELECT status FROM app.approvals WHERE id = $1", [rows[0].id]);
+    await mig.end();
+    expect(after.rows[0].status).toBe("pending");
+  });
+
+  it("an uppercase approval ID gets the one event key", async () => {
+    const { g, approvalId } = await readyCase();
+    const res = await decide(g, approvalId.toUpperCase(), { decision: "approve", caseVersion: 1 });
+    expect(res.status).toBe(200);
+    const mig = await connect("opsbridge_migrator");
+    const { rowCount } = await mig.query(
+      "SELECT 1 FROM app.outbox WHERE workspace_id = $1 AND idempotency_key = $2",
+      [g.workspaceId, `approval:${approvalId}`],
+    );
+    await mig.end();
+    expect(rowCount).toBe(1);
+  });
+
   it("refuses unknown fields, a bad decision and a missing key", async () => {
     const { g, approvalId } = await readyCase();
     const base = { decision: "approve", caseVersion: 1 };

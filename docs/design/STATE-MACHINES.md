@@ -17,7 +17,7 @@ Transitions not listed here return `409 invalid_transition`. Every transition wr
 
 `POST /cases` creates a case in Intake in one transaction, which is the Draft to Intake step and its `case.created` event. `draft: true` stops at Draft, with no event until the case moves on.
 
-**Checklist states:** `open`, `flagged`, `done`, `not_applicable`. Leaving Intake needs every required item answered or flagged, so a flagged item can reach a reviewer. Entering Ready needs every required item `done` or `not_applicable`. The checklist locks at Ready, and a return to Needs Review unlocks it. Failures return `409 checklist_incomplete` or `409 checklist_locked`.
+**Checklist states:** `open`, `flagged`, `done`, `not_applicable`. Leaving Intake needs every required item answered or flagged, so a flagged item can reach a reviewer. Entering Ready needs every required item `done` or `not_applicable`. The checklist and the case details lock at Ready, so what a reviewer approves stays what was approved, and a return to Needs Review unlocks them (`409 case_locked`). A checklist edit bumps the case version, so a page from before the edit is stale. Failures return `409 checklist_incomplete` or `409 checklist_locked`.
 
 **Approval statuses:** `pending`, `approved`, `rejected`, `withdrawn`. A PATCH return from Ready withdraws the pending row. Every workflow command takes the case row lock first, so prerequisites can't change between the check and the update.
 

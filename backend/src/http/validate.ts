@@ -1,9 +1,16 @@
 import type { Context } from "hono";
-import { invalidRequest } from "./errors";
+import { invalidRequest, notFound } from "./errors";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const isUuid = (value: string) => UUID.test(value);
+
+// Postgres compares UUIDs by value, but audit targets and event keys are text. One spelling
+// per record, or the same case splits into two histories.
+export function canonicalId(value: string): string {
+  if (!isUuid(value)) throw notFound();
+  return value.toLowerCase();
+}
 
 // Strict DTOs: any field not named here is rejected, which is the mass-assignment defense.
 export async function readStrictJson(

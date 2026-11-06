@@ -1,9 +1,10 @@
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   ApiFailure,
   type ActivityRow,
   type Assignee,
   api,
+  intentKeys,
   type CaseFull,
   type CaseRow,
   type ChecklistItem,
@@ -40,27 +41,31 @@ function CreateCase({ onClose }: { onClose: () => void }) {
   const { data } = useLoad<{ items: Customer[] }>("/customers");
   const [failure, setFailure] = useState<ApiFailure | null>(null);
   const [busy, setBusy] = useState(false);
+  const keys = useRef(intentKeys()).current;
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const due = String(form.get("dueAt") ?? "");
+    const body = {
+      title: form.get("title"),
+      customerId: form.get("customerId"),
+      caseType: form.get("caseType"),
+      queue: form.get("queue"),
+      ...(due ? { dueAt: toIso(due) } : {}),
+    };
     setBusy(true);
     setFailure(null);
     try {
       const made = await api<CaseRow>("/cases", {
         method: "POST",
-        idempotencyKey: crypto.randomUUID(),
-        body: {
-          title: form.get("title"),
-          customerId: form.get("customerId"),
-          caseType: form.get("caseType"),
-          queue: form.get("queue"),
-          ...(due ? { dueAt: toIso(due) } : {}),
-        },
+        idempotencyKey: keys.keyFor(JSON.stringify(body)),
+        body,
       });
+      keys.settle();
       navigate(`/app/cases/${made.id}`);
     } catch (err) {
+      keys.settle(err);
       if (err instanceof ApiFailure && err.status === 401) sessionEnded();
       else if (err instanceof ApiFailure) setFailure(err);
     } finally {
@@ -549,6 +554,7 @@ function WorkflowSection({
 }) {
   const { state } = useSession();
   const [reason, setReason] = useState("");
+  const keys = useRef(intentKeys()).current;
   const allowed = (capability: string) => state.status === "ready" && can(state.me, capability);
   const canDecide = allowed("approvals:decide");
   const pending = data.approval?.status === "pending" ? data.approval : null;
@@ -579,16 +585,24 @@ function WorkflowSection({
   const decide = (decision: "approve" | "reject") =>
     pending &&
     act(
-      () =>
-        api(`/approvals/${encodeURIComponent(pending.id)}/decision`, {
-          method: "POST",
-          idempotencyKey: crypto.randomUUID(),
-          body: {
-            decision,
-            caseVersion: data.version,
-            ...(decision === "reject" ? { reason } : {}),
-          },
-        }),
+      async () => {
+        const body = {
+          decision,
+          caseVersion: data.version,
+          ...(decision === "reject" ? { reason } : {}),
+        };
+        try {
+          await api(`/approvals/${encodeURIComponent(pending.id)}/decision`, {
+            method: "POST",
+            idempotencyKey: keys.keyFor(`${pending.id}:${JSON.stringify(body)}`),
+            body,
+          });
+          keys.settle();
+        } catch (e) {
+          keys.settle(e);
+          throw e;
+        }
+      },
       decision === "approve" ? "Approved." : "Rejected and returned to review.",
     ).then(() => setReason(""));
 
@@ -677,6 +691,7 @@ export function CaseDetail({ id }: { id: string }) {
   );
 
   const canEdit = state.status === "ready" && can(state.me, "cases:edit");
+  const locked = data ? ["Ready", "Approved", "Closed"].includes(data.status) : false;
 
   if (failure) {
     return (
@@ -781,6 +796,8 @@ export function CaseDetail({ id }: { id: string }) {
           <h2>Rename</h2>
           {data.readOnly ? (
             <p className="muted">Shared sample case, read-only for every visitor.</p>
+          ) : locked ? (
+            <p className="muted">Details are locked from Ready on. Return it to review first.</p>
           ) : canEdit ? (
             <form
               onSubmit={(e) => {

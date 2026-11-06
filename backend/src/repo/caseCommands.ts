@@ -20,6 +20,12 @@ const stale = () =>
   new ApiError(409, "stale_version", "Someone changed this case. Reload and try again.");
 const invalidTransition = (message = "That status change isn't allowed.") =>
   new ApiError(409, "invalid_transition", message);
+const detailsLocked = () =>
+  new ApiError(409, "case_locked", "Details are locked from Ready on. Return it to review first.");
+
+// What a reviewer approved must stay what was approved, so details stop changing here.
+const detailsFrozen = (status: unknown) =>
+  status === "Ready" || status === "Approved" || status === "Closed";
 
 export const workflowRole = (ctx: CommandContext): CaseRole | null => {
   if (ctx.actorRole === "owner" || ctx.actorRole === "manager") return "reviewer";
@@ -187,8 +193,9 @@ export async function updateCase(
     await checkChecklistGate(ctx, id, to);
   } else if (to === from) {
     throw invalidTransition("The case is already in that status.");
-  } else if (from === "Closed") {
-    throw invalidTransition("Reopen a closed case before changing it.");
+  }
+  if (detailsFrozen(from) && (patch.title !== undefined || patch.dueAt !== undefined)) {
+    throw detailsLocked();
   }
   const title = patch.title ?? (before.title as string);
   const updated = await ctx.db.query(
@@ -290,6 +297,7 @@ export async function handOffCase(
   const before = await lockedCase(ctx, seesTemplate, id);
   if (before.version !== input.expectedCaseVersion) throw stale();
   if (before.status === "Closed") throw invalidTransition("A closed case can't be handed off.");
+  if (input.dueAt !== undefined && detailsFrozen(before.status)) throw detailsLocked();
   // Same answer for another workspace's ID, an unknown ID and an ineligible person.
   const assignee = input.toAssigneeId
     ? await eligibleAssignee(ctx.db, ctx.workspaceId, input.toAssigneeId)
@@ -359,14 +367,22 @@ export async function updateChecklistItem(
     [ctx.workspaceId, caseId, itemId],
   );
   if (!current.rows[0]) throw notFound();
+  // Reopening an item drops its old evidence, which no longer describes the item.
   const { rows, rowCount } = await ctx.db.query(
     `UPDATE app.case_checklist_items
-        SET state = $4, evidence_ref = coalesce($5, evidence_ref), version = version + 1
+        SET state = $4,
+            evidence_ref = CASE WHEN $4 = 'open' THEN NULL ELSE coalesce($5, evidence_ref) END,
+            version = version + 1
       WHERE workspace_id = $1 AND case_id = $2 AND id = $3 AND version = $6
       RETURNING id, state, version, evidence_ref`,
     [ctx.workspaceId, caseId, itemId, input.state, input.evidenceRef ?? null, input.version],
   );
   if (rowCount === 0) throw stale();
+  // The checklist is part of what a reviewer read, so a page from before this edit is stale.
+  await ctx.db.query(
+    "UPDATE app.cases SET version = version + 1 WHERE workspace_id = $1 AND id = $2",
+    [ctx.workspaceId, caseId],
+  );
   await writeAudit(ctx, "checklist.updated", caseId, {
     before: current.rows[0],
     after: rows[0],

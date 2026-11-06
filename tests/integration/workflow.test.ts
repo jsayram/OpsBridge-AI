@@ -31,6 +31,9 @@ const finishRequired = async (cookie: string, id: string, state = "done") => {
   }
 };
 
+const versionOf = async (cookie: string, id: string) =>
+  (await call(`/api/v1/cases/${id}`, { cookie })).json.version as number;
+
 const events = async (g: Guest) => {
   const mig = await connect("opsbridge_migrator");
   const { rows } = await mig.query(
@@ -47,12 +50,16 @@ describe("P2.3 transitions through the API", () => {
     const id = (await packCases(g))["case-1"]?.id as string;
 
     await finishRequired(g.cookie, id);
-    const review = await patch(g.cookie, id, { status: "Needs Review", version: 1 });
+    const review = await patch(g.cookie, id, {
+      status: "Needs Review",
+      version: await versionOf(g.cookie, id),
+    });
     expect(review.status).toBe(200);
+    const atReview = review.json.version;
 
-    expect((await patch(g.cookie, id, { status: "Ready", version: 2 })).status).toBe(403);
+    expect((await patch(g.cookie, id, { status: "Ready", version: atReview })).status).toBe(403);
     await setRole(g.cookie, "manager");
-    const ready = await patch(g.cookie, id, { status: "Ready", version: 2 });
+    const ready = await patch(g.cookie, id, { status: "Ready", version: atReview });
     expect(ready.status).toBe(200);
 
     const detail = await call(`/api/v1/cases/${id}`, { cookie: g.cookie });
@@ -60,7 +67,7 @@ describe("P2.3 transitions through the API", () => {
 
     const returned = await patch(g.cookie, id, {
       status: "Needs Review",
-      version: 3,
+      version: ready.json.version,
       reason: "Missing signature",
     });
     expect(returned.status).toBe(200);
@@ -131,16 +138,26 @@ describe("P2.3 transitions through the API", () => {
     expect(blocked.json.code).toBe("checklist_incomplete");
 
     await finishRequired(g.cookie, id, "flagged");
-    const flaggedPasses = await patch(g.cookie, id, { status: "Needs Review", version: 1 });
+    const flaggedPasses = await patch(g.cookie, id, {
+      status: "Needs Review",
+      version: await versionOf(g.cookie, id),
+    });
     expect(flaggedPasses.status).toBe(200);
 
     await setRole(g.cookie, "manager");
-    const flaggedStops = await patch(g.cookie, id, { status: "Ready", version: 2 });
+    const flaggedStops = await patch(g.cookie, id, {
+      status: "Ready",
+      version: flaggedPasses.json.version,
+    });
     expect(flaggedStops.status).toBe(409);
     expect(flaggedStops.json.code).toBe("checklist_incomplete");
 
     await finishRequired(g.cookie, id);
-    expect((await patch(g.cookie, id, { status: "Ready", version: 2 })).status).toBe(200);
+    const ok = await patch(g.cookie, id, {
+      status: "Ready",
+      version: await versionOf(g.cookie, id),
+    });
+    expect(ok.status).toBe(200);
   });
 
   it("an optional item never blocks", async () => {
@@ -149,7 +166,11 @@ describe("P2.3 transitions through the API", () => {
     await finishRequired(g.cookie, id);
     const items = await checklist(g.cookie, id);
     expect(items.find((i) => !i.required)?.state).toBe("open");
-    expect((await patch(g.cookie, id, { status: "Needs Review", version: 1 })).status).toBe(200);
+    const moved = await patch(g.cookie, id, {
+      status: "Needs Review",
+      version: await versionOf(g.cookie, id),
+    });
+    expect(moved.status).toBe(200);
   });
 
   it("checklist updates are versioned, audited and locked once a case is Ready", async () => {
@@ -158,7 +179,20 @@ describe("P2.3 transitions through the API", () => {
     const id = pack["case-2"]?.id as string;
     const [item] = await checklist(g.cookie, id);
     if (!item) throw new Error("no item");
-    expect((await setItem(g.cookie, id, item, "open")).status).toBe(200);
+    const cleared = await call(`/api/v1/cases/${id}/checklist/${item.id}`, {
+      method: "PATCH",
+      cookie: g.cookie,
+      body: { state: "done", version: item.version, evidenceRef: "signed-sheet-1" },
+    });
+    expect(cleared.json.evidenceRef).toBe("signed-sheet-1");
+    const reopened = await setItem(
+      g.cookie,
+      id,
+      { ...item, version: cleared.json.version },
+      "open",
+    );
+    expect(reopened.status).toBe(200);
+    expect(reopened.json.evidenceRef).toBeNull();
     const stale = await setItem(g.cookie, id, item, "done");
     expect(stale.status).toBe(409);
     expect(stale.json.code).toBe("stale_version");
@@ -173,7 +207,7 @@ describe("P2.3 transitions through the API", () => {
     const swapped = await setItem(g.cookie, other, item, "done");
     expect(swapped.status).toBe(404);
 
-    const bad = await setItem(g.cookie, id, { ...item, version: 2 }, "skipped");
+    const bad = await setItem(g.cookie, id, { ...item, version: 3 }, "skipped");
     expect(bad.status).toBe(400);
 
     const ready = pack["case-3"]?.id as string;
@@ -187,6 +221,66 @@ describe("P2.3 transitions through the API", () => {
     expect(activity.json.items[0].action).toBe("checklist.updated");
   });
 
+  it("a checklist edit makes a page loaded before it stale", async () => {
+    const g = await launch();
+    await setRole(g.cookie, "manager");
+    const id = (await packCases(g))["case-2"]?.id as string;
+    const seen = await versionOf(g.cookie, id);
+    await finishRequired(g.cookie, id);
+    const res = await patch(g.cookie, id, { status: "Ready", version: seen });
+    expect(res.status).toBe(409);
+    expect(res.json.code).toBe("stale_version");
+  });
+
+  it("details freeze from Ready on, so what was approved stays what was approved", async () => {
+    const g = await launch();
+    await setRole(g.cookie, "manager");
+    const c = (await packCases(g))["case-3"];
+    const id = c?.id as string;
+    const edits = [{ title: "Changed" }, { dueAt: "2031-01-01T00:00:00Z" }];
+    for (const edit of edits) {
+      const res = await patch(g.cookie, id, { ...edit, version: 1 });
+      expect(res.status).toBe(409);
+      expect(res.json.code).toBe("case_locked");
+    }
+    const handoff = await call(`/api/v1/cases/${id}/handoffs`, {
+      method: "POST",
+      cookie: g.cookie,
+      body: {
+        toQueue: "Field Services",
+        reason: "x",
+        dueAt: "2031-01-01T00:00:00Z",
+        expectedCaseVersion: 1,
+      },
+    });
+    expect(handoff.status).toBe(409);
+    expect(handoff.json.code).toBe("case_locked");
+    const d = await call(`/api/v1/cases/${id}`, { cookie: g.cookie });
+    await call(`/api/v1/approvals/${d.json.approval.id}/decision`, {
+      method: "POST",
+      cookie: g.cookie,
+      headers: { "idempotency-key": `freeze-test-${id}` },
+      body: { decision: "approve", caseVersion: 1 },
+    });
+    for (const edit of edits) {
+      const res = await patch(g.cookie, id, { ...edit, version: 2 });
+      expect(res.json.code).toBe("case_locked");
+    }
+    const after = await call(`/api/v1/cases/${id}`, { cookie: g.cookie });
+    expect(after.json.version).toBe(2);
+    expect(after.json.title).toBe(d.json.title);
+  });
+
+  it("an uppercase ID reaches the same case and the same history", async () => {
+    const g = await launch();
+    const id = (await packCases(g))["case-1"]?.id as string;
+    const res = await patch(g.cookie, id.toUpperCase(), { title: "Upper", version: 1 });
+    expect(res.status).toBe(200);
+    expect(res.json.id).toBe(id);
+    const activity = await call(`/api/v1/cases/${id}/activity`, { cookie: g.cookie });
+    expect(activity.json.items[0].action).toBe("case.updated");
+  });
+
   it("a checklist change can't slip past a transition running at the same moment", async () => {
     for (let round = 0; round < 10; round++) {
       const g = await launch();
@@ -196,8 +290,9 @@ describe("P2.3 transitions through the API", () => {
       await finishRequired(g.cookie, id);
       const fresh = (await checklist(g.cookie, id)).find((i) => i.required);
       if (!fresh || !items.length) throw new Error("no item");
+      const version = await versionOf(g.cookie, id);
       const [move, flip] = await Promise.all([
-        patch(g.cookie, id, { status: "Ready", version: 1 }),
+        patch(g.cookie, id, { status: "Ready", version }),
         setItem(g.cookie, id, fresh, "open"),
       ]);
       const detail = await call(`/api/v1/cases/${id}`, { cookie: g.cookie });
@@ -322,6 +417,23 @@ describe("P2.3 handoffs, JOB-TEST-02", () => {
     expect(bodies[2]).toEqual(bodies[0]);
     const after = await call(`/api/v1/cases/${id}`, { cookie: g.cookie });
     expect(after.json.version).toBe(2);
+  });
+
+  it("an inactive person is refused the same way", async () => {
+    const h = await launch();
+    const list = (await call("/api/v1/assignees", { cookie: h.cookie })).json.items;
+    const gone = list.find((p: { canReceiveCases: boolean }) => p.canReceiveCases);
+    const mig = await connect("opsbridge_migrator");
+    await mig.query("UPDATE app.assignees SET active = false WHERE id = $1", [gone.id]);
+    await mig.end();
+    const cid = (await packCases(h))["case-1"]?.id as string;
+    const res = await handoff(
+      { toAssigneeId: gone.id, reason: "x", expectedCaseVersion: 1 },
+      h.cookie,
+      cid,
+    );
+    expect(res.status).toBe(403);
+    expect(res.json.code).toBe("unauthorized_assignee");
   });
 
   it("moves to a queue, clears the assignee, and refuses a no-op", async () => {

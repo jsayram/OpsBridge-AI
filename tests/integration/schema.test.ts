@@ -1,6 +1,16 @@
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
-import { connect, launch, type Guest, withLimits, call } from "./harness";
+import {
+  call,
+  connect,
+  counts,
+  type Guest,
+  idempotencyKey,
+  launch,
+  packCases,
+  setRole,
+  withLimits,
+} from "./harness";
 
 const manifest = JSON.parse(readFileSync("sample-data/seed-manifest.json", "utf8"));
 const TEMPLATE = "00000000-0000-4000-8000-000000000001";
@@ -227,6 +237,8 @@ describe("P2.1 schema", () => {
   });
 
   it("the pack holds every manifest table, and two launches match", async () => {
+    const first = await launch();
+    const second = await launch();
     const mig = await connect("opsbridge_migrator");
     const logical: Record<string, string> = {
       customers: "canonical_name, account_code",
@@ -247,8 +259,8 @@ describe("P2.1 schema", () => {
     for (const [table, count] of Object.entries(manifest.scenarioPack.rows) as [string, number][]) {
       const q = `SELECT ${logical[table]} FROM app.${table} WHERE workspace_id = $1`;
       const sorted = (rows: unknown[]) => rows.map((r) => JSON.stringify(r)).sort();
-      const a = sorted((await mig.query(q, [A.workspaceId])).rows);
-      const b = sorted((await mig.query(q, [B.workspaceId])).rows);
+      const a = sorted((await mig.query(q, [first.workspaceId])).rows);
+      const b = sorted((await mig.query(q, [second.workspaceId])).rows);
       expect(b, table).toEqual(a);
       expect(a.length, table).toBe(count);
       total += count;
@@ -260,6 +272,33 @@ describe("P2.1 schema", () => {
 
   it("a purge leaves no row in any workspace-scoped table", async () => {
     const victim = await launch();
+    await setRole(victim.cookie, "manager");
+    const pack = await packCases(victim);
+    const customers = await call("/api/v1/customers", { cookie: victim.cookie });
+    await call("/api/v1/cases", {
+      method: "POST",
+      cookie: victim.cookie,
+      headers: idempotencyKey(),
+      body: { title: "x", customerId: customers.json.items[0].id, caseType: "Billing" },
+    });
+    await call(`/api/v1/cases/${pack["case-1"]?.id}/handoffs`, {
+      method: "POST",
+      cookie: victim.cookie,
+      body: { toQueue: "Seasonal Staffing", reason: "x", expectedCaseVersion: 1 },
+    });
+    const ready = await call(`/api/v1/cases/${pack["case-3"]?.id}`, { cookie: victim.cookie });
+    await call(`/api/v1/approvals/${ready.json.approval.id}/decision`, {
+      method: "POST",
+      cookie: victim.cookie,
+      headers: idempotencyKey(),
+      body: { decision: "approve", caseVersion: 1 },
+    });
+    const filled = await counts(victim.workspaceId, [
+      "consultant_handoffs",
+      "outbox",
+      "idempotency_keys",
+    ]);
+    for (const [table, n] of Object.entries(filled)) expect(n, table).toBeGreaterThan(0);
     const mig = await connect("opsbridge_migrator");
     const clean = await connect("opsbridge_cleanup");
     await mig.query(

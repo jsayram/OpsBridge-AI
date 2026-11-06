@@ -111,7 +111,8 @@ export function buildTemplate(manifest) {
         case_type: CASE_TYPES[n % CASE_TYPES.length],
         status,
         due_at: at((n % 21) - 7),
-        created_at: at(-30 + (n % 28)),
+        // Pack cases sit newest, in story order, so a visitor sees the Intake case first.
+        created_at: packIndex >= 0 ? at(-1 - packIndex) : at(-30 + (n % 28)),
         queue: assignee?.team ?? manifest.template.teams[n % 2],
         assignee_id: assignee?.id ?? null,
         pack_key: packIndex >= 0 ? `case-${packIndex + 1}` : null,
@@ -308,7 +309,20 @@ export function buildTemplate(manifest) {
     occurred_at: at(-i),
   }));
 
+  // Every case carries a checklist, so none reaches Ready on an empty list.
+  const ownerChecklist = [
+    ["client_contact_confirmed", "Client contact confirmed"],
+    ["scope_confirmed", "Scope of work confirmed"],
+  ].map(([item_key, label], position) => ({
+    id: id(`owner-checklist:${item_key}`),
+    case_id: OWNER_CASE_ID,
+    item_key,
+    label,
+    position,
+  }));
+
   return {
+    ownerChecklist,
     customers,
     assignees,
     cases,

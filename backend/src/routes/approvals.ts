@@ -3,9 +3,8 @@ import { requireActor, requireCapability } from "../auth/actor";
 import { hashHex } from "../auth/tokens";
 import { withWorkspace } from "../db";
 import type { AppEnv } from "../env";
-import { notFound } from "../http/errors";
 import {
-  isUuid,
+  canonicalId,
   optionalText,
   readStrictJson,
   requireIdempotencyKey,
@@ -21,8 +20,7 @@ approvals.use("*", requireActor, requireCapability("approvals:decide"));
 
 approvals.post("/:id/decision", async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const key = requireIdempotencyKey(c);
   const body = await readStrictJson(c, ["decision", "caseVersion", "reason"]);
   const reason = optionalText(body.reason, "Reason", 500);

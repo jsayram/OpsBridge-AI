@@ -175,6 +175,7 @@ export async function seed(url) {
         created_at: manifest.clock,
       },
     ]);
+    await insertRows(c, "case_checklist_items", OWNER_WORKSPACE_ID, t.ownerChecklist);
     await c.query("COMMIT");
   } catch (e) {
     await c.query("ROLLBACK");

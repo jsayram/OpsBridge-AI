@@ -8,6 +8,7 @@ import { CHECKLIST_STATES } from "../domain/checklist";
 import type { AppEnv } from "../env";
 import { invalidRequest, notFound } from "../http/errors";
 import {
+  canonicalId,
   isUuid,
   isVersion,
   optionalText,
@@ -31,6 +32,12 @@ import { commandContext, idempotent } from "../repo/records";
 const MAX_TITLE = 200;
 const MAX_REASON = 500;
 const CURSOR = /^([01])_(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z)_([0-9a-f-]{36})$/;
+
+// A real calendar moment: the regex alone lets month 13 through to the database.
+const isRealInstant = (at: string) => {
+  const parsed = new Date(`${at.slice(0, 23)}Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 23) === at.slice(0, 23);
+};
 
 const pageLimit = (c: Context) => {
   const limit = Number(c.req.query("limit") ?? 25);
@@ -61,7 +68,9 @@ function caseQuery(c: Context<AppEnv>): CaseQuery {
   if (search !== undefined) q.search = requireText(search, "Search", 100);
   if (cursor !== undefined) {
     const m = CURSOR.exec(cursor);
-    if (!m || !isUuid(m[3] as string)) throw invalidRequest("Bad cursor");
+    if (!m || !isUuid(m[3] as string) || !isRealInstant(m[2] as string)) {
+      throw invalidRequest("Bad cursor");
+    }
     q.cursor = { rank: m[1] === "1" ? 1 : 0, at: m[2] as string, id: m[3] as string };
   }
   return q;
@@ -116,8 +125,7 @@ cases.post("/", requireCapability("cases:edit"), async (c) => {
 
 cases.get("/:id", async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const detail = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, async (db) => {
     const row = await findCase(db, actor.workspaceId, actor.kind === "guest", id);
     return row ? caseDetail(db, row, actor.workspaceId) : null;
@@ -128,8 +136,7 @@ cases.get("/:id", async (c) => {
 
 cases.get("/:id/activity", async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const limit = pageLimit(c);
   const cursor = c.req.query("cursor");
   if (cursor !== undefined && !/^\d{1,18}$/.test(cursor)) throw invalidRequest("Bad cursor");
@@ -146,8 +153,7 @@ cases.get("/:id/activity", async (c) => {
 // PATCH covers details and status. Approved and leaving Closed each have their own command.
 cases.patch("/:id", requireCapability("cases:edit"), async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const body = await readStrictJson(c, ["version", "title", "dueAt", "status", "reason"]);
   const version = requireVersion(body.version);
   if (body.title === undefined && body.dueAt === undefined && body.status === undefined) {
@@ -176,8 +182,7 @@ cases.patch("/:id", requireCapability("cases:edit"), async (c) => {
 
 cases.post("/:id/reopen", requireCapability("cases:reopen"), async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const body = await readStrictJson(c, ["reason", "version"]);
   const version = requireVersion(body.version);
   const reason = requireText(body.reason, "Reason", MAX_REASON);
@@ -195,8 +200,7 @@ cases.post("/:id/reopen", requireCapability("cases:reopen"), async (c) => {
 
 cases.post("/:id/handoffs", requireCapability("cases:handoff"), async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  if (!isUuid(id)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
   const body = await readStrictJson(c, [
     "toAssigneeId",
     "toQueue",
@@ -229,9 +233,8 @@ cases.post("/:id/handoffs", requireCapability("cases:handoff"), async (c) => {
 
 cases.patch("/:id/checklist/:itemId", requireCapability("cases:edit"), async (c) => {
   const actor = c.get("actor");
-  const id = c.req.param("id");
-  const itemId = c.req.param("itemId");
-  if (!isUuid(id) || !isUuid(itemId)) throw notFound();
+  const id = canonicalId(c.req.param("id"));
+  const itemId = canonicalId(c.req.param("itemId"));
   const body = await readStrictJson(c, ["state", "version", "evidenceRef"]);
   const evidenceRef = optionalText(body.evidenceRef, "Evidence reference", 200);
   const input = {

@@ -171,6 +171,30 @@ test("list search, filters, empty state and a shared read-only case", async ({ p
   await expectNoAxeViolations(page);
 });
 
+test("a lost response retries with the same key, so one case is made", async ({ page }) => {
+  await openOverview(page);
+  await toCases(page);
+  await page.getByRole("button", { name: "New case" }).click();
+  await page.getByLabel("Case title").fill("Only one of these");
+  let dropped = false;
+  await page.route("**/api/v1/cases", async (route) => {
+    if (route.request().method() === "POST" && !dropped) {
+      dropped = true;
+      await route.fetch();
+      await route.abort();
+    } else await route.continue();
+  });
+  await page.getByRole("button", { name: "Create case" }).click();
+  await expect.poll(() => dropped).toBe(true);
+  await expect(page.getByRole("button", { name: "Create case" })).toBeEnabled();
+  await page.getByRole("button", { name: "Create case" }).click();
+  await expect(page.getByRole("heading", { name: "Only one of these" })).toBeVisible();
+  await toCases(page);
+  await page.getByLabel("Search title or client").fill("Only one of these");
+  await page.getByRole("button", { name: "Search" }).click();
+  await expect(page.locator("tbody tr")).toHaveCount(1);
+});
+
 test("the new-case form and keyboard path pass axe", async ({ page }) => {
   await openOverview(page);
   await toCases(page);

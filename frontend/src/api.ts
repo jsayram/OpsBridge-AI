@@ -51,6 +51,21 @@ export async function api<T>(
   return body as T;
 }
 
+// One key per intent, kept until the server has answered. A lost response then retries with
+// the same key and replays the result, where a fresh key would repeat the effect.
+export function intentKeys() {
+  let held: { intent: string; key: string } | null = null;
+  return {
+    keyFor(intent: string) {
+      if (held?.intent !== intent) held = { intent, key: crypto.randomUUID() };
+      return held.key;
+    },
+    settle(error?: unknown) {
+      if (!(error instanceof ApiFailure && error.status === 0)) held = null;
+    },
+  };
+}
+
 export type Me =
   | {
       kind: "guest";
