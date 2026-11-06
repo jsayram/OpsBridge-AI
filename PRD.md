@@ -1,11 +1,11 @@
 # OpsBridge AI
 ## Phased Product Requirements Document and AI Builder Contract
 
-**Version:** 1.2  
+**Version:** 1.3  
 **Revision date:** November 6, 2026 (America/New_York)  
 **Original supplied document date:** November 6, 2026 (preserved provenance; not the revision date)  
 **Product owner:** Jose Ramirez  
-**Status:** Planning revision for owner review; stack direction chosen by the owner; implementation paused; no phase accepted, deployed, or claimed complete  
+**Status:** Build resumed as phased sessions on November 6, 2026; stack direction chosen by the owner; P0 design defects resolved in this revision; no phase owner-accepted, deployed, or claimed complete  
 **Intended audience:** AI coding agents, technical reviewers, hiring managers, and future maintainers  
 **Primary deliverable:** One publicly accessible, securely hosted enterprise operations automation web application with a repeatable guided demo, public technical case study, and private administration area.
 
@@ -35,7 +35,7 @@ This is a build contract, not a vague inspiration document. The implementing age
 16. Use the 47 work packages in Section 14, with one coordinator and bounded subagent assignments. A subagent report is not verification. Reconcile its changes, execute relevant checks, and update evidence before requesting acceptance.
 17. Document every package start, package finish, meaningful decision, failure, blocker, and handoff in the repository and Jose-Ramirez-Vault using Section 19.4 and docs/VAULT-WORKFLOW.md. No package is review-ready until the saved notes have been read back and linked to evidence.
 18. Keep Planned, Implemented, Verified, Owner Accepted, Merged, and Deployed as separate evidence fields. Planning a feature, using a fixture, or passing a local test does not establish any other field.
-19. The current request authorizes PRD, roadmap, job-alignment, and vault documentation updates only. Do not resume app scaffolding or implementation until Jose explicitly resumes the build. Do not create sessions, branches, accounts, deployments, or paid resources merely because they appear in this plan.
+19. Jose resumed the build on November 6, 2026 as phased sessions (docs/MASTER_INBOX.md). Local work, local Git history and the approved local tools are authorized. Do not create accounts, deployments, pushes, merges into main, or paid resources merely because they appear in this plan; docs/SESSION_HANDOFF.md lists the stop points.
 
 **Definition of done:** Requirements must work from a clean checkout and hosted environment, pass automated tests and manual verification, and have a truthful demonstration and reproducible deployment guide. A screenshot-only prototype does not meet this contract.
 
@@ -119,7 +119,7 @@ These are product decisions adapted from Jose's saved software-factory blueprint
 
 # 4. Scope and Non-Goals
 
-## 4.1 In scope for product version 1 (PRD revision 1.2)
+## 4.1 In scope for product version 1 (PRD revision 1.3)
 
 - Public landing/portfolio page and isolated guided demo.
 - Private owner login, least-privilege roles, and secure sessions.
@@ -188,10 +188,10 @@ Exact routing may adapt to the chosen React router, but no route may rely on cli
 
 **Scenario: Northstar Operations needs to onboard a fictional seasonal-services client.**
 
-1. Visitor clicks Launch Guided Demo. Server creates an isolated session and seeds exactly defined fictional accounts, invoices, cases, and documents.
+1. Visitor clicks Launch Guided Demo. Server creates an isolated session and copies a small, exactly defined scenario pack into a new workspace. The rest of the dataset is read from a shared read-only template (Section 16.1). If the database is waking, the screen says so (Section 13.2).
 2. Visitor clicks Create Sample Case. A case is created locally and optionally synchronizes from the simulated CRM. The UI shows a durable activity event.
 3. Visitor clicks Detect Mismatch. A duplicate/mismatch between a canonical customer and a simulated finance record is found with both values displayed.
-4. Visitor opens Review Document. A fixture-based or live AI extraction (truthfully labeled) identifies two missing fields and references the exact source locations. The user accepts/rejects a proposed non-legal correction.
+4. Visitor opens Review Document and picks a fixture document. Guests cannot upload files. A deterministic fixture review (truthfully labeled) identifies two missing fields and references the exact source locations. The user accepts, edits or rejects a proposed non-legal correction.
 5. Visitor clicks Approve Resolution. The workflow updates state, writes audit history, enqueues a synthetic notification or a safe configured integration action, and updates analytics.
 6. Visitor sees a result recap: steps, actions, before/after records, audit events, executed vs simulated integrations, and hypothetical vs measured time savings. A Reset Demo button restores a fresh isolated session.
 
@@ -232,7 +232,7 @@ Exact routing may adapt to the chosen React router, but no route may rely on cli
 | C - Cloudflare containers | React assets/Worker ingress + ASP.NET Core in Cloudflare Containers + external managed PostgreSQL + R2 | Not selected. It adds the most moving parts, and containers sleep when idle. |
 | D - Cloudflare Workers + PostgreSQL | React assets + TypeScript Workers + Neon Free Postgres through Hyperdrive + R2 | **Selected by Jose.** Keeps the PostgreSQL evidence with no server to keep awake. |
 
-**Open proof items for P0.2:** PDF text extraction within Workers CPU and memory limits, and whether normal requests fit the Workers Free 10 ms CPU limit; Neon wake-up delay on a first visit; transaction behavior through Hyperdrive's transaction-mode pooling; workspace isolation and least-privilege roles; outbox scheduling and recovery; database network exposure; backup and restore; current official prices. A failed proof reopens the decision through an updated ADR. Salesforce and Zapier remain external services. Language examples in the job posting are alternatives, not a requirement to add every language. Azure/AWS are illustrative nice-to-have cloud examples, and Cloudflare work must not be described as Azure or AWS experience. Preserve the job outcomes and all security/evidence gates.
+**P0.2 proof status:** ADR-000 owns the current state of each proof item. On November 6, 2026 the local proofs passed for approval concurrency, workspace isolation, least-privilege roles, audit cleanup, outbox replay and local restore, all on Docker Postgres without Hyperdrive in the path. PDF extraction works in workerd but does not fit the Workers Free 10 ms CPU limit past a few pages, so public paths never parse a PDF at request time (Sections 5.3 and 10.2) and the owner-upload path waits on DEC-003. Items needing Neon or Hyperdrive remain Pending Owner Credentials/Configuration. A failed proof reopens the decision through an updated ADR. Salesforce and Zapier remain external services. Language examples in the job posting are alternatives, not a requirement to add every language. Azure/AWS are illustrative nice-to-have cloud examples, and Cloudflare work must not be described as Azure or AWS experience. Preserve the job outcomes and all security/evidence gates.
 
 **Why PostgreSQL:** The posting makes strong SQL and data modeling a must-have and centers the data duties on reconciling systems into one trusted source of truth. The eventual README must distinguish Jose's prior SQL Server experience from what this project actually implements.
 
@@ -244,7 +244,7 @@ Exact routing may adapt to the chosen React router, but no route may rely on cli
 4. Object storage: only private, authorized documents; all references scoped server-side.
 5. Integration adapters: Salesforce test organization, mock ERP, and Zapier; separate credentials and explicit capabilities.
 6. AI gateway: accepts approved document excerpts, uses schema-constrained extraction and deterministic validation, and cannot perform external writes.
-7. Background execution: a durable DB-backed outbox, dispatched right after commit, with a slow Workers Cron Trigger sweep (about every 15-30 minutes) for anything missed. A sweep every minute would keep Neon awake and exhaust its free compute. Add a managed queue only when a measurable need justifies it.
+7. Background execution: a durable DB-backed outbox, dispatched right after commit, with a Workers Cron Trigger sweep every 30 minutes for anything missed and for expired demo cleanup. A sweep every minute would keep Neon awake and exhaust its free compute; the arithmetic is in docs/design/COST-INVENTORY.md. Add a managed queue only when a measurable need justifies it.
 
 ## 6.3 Deployment requirements
 
@@ -265,7 +265,7 @@ The schema must be generated through versioned migrations with explicit primary 
 
 | Table/aggregate | Required fields (minimum) | Key invariants |
 |---|---|---|
-| workspaces | id, name, mode (owner/demo), created_at, expires_at | Demo workspaces expire and cannot see owner records. |
+| workspaces | id, name, mode (owner/demo/template), created_at, expires_at | Demo workspaces expire and cannot see owner records. Exactly one template workspace exists, and it is read-only to every runtime role. |
 | users | id, oidc_subject, email_display, active, created_at | Never authorize based solely on an unverified email supplied by browser. |
 | memberships | workspace_id, user_id, role | Unique membership; server-side authorization for each request. |
 | demo_sessions | id, workspace_id, token_hash, expires_at, quota_counters | No raw session token stored in DB; TTL and rate limits enforced. |
@@ -275,12 +275,13 @@ The schema must be generated through versioned migrations with explicit primary 
 | external_connections | id, workspace_id, provider, mode, scopes, secret_reference, status | No raw access/refresh tokens in app tables; only server-owned references. |
 | external_record_links | workspace_id, provider, external_type, external_id, canonical_type, canonical_id, last_seen | Unique per provider/type/external ID; proven mapping. |
 | sync_runs | id, workspace_id, provider, cursor, started_at, ended_at, status, counts, error_code | Resume safely, preserve last successful cursor. |
-| reconciliation_findings | id, workspace_id, entity_type, entity_id, kind, severity, source_values, status, resolved_at | Resolution is auditable; source evidence retained without secrets. |
+| reconciliation_findings | id, workspace_id, entity_type, entity_id, kind, severity, source_values, status, defer_until, resolved_at | Resolution is auditable; source evidence retained without secrets. |
 | workflow_rules | id, workspace_id, trigger, condition, action, enabled, version | No arbitrary code execution or user-supplied destination URLs. |
-| workflow_events/outbox | id, workspace_id, event_type, payload_ref, idempotency_key, state, attempts, next_attempt_at | Exactly-once business effect via idempotent sink; at-least-once delivery assumed. |
+| workflow_events/outbox | id, workspace_id, event_type, payload_ref, idempotency_key, dispatch_state, delivery_evidence, evidence_ref, attempts, next_attempt_at, lease_expires_at | One business effect via an idempotent sink; at-least-once delivery assumed. Delivery evidence is never inferred from dispatch state. |
 | approvals | id, workspace_id, case_id, proposed_action, proposed_payload, status, actor_id, decided_at, reason | Author and reviewer separation where applicable; state changes atomic. |
-| ai_reviews | id, workspace_id, document_id, model_version, prompt_version, extraction, citations, status, cost_units | Model output never directly mutates records. |
-| audit_events | id, workspace_id, actor_type, actor_id, action, target, before_hash, after_hash, request_id, occurred_at | Append-only from application role; no raw secrets or sensitive prompt payloads. |
+| ai_reviews | id, workspace_id, document_id, model_version, prompt_version, extraction, citations, reviewer_edits, status, cost_units | Model output never directly mutates records. The original suggestion is immutable; reviewer edits are stored beside it and revalidated. |
+| audit_events | id, workspace_id, actor_type, actor_id, action, target, before_hash, after_hash, request_id, occurred_at | Append-only for every role; the only exception is the Section 7.4 cleanup rule. No raw secrets or sensitive prompt payloads. |
+| retention_log | id, workspace_id, purged_at, audit_rows, business_rows | Written by the cleanup role in the purge transaction. Holds counts and the workspace ID only. |
 | metric_snapshots | workspace_id, period, metric_key, numerator, denominator, assumptions_version | Must identify synthetic, measured, or estimated provenance. |
 
 ## 7.1 Database rules
@@ -298,11 +299,14 @@ The schema must be generated through versioned migrations with explicit primary 
 
 ## 7.2 Canonical statuses
 
-Case: Draft -> Intake -> Needs Review -> Ready -> Approved -> Closed.  
-Exception: Open -> Investigating -> Proposed -> Resolved / Dismissed.  
-AI review: Queued -> Processing -> Needs Human Review -> Accepted / Rejected / Failed.  
-Outbox: Pending -> Processing -> Delivered / Retry Scheduled / Dead Letter.  
+Case: Draft -> Intake -> Needs Review -> Ready -> Approved -> Closed. Closed -> Needs Review is the reopen path, for an authorized role with a reason.  
+Exception: Open -> Investigating -> Proposed -> Resolved / Dismissed. Open, Investigating or Proposed -> Deferred -> Open; a deferred finding carries defer_until and returns to the queue on that date or by operator action.  
+AI review: Queued -> Processing -> Needs Human Review -> Accepted / Accepted with Edits / Rejected. Queued or Processing -> Failed; Failed -> Queued on retry. An abstention still reaches Needs Human Review.  
+Outbox dispatch_state: Pending -> Processing -> Accepted / Simulated / Retry Scheduled / Dead Letter. Retry Scheduled -> Processing. Dead Letter -> Pending only by an audited operator retry.  
+Outbox delivery_evidence: None -> Provider Accepted -> Confirmed. This is a separate field from dispatch_state. Confirmed requires an evidence reference.  
 Integration: Not Configured -> Simulated / Connected Test -> Degraded / Disconnected.
+
+The user-facing delivery label is derived, and these five are the only labels: **Queued** (Pending, Processing or Retry Scheduled), **Accepted** (Accepted with Provider Accepted evidence), **Confirmed** (Confirmed evidence), **Failed** (Dead Letter), **Simulated** (Simulated). "Delivered" is retired because neither Mode A nor Mode B can prove it without evidence. In Mode A there is no callback, so Confirmed is reachable only when the owner records a Zap run reference through an audited admin action (POST /api/v1/admin/automations/runs/{id}/confirm). Until then a Mode A event stays Accepted, which is the truthful state. Full transition tables are in docs/design/STATE-MACHINES.md.
 
 Invalid transitions return a typed conflict response; they must not silently succeed.
 
@@ -320,6 +324,20 @@ These are bounded extensions to the baseline schema; specify them in P0.3 and mi
 | customer_source_relationships | id, workspace_id, customer_id, external_record_link_id, relationship_role, mapping_version, approved_by, approved_at | Preserve distinct CRM organization and ERP bill-to external identities when related to one canonical organization; invoice/source references retain their specific bill-to relationship. Source links and customer must share the workspace; relationship is not evidence that the entities are interchangeable. |
 
 Self-serve report criteria are validated request DTOs, not arbitrary SQL; persistence of saved report criteria is optional and requires scoped owner/role rules. Do not introduce a separate reporting warehouse or unrestricted report execution engine for this slice.
+
+## 7.4 Roles, retention and the append-only exception
+
+Three database roles exist, with separate credentials and, in hosted environments, separate Hyperdrive configurations:
+
+| Role | Used by | May | May not |
+|---|---|---|---|
+| opsbridge_migrator | Controlled release step only | Own the schema, apply migrations, seed the template | Serve requests |
+| opsbridge_app | Worker request path and dispatcher | SELECT, INSERT and UPDATE on business tables; SELECT and INSERT on audit_events; EXECUTE the outbox claim functions | DELETE or TRUNCATE anything; UPDATE audit_events; run the purge |
+| opsbridge_cleanup | Cron cleanup path only | SELECT and DELETE needed for the purge; EXECUTE purge_demo_workspace; INSERT into retention_log | INSERT or UPDATE business rows; UPDATE audit_events; touch owner or template workspaces |
+
+**Rule.** audit_events rejects UPDATE, DELETE and TRUNCATE for every role, including the table owner, through a trigger. One case passes: a DELETE by opsbridge_cleanup of rows whose workspace has mode demo and an expires_at in the past. Owner and template audit rows can never be removed by the application. The purge runs one workspace at a time in one transaction, refuses anything else, and records counts in retention_log, so a purge is itself accountable.
+
+Demo reset never deletes. It creates a fresh workspace, points the session at it and sets the old workspace's expires_at to now, so the request path needs no destructive right. The cron sweep purges at most 5 expired workspaces per run. retention_log rows are kept 90 days and removed by the migrator role. Purged demo data can remain in backups until those backups rotate, which is at most 7 days.
 
 
 ---
@@ -347,14 +365,18 @@ Self-serve report criteria are validated request DTOs, not arbitrary SQL; persis
 | GET /api/v1/me | Any session | Return server-authorized capabilities, not editable roles. |
 | GET/POST /api/v1/cases | Scoped viewer/editor | List/create fictional cases. |
 | GET/PATCH /api/v1/cases/{id} | Scoped actor | Read/update with version checking. |
-| POST /api/v1/cases/{id}/documents | Scoped editor | Initiate validated private file upload. |
+| POST /api/v1/cases/{id}/documents | Owner workspace editor only | Initiate validated private file upload. Guests receive 403. |
+| POST /api/v1/cases/{id}/documents/from-fixture | Scoped editor, including demo | Attach an allowlisted fixture document by fixture ID. |
 | POST /api/v1/documents/{id}/review | Scoped actor | Request bounded AI or fixture review. |
+| POST /api/v1/ai-reviews/{id}/decision | Authorized reviewer | Accept, accept with edits or reject; edits are revalidated. |
 | POST /api/v1/approvals/{id}/decision | Authorized reviewer | Accept/reject approved actions with audit/outbox. |
 | GET /api/v1/reconciliation | Scoped viewer | List mismatches and source evidence. |
-| POST /api/v1/reconciliation/{id}/resolve | Authorized reviewer | Apply safe mapped correction. |
+| POST /api/v1/reconciliation/{id}/resolve | Authorized reviewer | Approve, reject or defer; approve applies a safe mapped correction. |
 | GET /api/v1/integrations | Scoped viewer | Redacted provider state and sync health. |
 | POST /api/v1/admin/integrations/{id}/sync | Owner only | Start read-only controlled sync. |
 | GET /api/v1/automations/runs | Scoped viewer | Status, attempts, delivery uncertainty. |
+| POST /api/v1/admin/automations/runs/{id}/confirm | Owner only | Record evidence reference that moves an event to Confirmed. |
+| POST /api/v1/cases/{id}/reopen | Authorized reviewer | Version-checked Closed -> Needs Review with a required reason. |
 | GET /api/v1/analytics/overview | Scoped viewer | Deterministic metrics with provenance. |
 | POST /api/v1/cases/{id}/handoffs | Scoped analyst/reviewer | Version-checked assignment/queue transfer with checklist and audit history. |
 | PATCH /api/v1/cases/{id}/checklist/{itemId} | Scoped editor | Update allowed checklist fields; enforce workspace, version and transition prerequisites. |
@@ -411,13 +433,15 @@ Zapier is a meaningful integration, not a decorative badge. However, an external
 - Allowlisted event types only: case.created, case.needs_review, approval.completed, reconciliation.resolved, integration.degraded.
 - A workflow rule has a clear trigger, filter, action, enabled state, and audit history. No arbitrary code, SQL, shell, or free-form external HTTP target.
 - Payloads are minimal, synthetic in demo, non-sensitive, and subject to schema validation. Do not send document contents or credential material.
-- Clearly distinguish **Queued**, **Accepted by provider**, **Delivered/confirmed (only when evidence exists)**, **Failed**, and **Simulated**.
+- Clearly distinguish **Queued**, **Accepted** (by the provider), **Confirmed** (only when evidence exists), **Failed**, and **Simulated**. Section 7.2 defines how each label is derived.
+- Only the owner workspace can reach a live transport. Demo workspaces always use the simulated transport, so no public action can write to the sheet or consume Zapier tasks.
 
 ## 9.2 Two Zapier modes
 
 **Mode A, persistent low-cost demonstration (mandatory):**
 
-- Application emits a sanitized approved event to an owner-controlled Google Sheet through an authenticated server-side integration.
+- Application emits a sanitized approved event to an owner-controlled Google Sheet through an authenticated server-side integration, using a Google service account that can reach only that sheet.
+- A Sheets append has no idempotency key, so duplicate prevention happens on the application side. Each attempt reads the sheet's event ID column first. If the event ID is present, the attempt records Provider Accepted and appends nothing. Otherwise it appends one row with the event ID in column A. A dispatcher holds a 60-second lease; Sheets calls time out at 10 seconds; a timed-out append is retried no sooner than 120 seconds later so a late write lands before the next check. docs/design/INTEGRATION-CONTRACTS.md has the full sequence and the residual risk.
 - Zapier uses a supported non-premium Google Sheets trigger and one non-premium action, such as sending an email to an owner-controlled test mailbox.
 - Free-tier polling can take up to the plan's documented interval, so the public five-minute tour never waits for this Zap.
 - Demonstration evidence includes a real execution record, visible timestamp, destination, and video; the public environment displays the mode honestly.
@@ -462,13 +486,13 @@ No real visa eligibility, legal advice, immigration filing, government record cr
 
 1. Authorize workspace, case, document, and action.
 2. Validate uploaded object and processing status.
-3. Extract text safely from a synthetic document with bounded size/page/character limits.
+3. Extract text safely from a synthetic document with bounded size/page/character limits. Fixture documents are extracted once at build time and their text ships with the seed, so public requests never parse a PDF. A document with no text layer is not an extraction failure: the review abstains with reason no_extractable_text. There is no OCR or vision path in v1.
 4. Strip active document features; treat extracted text as untrusted.
 5. Call an allowlisted AI provider through server-side configuration, or use a clearly labeled deterministic demo fixture.
 6. Require a strict versioned JSON schema: extractedFields, perFieldSource, uncertainties, missingFields, proposedAction, abstained, and reasons.
 7. Validate schema and permissible field values. Deterministic rules, not model assertions, determine business policy validity.
 8. Persist model/provider identifier, prompt template version, input document hash, output validation result, token/cost estimate, and citations.
-9. Present a comparison UI that permits a human to accept, reject, or edit the proposed action.
+9. Present a comparison UI that permits a human to accept, reject, or edit the proposed action. An edit is stored apart from the original suggestion, limited to fields in the schema, and passes the same deterministic validation before the status becomes Accepted with Edits.
 10. Only an authorized reviewer can commit the approved action through a normal audited application command.
 
 ## 10.3 Guardrails
@@ -489,7 +513,7 @@ No real visa eligibility, legal advice, immigration filing, government record cr
 Build at least 40 synthetic test documents:
 
 - 20 standard complete/incomplete documents.
-- 10 deliberately messy cases: scans, layouts, missing pages, conflicting dates, typos, unexpected field order.
+- 10 deliberately messy cases: layouts, missing pages, conflicting dates, typos, unexpected field order, and image-only scans. Scans are in the suite to test abstention: with no OCR path, the correct result for an image-only page is abstained with reason no_extractable_text, and they are excluded from extraction-accuracy figures.
 - 10 adversarial cases: prompt injection, forged role text, hidden instructions, external URL bait, embedded markup, and attempts to force unauthorized tool use.
 
 Track exact-match/normalized field accuracy, per-field precision/recall where applicable, missing-field detection, abstention correctness, schema-valid output rate, inappropriate-action rate, latency, token usage, and estimated cost.
@@ -516,7 +540,7 @@ The test report must state fixture size, model/version, date, limitations, and e
 3. Integration health: connected/simulated status, last successful sync, records processed, failures and retries.
 4. Data quality: unique conflicts by type, unresolved age, resolution outcomes, and fields most frequently mismatched.
 5. AI assistance: processed docs, accepted/rejected suggestions, abstentions, measured evaluation performance, and provider cost.
-6. Automation: queued/delivered/simulated notifications, retries, dead letters, and estimated manual steps avoided.
+6. Automation: queued/accepted/confirmed/simulated notifications, retries, dead letters, and estimated manual steps avoided.
 7. ROI calculator: editable assumptions with explicit source and caveat, comparing manual and automated process cost.
 
 ## 11.2 ROI formulas and provenance
@@ -549,7 +573,7 @@ Use OWASP ASVS 5.0 as a web application checklist, OWASP API Security Top 10 (20
 
 ## 12.1 Assets and trust boundaries
 
-**Assets:** source repository, deployment credentials, OIDC identity, sessions, Salesforce OAuth tokens, Zapier hook URL, AI provider key, database, synthetic business records, private document objects, audit evidence, and cost budget.
+**Assets:** source repository, deployment credentials, OIDC identity, sessions, Salesforce OAuth tokens, Google service account key for the Sheets bridge, Zapier account and its Google connection, Zapier hook URL, AI provider key, database role credentials, database, synthetic business records, private document objects, audit evidence, and cost budget.
 
 **Trust boundaries:** anonymous browser -> application API; authenticated owner -> privileged API; application -> DB/storage; application -> Salesforce; application -> ERP simulator; application -> Zapier/Google Sheets; application -> LLM provider; deployment/CI -> production infrastructure.
 
@@ -565,7 +589,7 @@ Use OWASP ASVS 5.0 as a web application checklist, OWASP API Security Top 10 (20
 | Cross-site scripting | Safe React rendering, strict CSP, no unsafe HTML, sanitize any approved rich text | Stored/reflected XSS fixtures and CSP smoke test. |
 | CSRF on privileged writes | Origin checks and anti-CSRF token or equivalent framework protection | Cross-origin form/request rejection tests. |
 | SSRF and untrusted URLs | Allowlists, no user-controlled fetch target, block loopback/link-local/metadata IPs and redirects to disallowed networks | URL bypass and redirect tests. |
-| Malicious or oversized file | Type detection by bytes, size/page limits, private quarantine, optional malware scanning, safe extraction, no executable formats | EICAR where safe, polyglot/oversize/spoofed MIME tests. |
+| Malicious or oversized file | Guests cannot upload; they select allowlisted fixtures. Owner uploads get type detection by bytes, size/page limits, private quarantine, optional malware scanning, safe extraction, no executable formats | Guest upload denial, EICAR where safe, polyglot/oversize/spoofed MIME tests. |
 | Prompt injection/data exfiltration | Document text as data, no tools or secrets in model context, strict output schema, human approval, provider allowlist | Adversarial AI evaluation suite. |
 | Webhook spam/replay | Secret server-side destinations, bounded retries, idempotency keys, rate limiting, validated provider callbacks if added | Duplicate/replay and outage tests. |
 | AI/API cost blowout | Owner-only live AI, per-session/request quotas, concurrency limits, provider cost alerts, hard application token budget | Stress and quota-exhaustion tests. |
@@ -638,6 +662,8 @@ These are engineering targets for a small portfolio app, not contractual SLAs:
 
 - Desktop dashboard main content usable within 2.5 seconds under normal demo load.
 - Non-AI API p95 under 500ms at a documented low-load test profile, excluding network variance and startup/cold start; publish observed numbers with hardware and conditions.
+- **First visit:** the landing page is static assets and never touches the database, with main content usable within 2 seconds. Launch Guided Demo, including a Neon wake-up, reaches the first demo screen within 5 seconds at p95. Measure both at P1.5 and P7.4 and publish the result. If Neon's wake-up misses this target, revisit before P8; no keep-warm ping is allowed on the free plan.
+- **Waking behavior:** after 1 second the screen says "Starting your demo workspace. This can take a few seconds the first time." with a progress indicator announced to screen readers. At 8 seconds it offers Retry. At 15 seconds it also offers the recorded walkthrough, so a visitor is never stuck on a spinner.
 - No unbounded list, report, file, or webhook operation; hard resource limits.
 - All buttons have real states and actions. No dead-end demo controls.
 - Keyboard-only completion of the core demo path and automated accessibility checks, followed by manual spot checks.
@@ -688,7 +714,7 @@ The phase-specific tables below define scope, concrete artifacts, verification, 
 
 **Goal:** Resolve uncertainty before adding infrastructure or code.
 
-**Package boundaries:** No hosting/account provisioning, real integrations, public release, or whole-application generation. P0.5 is future build work and stays paused until Jose resumes implementation.
+**Package boundaries:** No hosting/account provisioning, real integrations, public release, or whole-application generation.
 
 | Work package | Bounded scope | Required artifacts | Verification / stop gate |
 |---|---|---|---|
@@ -858,7 +884,7 @@ The phase-specific tables below define scope, concrete artifacts, verification, 
 
 | Work package | Bounded scope | Required artifacts | Verification / stop gate |
 |---|---|---|---|
-| P5.1 - Private document lifecycle | Implement authorized synthetic PDF upload, byte/type/size/page limits, private quarantine, safe bounded text extraction and retention. | Document lifecycle endpoints/worker, hash/version metadata, private object policy and upload/security tests. | Test spoofed/oversize/active/malformed files, cross-workspace object reads and cleanup; no public bucket or real document input. |
+| P5.1 - Private document lifecycle | Implement authorized owner-only synthetic PDF upload, byte/type/size/page limits, private quarantine, safe bounded text extraction and retention. Guests use prepared fixtures. Where extraction runs depends on DEC-003. | Document lifecycle endpoints/worker, hash/version metadata, private object policy and upload/security tests. | Test spoofed/oversize/active/malformed files, cross-workspace object reads and cleanup; no public bucket or real document input. |
 | P5.2 - Structured fixture review | Implement provider-neutral schema, deterministic fixtures, source segment/page references, missing fields, uncertainty and abstention. | Review contracts, versioned prompt/fixtures, validated extraction display and schema/citation tests. | Reject invalid/unknown fields or unsupported source claims; prove deterministic replay with no live inference or external writes for guests. |
 | P5.3 - Owner-only live gateway and budgets | Only after owner provider/budget approval, add fixed allowlisted provider calls with hard request/token/concurrency limits, timeout and fallback. | Server-side adapter, cost/version metadata, provider-data handling note and quota/outage tests. | Test exhausted limits, unavailable provider, unsafe destinations and secret-redaction. Credentials or live approval absent means disabled/pending, not live-verified. |
 | P5.4 - Human review and audited command | Allow reviewer accept/reject/edit with evidence; commit approved safe changes through ordinary authorized version-checked command. | Comparison/review UI, linked approval command, source-to-change audit and rejection/concurrency tests. | Prove model cannot call tools, write data or notify; rejected/invalid/stale suggestions cannot mutate canonical state. |
@@ -991,7 +1017,7 @@ The phase-specific tables below define scope, concrete artifacts, verification, 
 
 The source is Jose's supplied Development & Automation Lead job description. It is reference material, not authorization to access the employer or its systems. The posting requires at least one modern language; Python, C#, and JavaScript/TypeScript are examples. Azure/AWS and workflow/BI products are examples, not a requirement to accumulate every vendor. Salesforce is this project's chosen CRM demonstration candidate; the posting does not identify the CRM vendor. NetSuite is expressly named, but the ERP Simulator is not evidence of live NetSuite experience.
 
-Maintain these **25 stable JOB IDs** in REQUIREMENTS-TRACEABILITY.md, package briefs/reports, and vault notes. All product proof below is **Planned at revision 1.2**. A language/framework/hosting choice is useful only if it enables readable, secure, tested evidence of these outcomes. Do not claim work-history requirements from a solo synthetic app.
+Maintain these **25 stable JOB IDs** in REQUIREMENTS-TRACEABILITY.md, package briefs/reports, and vault notes. All product proof below is **Planned at revision 1.3** unless docs/REQUIREMENTS-TRACEABILITY.md records otherwise. A language/framework/hosting choice is useful only if it enables readable, secure, tested evidence of these outcomes. Do not claim work-history requirements from a solo synthetic app.
 
 ## Must-have qualifications
 
@@ -1062,7 +1088,7 @@ Seed data must be deterministic, version-controlled, and generated through fixtu
 - 120 fictional cases spanning all states, with 20 intentionally needing review.
 - 40 synthetic sample documents covering AI evaluation categories.
 - 80 fictional invoices, 20 inventory references, and 15 deliberate reconciliation discrepancies.
-- 30 approval/activity events and 20 automation events with examples of delivered, simulated, retry and failed state. Historical seeded delivery labels are synthetic examples, never evidence that a real message was delivered.
+- 30 approval/activity events and 20 automation events with examples of confirmed, accepted, simulated, retry and failed state. Historical seeded delivery labels are synthetic examples, never evidence that a real message was delivered.
 - 90 days of synthetic dashboard snapshots with time labels and reproducible calculation inputs.
 
 **Required named fixtures (minimum dataset counts above remain mandatory)**
@@ -1078,6 +1104,16 @@ Seed data must be deterministic, version-controlled, and generated through fixtu
 
 Fixture generation must be idempotent. Demo reset may only operate on the current ephemeral workspace. Owner test data and real Salesforce test account are not reset by public demo controls.
 
+## 16.1 Seed shape: shared template plus scenario pack
+
+The Section 16 minimums describe the dataset as a whole, not a per-session copy. Copying roughly 1,500 rows per visitor would use storage and compute that Neon Free does not have to spare.
+
+- **Template workspace:** one workspace with mode template holds the full dataset. The migrator role seeds it in the release step. Every runtime role can read it, and none can change it.
+- **Scenario pack:** Launch and Reset run one server-side function that copies about 35 rows into the new workspace: the guided client, its cases, findings, approvals and documents. Local measurement took 2 ms for 35 rows and 20 ms for 1,500.
+- **Reads** combine the visitor's workspace with the template, and template rows are labeled read-only. **Writes** can only reach the visitor's workspace, enforced by row-level security and composite foreign keys.
+- Analytics for guests read the template's 90 days of snapshots plus the visitor's own changes.
+- Reset restores the pack exactly, and the same pack version always yields the same logical records.
+
 ---
 
 # 17. Operating Costs and Resource Controls
@@ -1086,11 +1122,12 @@ The objective is a low-cost persistent portfolio, not a claim of zero cost. Clou
 
 | Component | Policy |
 |---|---|
-| Application host + managed relational DB | Workers Free and Neon Free through Hyperdrive are the selected plans, at $0 before AI usage or a domain. Move to Workers Paid ($5 per month) only if the 10 ms CPU limit is hit in practice. Neon Free has 100 compute hours per project per month, 1 GB of storage, 5 GB of egress, sleeps after 5 idle minutes and has a 6-hour restore window, so demo cleanup and scheduled pg_dump backups to R2 are required. Reverify current limits before creating accounts. |
+| Application host + managed relational DB | Workers Free and Neon Free through Hyperdrive are the selected plans, at $0 before AI usage or a domain. Move to Workers Paid ($5 per month) only if the 10 ms CPU limit is hit in practice, or by DEC-003 for hosted PDF extraction. Neon Free has 100 CU-hours per project per month, 1 GB of storage, 5 GB of egress, sleeps after 5 idle minutes and has a 6-hour restore window, so the compute is capped at 0.25 CU and demo cleanup and scheduled pg_dump backups to R2 are required. Dispatch happens after commit, and the cron sweep stays at 30 minutes (about 30 CU-hours a month on its own). Reverify current limits before creating accounts. |
 | Cloudflare domain/DNS/object storage | Use owner-owned domain and private storage if selected. Inspect usage limits, request caps and object retention. |
 | Salesforce Developer Edition | Development/test only, never real employer data; keep connection optional. |
 | NetSuite | Simulator only; no production or commercial sandbox fee for v1. |
-| Zapier | Free two-step/polling workflow first; paid webhook feature behind explicit owner approval. |
+| Zapier | Free two-step/polling workflow first (100 tasks a month, 15-minute polling); paid webhook feature behind explicit owner approval. |
+| Google Sheets bridge | Owner-created Google Cloud project with the Sheets API and one service account shared on one sheet; $0 under standard quota. Google states charges for exceeding quota are planned later in 2026, so stay well below 60 writes a minute. The key is a host-managed secret. Revoke by deleting the key and unsharing the sheet. |
 | AI | Public demo defaults to fixtures. Live owner-only model calls have per-day token/request/concurrency limits and usage logging. |
 | Monitoring | Use minimal free/low-cost telemetry with short retention and alert only on meaningful failures. |
 
@@ -1348,8 +1385,8 @@ Future work must be separately scoped, estimated and approved. Do not silently c
 ## 23.1 Revision provenance and guidance
 
 - Source v1.0 is preserved byte-for-byte as OpsBridge_AI_Phased_PRD_v1.0.md, SHA-256 ecf61e30f8fabcfdaa13d3621c1b8d858bb2880b7ff5a5f187f31e6bb83eda69. The original document date is retained; the November 5 revision timestamp uses Jose's America/New_York timezone.
-- Maintained source: PRD.md. Revision snapshot: OpsBridge_AI_Phased_PRD_v1.2.md; the v1.1 snapshot is preserved as history. Vault PRD.md is an exact verified mirror; do not edit separate copies independently. A ChatGPT Library document is not changed by saving project/vault files; do not claim remote edits unless actually performed.
-- Jose requested subagents to audit job coverage, break phases into smaller documented steps, keep the vault current and update the PRD. This is planning/documentation authorization. Jose chose the stack direction on November 6, 2026. App implementation stays paused until he explicitly resumes the build.
+- Maintained source: PRD.md. Revision snapshot: OpsBridge_AI_Phased_PRD_v1.3.md; the v1.1 and v1.2 snapshots are preserved as history. Vault PRD.md is an exact verified mirror; do not edit separate copies independently. A ChatGPT Library document is not changed by saving project/vault files; do not claim remote edits unless actually performed.
+- Jose requested subagents to audit job coverage, break phases into smaller documented steps, keep the vault current and update the PRD. Jose chose the stack direction on November 6, 2026, and resumed the build the same day as phased sessions.
 - The actual four-page job posting was reviewed. docs/JOB-ALIGNMENT.md owns the independent 25-ID audit; this PRD integrates its requirements, additional scenarios and honest limits.
 
 ### User-saved inputs already referenced by v1.0
@@ -1382,6 +1419,7 @@ These are internal design inputs. Do not publish personal financial, immigration
 - Cloudflare Hyperdrive (connects an existing database): https://developers.cloudflare.com/hyperdrive/
 - Cloudflare Workers static assets: https://developers.cloudflare.com/workers/static-assets/
 - Cloudflare R2: https://developers.cloudflare.com/r2/
+- Google Sheets API limits: https://developers.google.com/workspace/sheets/api/limits
 
 Reference names/versions, including security-standard editions copied from v1.0, must be verified at P0.3 against official publications and recorded accurately. A link in the PRD is not proof of a currently published edition or platform capability; unavailable/superseded references must be corrected with a decision log without dropping their underlying security objective.
 
@@ -1406,17 +1444,15 @@ No security-critical behavior may remain an unspecified assumption at P0 accepta
 
 # 24. Immediate Next Task and Restart Instructions
 
-**Current action: owner review of PRD revision 1.2. The stack direction is chosen; app implementation is paused.** Updating planning documents and vault notes does not complete P0. Do not scaffold the app, purchase/provision hosting, create phase sessions/branches, connect accounts or publish as a side effect of reading this PRD.
+**Current action: phased build, P0 under review.** Jose resumed the build on November 6, 2026. docs/PHASE-LEDGER.md holds actual state and docs/SESSION_HANDOFF.md holds stop points. Do not purchase or provision hosting, connect accounts or publish as a side effect of reading this PRD.
 
-When Jose explicitly resumes the build:
+To continue:
 
-1. Read PRD.md fully, docs/MASTER_INBOX.md, docs/SESSION_HANDOFF.md, docs/PHASE-LEDGER.md, docs/JOB-ALIGNMENT.md, docs/VAULT-WORKFLOW.md, latest ADRs and the vault hub/decision log. Read fresh quota status.
-2. Inspect repository boundaries, user changes, AGENTS.md instructions and actual environment. Resolve a project Git root deliberately; never stage sibling projects or assume the parent directory is this application's repository.
-3. Begin P0.1, then finish P0.2 with Jose by closing the open ADR-000 proof items for the selected stack. Reopen the stack only if a proof fails or Jose changes the decision.
-4. Coordinator writes the P0 phase brief and bounded package briefs with real base/head/path ownership and routing rule. Start one fresh phase session only when authorized; delegate bounded audits/disjoint work, not approval decisions.
-5. Complete P0.3/P0.4 architecture, threat model, permissions, ERD/API/event/contracts, prototypes and deterministic seed plan. Update the vault at each meaningful checkpoint with teach-back, actual evidence and restart steps.
-6. Only after build resumption and accepted P0.2, run P0.5 scaffold/CI work in the chosen stack. Execute relevant checks and preserve actual failures/results. Never claim a cloud deployment or CI run that did not occur.
-7. P0.6 reconciles all required evidence and vault read-back. Ask Jose to Accept or Revise P0 before starting P1. Continue remaining 47-package plan in order; no automatic macro-phase continuation.
+1. Read PRD.md fully, docs/MASTER_INBOX.md, docs/SESSION_HANDOFF.md, docs/PHASE-LEDGER.md, docs/JOB-ALIGNMENT.md, docs/VAULT-WORKFLOW.md, latest ADRs and the vault hub/decision log.
+2. Inspect repository state and the current phase branch. Phase branches stack, and nothing merges into main until Jose approves.
+3. Take the next phase brief from docs/briefs/. The master coordinates; one phase session owns each phase.
+4. Update the vault at each meaningful checkpoint with teach-back, actual evidence and restart steps. Never claim a cloud deployment or CI run that did not occur.
+5. Continue the 47-package plan in order; no automatic macro-phase continuation.
 
 ## 24.1 Revision 1.1 change log
 
@@ -1434,6 +1470,22 @@ When Jose explicitly resumes the build:
 - Reworded the database exposure requirement for a managed internet-reachable endpoint; this is a compensating control for owner review, not an approval.
 - Added local-first development with Docker Postgres and `wrangler dev`.
 - Made no change to phases, packages, acceptance IDs, E2E scenarios, JOB IDs, or the implementation pause. No account, provisioning, spending or publication is approved by this revision.
+
+## 24.3 Revision 1.3 change log
+
+Produced in P0.3 from the P0.2 proofs and the phase brief. No phase, package ID, acceptance ID, E2E scenario or JOB ID was added, removed or reworded, apart from P5.1's scope text. No account, provisioning, spending or publication is approved by this revision.
+
+- Duplicate emails: Section 9.2 adds check-before-append by event ID, because a Sheets append has no idempotency key. Demo workspaces cannot reach a live transport.
+- Outbox vocabulary: Section 7.2 splits dispatch_state from delivery_evidence and defines five derived labels. Delivered is retired. Confirmed is reachable in Mode A through an audited owner action.
+- Audit versus cleanup: Section 7.4 defines three database roles, the single append-only exception, and reset without deletion. Tested on local Postgres.
+- Guest uploads: guests pick fixtures only (Sections 5.3, 8.2, 12.2; P5.1).
+- Seeding: Section 16.1 replaces a per-session full copy with a shared template and a pack of about 35 rows.
+- Scans: Sections 10.2 and 10.4 state there is no OCR or vision path, and image-only documents test abstention.
+- Missing states: case reopen, exception Deferred, and AI Accepted with Edits (Sections 7.2, 8.2, 10.2).
+- Credentials and cost: Google service account added to Section 12.1 and Section 17.
+- First visit: Section 13.2 adds a first-visit target and waking behavior.
+- Neon compute: Sections 6.2 and 17 fix the sweep at 30 minutes and cap the compute at 0.25 CU. "Compute hours" corrected to CU-hours.
+- Status text updated now that the build has resumed. Section 6 points to ADR-000 for proof state.
 
 **Product vision in one sentence:** A polished, secure, publicly demonstrable enterprise automation application that proves its developer can connect systems, design reliable workflows, govern AI, test rigorously, explain business value, and hand off a maintainable product.
 
