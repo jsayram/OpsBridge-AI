@@ -1,13 +1,13 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-06 (America/New_York), end of P0 phase session.
+Updated: 2026-11-06 (America/New_York), end of the local P1 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
 | Phase | Packages | Count | Plan state | Implemented | Verified | Owner accepted | Merged | Deployed |
 |---|---|---:|---|---|---|---|---|---|
 | P0 Foundation/design | P0.1–P0.6 | 6 | Run | Docs, spike, scaffold on `phase/p0-foundation` | Local checks passed; P0-C partial; hosted proofs pending; see `docs/reports/P0.md` | | No | No |
-| P1 Hosted shell/identity | P1.1–P1.5 | 5 | Planned | No | No | No | No | No |
+| P1 Hosted shell/identity | P1.1–P1.5 | 5 | Run locally | Local shell, sessions, identity boundary on `phase/p1-shell` | Local checks passed at `5c4c18c`; P1-E pending; identity against a test double only; see `docs/reports/P1.md` | | No | No |
 | P2 Records/audit | P2.1–P2.5 | 5 | Planned | No | No | No | No | No |
 | P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Planned | No | No | No | No | No |
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Planned | No | No | No | No | No |
@@ -22,6 +22,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P0:** Coordinator accepted for limited scope under delegation on 2026-11-06, at `601854a`. The master inspected the branch, reports and inbox and reran `npm run ci:local`, which passed. P0-C stays partial because GitHub Actions has never run (DEC-004). Hyperdrive, Neon and real-sheet proofs stay pending (DEC-002). Proof 1b failed and is routed as DEC-003. The master did not rerun the 42 DB proofs, and the restore has not been repeated on the final SQL, so P1 repeats both first. Owner Accepted stays empty. Nothing is merged or deployed.
 
+**P1:** Local part run on `phase/p1-shell` from `84c9694`, waiting for coordinator review. P1-A to P1-D and P1-F are met locally, P1-C against a labeled test double. P1-E is pending, since no account or deploy exists. The P0 repeats named above were done first: 42 of 42 proofs, and the restore on final SQL, both in `docs/evidence/P1.0/`. DEC-002, DEC-003 and DEC-004 were answered during the phase. DEC-005 to DEC-007 are open. Owner Accepted stays empty.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
@@ -32,11 +34,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P0.4 | Run | Done: Prototypes, journey, fixture plan, manifest | Browser and script checks; no full keyboard or screen-reader run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
 | P0.5 | Run | Done; P0-C partial: Scaffold and workflow | Clean-copy CI on Node 22 and 26, canaries failed as intended; GitHub Actions never run | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
 | P0.6 | Run | Done: Reports, ledger, handoff, P1 brief, vault | See `docs/reports/P0.6.md` | Master reviewed 2026-11-06; local CI rerun passed at 601854a | | No | No |
-| P1.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P1.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P1.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P1.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P1.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P1.1 | Local run | Partial: migrations, environment reference, rollback plan, smoke, inert release workflow | Migrate twice, grants, release gate, smoke on workerd; nothing hosted | Pending master | | No | No |
+| P1.2 | Local run | Done against a labeled test double; owner identity Pending Owner Configuration | Token, subject, revocation and guest denial tests; Access only against a stub | Pending master | | No | No |
+| P1.3 | Local run | Done: sessions, reset, quotas, seed, scoped reads, cron purge | Two guests plus owner matrix, P3 checks on real migrations, mutation canaries; Hyperdrive not in path | Pending master | | No | No |
+| P1.4 | Local run | Done: shell, states, request IDs, logs, CSP | Playwright on workerd in Chromium, axe, keyboard, reduced motion, phone; no Safari or screen reader | Pending master | | No | No |
+| P1.5 | Local preparation only | Partial: reports, setup steps, P2 brief | Clean-copy CI on Node 22; no staging proof | Pending master | | No | No |
 | P2.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P2.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P2.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |

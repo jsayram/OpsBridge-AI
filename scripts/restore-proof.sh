@@ -40,6 +40,11 @@ meta_trg="SELECT string_agg(tgrelid::regclass||'.'||tgname, ',' ORDER BY tgrelid
 check "triggers" "$(q "$dst" "$meta_trg")" "$(q "$src" "$meta_trg")"
 check "cleanup role has no table rights" "$(q "$dst" "SELECT count(*) FROM information_schema.role_table_grants WHERE grantee='opsbridge_cleanup' AND table_schema='app'")" "0"
 
+# A row trigger can't fire on an empty table, so an empty table would pass vacuously.
+if [[ "$(q "$dst" "SELECT count(*) FROM app.audit_events")" == "0" ]]; then
+  q "$dst" "INSERT INTO app.audit_events (workspace_id, actor_type, actor_id, action, target)
+            SELECT id, 'system', 'restore-proof', 'proof', 'proof' FROM app.workspaces LIMIT 1"
+fi
 denied "guard on restored copy: admin UPDATE audit row" "append-only" q "$dst" "UPDATE app.audit_events SET action='x'"
 denied "guard on restored copy: admin DELETE audit row" "append-only" q "$dst" "DELETE FROM app.audit_events"
 denied "guard on restored copy: admin TRUNCATE audit" "append-only" q "$dst" "TRUNCATE app.audit_events"

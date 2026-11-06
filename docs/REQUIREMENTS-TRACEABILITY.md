@@ -1,6 +1,6 @@
 # Requirements traceability
 
-Updated 2026-11-06 at P0. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
+Updated 2026-11-06 at local P1. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
 
 Each row points to the artifact that covers the requirement today. Later phases replace "Planned" with code paths, test names and run evidence.
 
@@ -15,10 +15,10 @@ Classification of every posting clause, from the four-page posting re-read on 20
 
 | ID | Requirement | Class | P0 evidence | Status | Owning phases |
 |---|---|---|---|---|---|
-| JOB-01 | Shipping production apps or integrations | Product + Real-experience | Scaffold and proofs only | Planned | P1, P2, P7, P8 |
+| JOB-01 | Shipping production apps or integrations | Product + Real-experience | Local shell, `docs/reports/P1.md`; nothing shipped | Local only | P1, P2, P7, P8 |
 | JOB-02 | One modern language | Product | `backend/`, `frontend/` TypeScript scaffold | Scaffold verified locally | P0-P8 |
 | JOB-03 | REST APIs, CRM/ERP, NetSuite a plus | Product; live NetSuite stays an experience gap | `docs/design/openapi.yaml`, `docs/design/INTEGRATION-CONTRACTS.md` | Designed | P0, P3, P7 |
-| JOB-04 | Strong SQL and data modeling | Product | `docs/design/ERD.md`, `spikes/p0.2/sql/001_schema.sql`, `docs/evidence/P0.2/db-proofs-run3.json` | Designed; proof schema verified locally | P0, P2, P3, P6 |
+| JOB-04 | Strong SQL and data modeling | Product | `backend/migrations/0001_foundation.sql`, `tests/integration/`, `docs/evidence/P1.0/` | First migration verified locally | P0, P2, P3, P6 |
 | JOB-05 | Git, code review, agile | Artifact + Real-experience | Branch history, `docs/BACKLOG.md`, package reports | In use | P0-P8 |
 | JOB-06 | Leading or mentoring developers | Real-experience | Engineering standards only; no people-leadership claim | Planned | P0, P7, P8 + interview |
 | JOB-07 | AI tools in the dev workflow | Artifact | Package reports name AI work, review and checks | In use | Every package |
@@ -37,7 +37,7 @@ Classification of every posting clause, from the four-page posting re-read on 20
 | JOB-20 | Definition mismatches ("customer") | Product | `DATA-DICTIONARY.md`, reconciliation prototype | Designed | P0, P3, P6 |
 | JOB-21 | Dashboards and self-serve reporting | Product | Overview prototype | Designed | P6, P7 |
 | JOB-22 | ROI and business cases | Product + Artifact | `docs/BUSINESS-BRIEF.md` | Planned | P6, P8 |
-| JOB-23 | Cloud and CI/CD | Product | `.github/workflows/ci.yml`, local CI logs in `docs/evidence/P0.5/` | Local only, no hosted run | P0, P1, P7, P8 |
+| JOB-23 | Cloud and CI/CD | Product | `.github/workflows/`, `docs/evidence/P1.5/`, `docs/ENVIRONMENTS.md`, `docs/runbooks/` | P0 CI passed on GitHub on draft PR 1 per its check; P1 checks local only, no deploy | P0, P1, P7, P8 |
 | JOB-24 | Workflow/RPA tools | Product (Zapier) | Outbox and Mode A design | Designed | P4, P7 |
 | JOB-25 | Startup or consulting background | Real-experience | Fictional context only | Planned | P0, P8 + interview |
 
@@ -63,6 +63,21 @@ No clause was left unclassified, and nothing above claims experience Jose has no
 | P0-C | CI runs on a clean scaffold and can fail meaningfully | `docs/evidence/P0.5/` local clean-copy runs and canary | **Partial:** no GitHub remote, so the workflow has never run on GitHub |
 | P0-D | No TBD for security-critical behavior | `THREAT-MODEL.md` section "Open items", grep in `docs/reports/P0.6.md` | Met |
 | P0-E | Report lists open decisions and deferred risks | `docs/reports/P0.md` | Met |
+
+## P1 acceptance
+
+Local evidence at `5c4c18c`. Nothing here is Owner Accepted, Merged or Deployed.
+
+| ID | Criterion | Evidence | State |
+|---|---|---|---|
+| P1-A | Launch and reset only your own demo | `tests/integration/sessions.test.ts`, `tests/e2e/shell.spec.ts` | Met locally |
+| P1-B | Two sessions can't touch each other | `isolation-matrix.test.ts`, `roles-isolation.test.ts`, `docs/evidence/P1.3/` | Met locally; Hyperdrive repeat pending |
+| P1-C | Guest denied on admin, no leak | `owner-identity.test.ts`, `tests/e2e/shell.spec.ts` | Met locally against a test double; 404 while unconfigured |
+| P1-D | No credential in bundle, logs, repo, payloads | `scripts/check-bundle.mjs`, `shell-api.test.ts`, gitleaks | Met locally |
+| P1-E | Staging deploy, smoke, documented rollback | `docs/runbooks/RELEASE-ROLLBACK.md`, `scripts/smoke.mjs` | **Pending Owner Credentials/Configuration** |
+| P1-F | Mobile, keyboard, reduced motion | `tests/e2e/shell.spec.ts`, `docs/evidence/P1.4/` | Met in Chromium |
+
+Scenarios with a first real check at P1: E2E-02, E2E-03 and E2E-04 (denial paths), E2E-18, E2E-21, E2E-26 (locally nothing external exists), E2E-27 (P0.5).
 
 ## ADR-000 proof items
 

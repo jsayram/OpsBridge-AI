@@ -1,12 +1,37 @@
-# Mutation canaries, rerun after the review fixes, 2026-11-06T19:12:15Z. Each mutation was made in the working tree, tested, then reverted.
+# Mutation canaries at 5c4c18c, 2026-11-06T19:13:43Z. Each mutation was made in the working tree, tested, then reverted.
 ## M0 baseline
+      Tests  96 passed (96)
 ## M1 API scope removed from cases.ts (a missed WHERE). RLS alone must still keep guests apart.
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > owner reads its own case but not guest or template rows
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > lists never mix workspaces
+      Tests  2 failed | 94 passed (96)
 ## M2 M1 plus cases_read policy opened to all rows. Tests must fail.
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > owner reads its own case but not guest or template rows
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > lists never mix workspaces
+ FAIL  tests/integration/roles-isolation.test.ts > isolation and least privilege > P3.a no workspace set returns only template rows
+ FAIL  tests/integration/roles-isolation.test.ts > isolation and least privilege > P3.b A cannot read B or owner by id
+      Tests  4 failed | 92 passed (96)
 ## M3 subject allowlist check removed. Tests must fail.
+ FAIL  tests/integration/owner-identity.test.ts > token verification > unknown subject gets 403 even with a perfect signature
+ FAIL  tests/integration/owner-identity.test.ts > token verification > the subject match is exact, not a prefix or case fold
+      Tests  2 failed | 94 passed (96)
 ## M4 audience check removed. Tests must fail.
+ FAIL  tests/integration/owner-identity.test.ts > token verification > wrong audience gets 401
+      Tests  1 failed | 95 passed (96)
 ## M5 reset keeps the old token. Tests must fail.
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > swapped cookies follow the session, not the ID in the URL
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > out-of-range input is a 400, not a database error
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > SQL injection strings stay data
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > swaps in a fresh workspace, rotates the token and kills the old cookie
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > E2E-18 repeated reset hits the session quota and affects nothing else
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > reset spends the same hourly budget as launch, so one client can't outrun the purge
+      Tests  6 failed | 90 passed (96)
 ## M6 reset skips the hourly budget. Tests must fail.
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > reset spends the same hourly budget as launch, so one client can't outrun the purge
+      Tests  1 failed | 95 passed (96)
 ## M7 reverted, baseline again
+      Tests  96 passed (96)
+
 
 Reading the results:
 - M1: guest-to-guest checks hold with the API scope gone, so RLS works alone. The failures are the owner seeing shared template rows, which RLS allows for every runtime role and only the API scope narrows. That is synthetic read-only data, not a cross-tenant leak.

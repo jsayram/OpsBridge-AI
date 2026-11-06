@@ -1,15 +1,16 @@
 PASS /health/live is minimal (200)
 PASS /health/ready is minimal (200)
-PASS landing page (6 ms)
+PASS landing page (8 ms)
 PASS landing has a CSP
 PASS SPA route falls back to the app
 PASS 404 envelope has a request ID
 PASS anonymous /me is 401
-PASS demo launch (201, 36 ms)
+PASS demo launch (201, 32 ms)
 PASS cookie flags
 PASS session works (analyst)
 PASS no admin capability
-PASS cases list is scoped
+PASS cases list opens with own rows
+PASS a second visitor can't read the first one's case (404)
 PASS cross-origin write refused
 PASS guest cannot reach admin (404)
 PASS guest cannot load the admin page (404)
