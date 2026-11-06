@@ -303,6 +303,9 @@ test.describe("P1-F keyboard, motion, mobile", () => {
     await expect(page).toHaveTitle(/Cases/);
     await expect(page.locator("main")).toBeFocused();
     await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Search title or client")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
     await expect(page.getByLabel("Status")).toBeFocused();
     const outline = await page
       .getByLabel("Status")

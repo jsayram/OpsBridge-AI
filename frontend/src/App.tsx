@@ -1,7 +1,8 @@
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Shell } from "./components/Shell";
 import { ErrorCard, SessionNotice, Skeleton } from "./components/ui";
-import { Admin, CaseDetail, Cases, Later, Overview } from "./pages/app";
+import { Admin, Later, Overview } from "./pages/app";
+import { CaseDetail, Cases } from "./pages/cases";
 import { Demo, Engineering, Landing, NotFoundPage } from "./pages/public";
 import { usePath } from "./router";
 import { SessionProvider, useSession } from "./session";

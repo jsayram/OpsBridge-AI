@@ -37,7 +37,15 @@ export const Skeleton = ({ label }: { label: string }) => (
   </div>
 );
 
-export function ErrorCard({ failure, onRetry }: { failure: ApiFailure; onRetry?: () => void }) {
+export function ErrorCard({
+  failure,
+  onRetry,
+  retryLabel = "Retry",
+}: {
+  failure: ApiFailure;
+  onRetry?: () => void;
+  retryLabel?: string;
+}) {
   return (
     <section className="card state-panel" role="alert">
       <h2>{failure.status === 403 ? "Access denied" : "That didn't work"}</h2>
@@ -49,7 +57,7 @@ export function ErrorCard({ failure, onRetry }: { failure: ApiFailure; onRetry?:
       )}
       {onRetry && (
         <button type="button" onClick={onRetry}>
-          Retry
+          {retryLabel}
         </button>
       )}
     </section>

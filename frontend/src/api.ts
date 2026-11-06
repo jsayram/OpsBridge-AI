@@ -12,7 +12,12 @@ export class ApiFailure extends Error {
 
 export async function api<T>(
   path: string,
-  options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
+  options: {
+    method?: string;
+    body?: unknown;
+    signal?: AbortSignal;
+    idempotencyKey?: string;
+  } = {},
 ): Promise<T> {
   let res: Response;
   try {
@@ -22,7 +27,10 @@ export async function api<T>(
       ...(options.signal ? { signal: options.signal } : {}),
       ...(options.body !== undefined
         ? {
-            headers: { "content-type": "application/json" },
+            headers: {
+              "content-type": "application/json",
+              ...(options.idempotencyKey ? { "idempotency-key": options.idempotencyKey } : {}),
+            },
             body: JSON.stringify(options.body),
           }
         : {}),
@@ -63,8 +71,53 @@ export type CaseRow = {
   dueAt: string | null;
   version: number;
   customer: string;
+  queue: string;
+  assigneeId: string | null;
+  assignee: string | null;
+  overdue: boolean;
+  ageDays: number;
   readOnly: boolean;
 };
+
+export type ChecklistItem = {
+  id: string;
+  key: string;
+  label: string;
+  required: boolean;
+  state: string;
+  evidenceRef: string | null;
+  version: number;
+};
+
+export type HandoffRow = {
+  id: string;
+  fromAssignee: string | null;
+  toAssignee: string | null;
+  fromQueue: string;
+  toQueue: string;
+  dueAt: string | null;
+  reason: string;
+  openRequired: number;
+  occurredAt: string;
+};
+
+export type CaseFull = CaseRow & {
+  checklist: ChecklistItem[];
+  handoffs: HandoffRow[];
+  approval: { id: string; status: string; reason: string | null } | null;
+  documents: { id: string; title: string; category: string | null; status: string }[];
+};
+
+export type ActivityRow = {
+  id: string;
+  action: string;
+  actor: string;
+  summary: string | null;
+  occurredAt: string;
+};
+
+export type Assignee = { id: string; name: string; team: string; canReceiveCases: boolean };
+export type Customer = { id: string; name: string; accountCode: string };
 
 export type Summary = {
   provenance: string;
