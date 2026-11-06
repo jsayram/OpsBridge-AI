@@ -1,0 +1,15 @@
+# Local smoke, commit a9b1995, 2026-11-06T17:31:22Z, wrangler dev
+/health/live     200 application/json | {"status":"ok"}
+/health/ready    200 application/json | {"status":"ok"}
+/api/v1/nope     404 application/json | {"code":"not_found","message":"Not found","requestId":"886b0f9c-643f-4cc5-8c33-d6f806254b8
+/                200 text/html; charset=utf-8 | <!doctype html> <html lang="en">   <head>     <meta charset="utf-8" />     <meta name="vie
+/app/overview    200 text/html; charset=utf-8 | <!doctype html> <html lang="en">   <head>     <meta charset="utf-8" />     <meta name="vie
+--- headers on /
+content-security-policy: default-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
+permissions-policy: camera=(), microphone=(), geolocation=()
+referrer-policy: no-referrer
+x-content-type-options: nosniff
+--- headers on /health/live
+Content-Security-Policy: default-src 'none'; frame-ancestors 'none'
+Referrer-Policy: no-referrer
+X-Content-Type-Options: nosniff
