@@ -168,6 +168,17 @@ describe("cross-workspace matrix", () => {
     expect(rows[0].request_id).toBe(first.headers.get("x-request-id"));
   });
 
+  it("out-of-range input is a 400, not a database error", async () => {
+    const target = (await call("/api/v1/cases?limit=1", { cookie: A.cookie })).json.items[0];
+    const patch = (body: unknown) =>
+      call(`/api/v1/cases/${target.id}`, { method: "PATCH", cookie: A.cookie, body });
+    expect((await patch({ title: "x", version: 2147483648 })).status).toBe(400);
+    expect((await patch({ title: "x", version: 0 })).status).toBe(400);
+    expect((await patch({ title: "a\u0000b", version: target.version })).status).toBe(400);
+    const cursor = `0:${"-".repeat(36)}`;
+    expect((await call(`/api/v1/cases?cursor=${cursor}`, { cookie: A.cookie })).status).toBe(400);
+  });
+
   it("SQL injection strings stay data", async () => {
     const target = (await call("/api/v1/cases?limit=1", { cookie: A.cookie })).json.items[0];
     const title = "x'; DROP TABLE app.cases; --";

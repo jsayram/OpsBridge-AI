@@ -4,7 +4,7 @@ import { type GuestActor, requireActor, requireCapability } from "../auth/actor"
 import { isDemoRole } from "../auth/policy";
 import { DEMO_COOKIE, hashToken, ipBucket, newDemoToken } from "../auth/tokens";
 import { pgCode, withClient } from "../db";
-import { type AppEnv, demoLimits } from "../env";
+import type { AppEnv, Bindings } from "../env";
 import { ApiError, invalidRequest } from "../http/errors";
 import { log } from "../http/log";
 import { clientIp } from "../http/middleware";
@@ -31,6 +31,10 @@ const lifecycleError = (e: unknown): never => {
       throw new ApiError(429, "reset_quota", "This session has used all of its resets.");
     case "P0006":
       throw new ApiError(503, "demo_unavailable", "The demo is not available right now.");
+    case "55P03": // lock_timeout
+    case "57014": // statement_timeout
+    case "40P01": // deadlock, reset meeting a purge at the expiry boundary
+      throw new ApiError(503, "demo_busy", "The demo is busy. Try again in a moment.");
     default:
       throw e;
   }
@@ -42,53 +46,50 @@ const sessionBody = (row: { session_expires_at: Date; role: string }) => ({
   demoRole: row.role,
 });
 
-export const demo = new Hono<AppEnv>();
-
-demo.post("/sessions", async (c) => {
-  if (c.env.DEMO_LAUNCH_PAUSED === "true") {
+const demoAvailable = (env: Bindings): string => {
+  if (env.DEMO_LAUNCH_PAUSED === "true") {
     throw new ApiError(503, "demo_paused", "New demo sessions are paused.");
   }
-  if (!c.env.IP_HASH_KEY) {
+  if (!env.IP_HASH_KEY) {
     log({ level: "error", event: "config_missing", code: "ip_hash_key" });
     throw new ApiError(503, "demo_unavailable", "The demo is not available right now.");
   }
-  const limits = demoLimits(c.env);
+  return env.IP_HASH_KEY;
+};
+
+const maxAge = (expiresAt: Date) =>
+  Math.max(1, Math.ceil((expiresAt.getTime() - Date.now()) / 1000));
+
+export const demo = new Hono<AppEnv>();
+
+demo.post("/sessions", async (c) => {
+  const key = demoAvailable(c.env);
   const token = newDemoToken();
   const tokenHash = await hashToken(token);
-  const bucket = await ipBucket(c.env.IP_HASH_KEY, clientIp(c));
+  const bucket = await ipBucket(key, clientIp(c));
   const { rows } = await withClient(c.env.HYPERDRIVE, (db) =>
     db
-      .query("SELECT * FROM app.launch_demo_session($1, $2, $3, $4, $5)", [
-        tokenHash,
-        bucket,
-        limits.ttlSeconds,
-        limits.workspaceCap,
-        limits.hourlyLaunchLimit,
-      ])
+      .query("SELECT * FROM app.launch_demo_session($1, $2)", [tokenHash, bucket])
       .catch(lifecycleError),
   );
-  setSessionCookie(c, token, limits.ttlSeconds);
+  setSessionCookie(c, token, maxAge(rows[0].session_expires_at));
   return c.json(sessionBody(rows[0]), 201);
 });
 
 demo.post("/reset", requireActor, requireCapability("demo:reset"), async (c) => {
+  const key = demoAvailable(c.env);
   const actor = c.get("actor") as GuestActor;
-  const limits = demoLimits(c.env);
   const token = newDemoToken();
-  const { rows } = await withClient(c.env.HYPERDRIVE, async (db) =>
+  const newHash = await hashToken(token);
+  const bucket = await ipBucket(key, clientIp(c));
+  const { rows } = await withClient(c.env.HYPERDRIVE, (db) =>
     db
-      .query("SELECT * FROM app.reset_demo_session($1, $2, $3, $4, $5)", [
-        actor.tokenHash,
-        await hashToken(token),
-        limits.ttlSeconds,
-        limits.workspaceCap,
-        limits.resetLimit,
-      ])
+      .query("SELECT * FROM app.reset_demo_session($1, $2, $3)", [actor.tokenHash, newHash, bucket])
       .catch(lifecycleError),
   );
   const row = rows[0];
   if (!row) throw new ApiError(401, "session_expired", "Your demo session has ended");
-  setSessionCookie(c, token, limits.ttlSeconds);
+  setSessionCookie(c, token, maxAge(row.session_expires_at));
   return c.json(sessionBody(row));
 });
 

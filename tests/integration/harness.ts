@@ -13,6 +13,32 @@ export const connect = async (user: string) => {
   return c;
 };
 
+type Limits = Partial<{
+  ttl_seconds: number;
+  workspace_cap: number;
+  hourly_limit: number;
+  reset_limit: number;
+}>;
+
+// Limits are migrator-owned data, so tests change them the way a migration would.
+export async function withLimits<T>(limits: Limits, fn: () => Promise<T>): Promise<T> {
+  const mig = await connect("opsbridge_migrator");
+  const { rows } = await mig.query("SELECT * FROM app.demo_limits");
+  const before = rows[0];
+  const set = async (l: Record<string, unknown>) => {
+    for (const [k, v] of Object.entries(l)) {
+      if (k !== "id") await mig.query(`UPDATE app.demo_limits SET ${k} = $1`, [v]);
+    }
+  };
+  await set(limits);
+  try {
+    return await fn();
+  } finally {
+    await set(before);
+    await mig.end();
+  }
+}
+
 export const OWNER_SUBJECT = "test-double-owner-subject";
 
 // The test identity double: a throwaway key pair, regenerated every run, standing in for
@@ -54,8 +80,6 @@ export const baseEnv = (): Bindings => ({
   HYPERDRIVE_CLEANUP: { connectionString: url("opsbridge_cleanup") } as never,
   ENVIRONMENT: "local",
   IP_HASH_KEY: "integration-test-key",
-  DEMO_LAUNCH_HOURLY_LIMIT: "100000",
-  DEMO_WORKSPACE_CAP: "100000",
 });
 
 export type CallOptions = {

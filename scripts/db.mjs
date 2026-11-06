@@ -166,6 +166,14 @@ export async function seed(url) {
   return { customers: customers.length, cases: cases.length };
 }
 
+// Test databases only: many launches from one address, so limits are set by each test.
+export async function relaxLimits(url) {
+  if (!/opsbridge_(test|e2e)$/.test(url)) throw new Error("relaxLimits is for test databases");
+  const c = await connect(url);
+  await c.query("UPDATE app.demo_limits SET workspace_cap = 100000, hourly_limit = 100000");
+  await c.end();
+}
+
 const main = async () => {
   const [cmd, arg] = process.argv.slice(2);
   const url = process.env.DATABASE_MIGRATOR_URL;

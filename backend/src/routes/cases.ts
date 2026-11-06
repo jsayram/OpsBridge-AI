@@ -7,7 +7,7 @@ import { ApiError, forbidden, invalidRequest, notFound } from "../http/errors";
 import { isUuid, readStrictJson } from "../http/validate";
 
 const STATUSES = ["Draft", "Intake", "Needs Review", "Ready", "Approved", "Closed"];
-const CURSOR = /^[01]:[0-9a-f-]{36}$/;
+const MAX_VERSION = 2_147_483_647;
 const MAX_TITLE = 200;
 
 const SELECT = `SELECT c.id, c.title, c.case_type, c.status, c.due_at, c.version,
@@ -46,8 +46,10 @@ cases.get("/", async (c) => {
   const status = c.req.query("status");
   if (status !== undefined && !STATUSES.includes(status)) throw invalidRequest("Bad status");
   const cursor = c.req.query("cursor");
-  if (cursor !== undefined && !CURSOR.test(cursor)) throw invalidRequest("Bad cursor");
   const [rank, afterId] = cursor ? cursor.split(":") : [null, null];
+  if (cursor !== undefined && !((rank === "0" || rank === "1") && isUuid(afterId ?? ""))) {
+    throw invalidRequest("Bad cursor");
+  }
   const { rows } = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
     db.query(
       `${SELECT} WHERE ${SCOPE}
@@ -84,10 +86,20 @@ cases.patch("/:id", requireCapability("cases:edit"), async (c) => {
   const id = c.req.param("id");
   if (!isUuid(id)) throw notFound();
   const { title, version } = await readStrictJson(c, ["title", "version"]);
-  if (typeof title !== "string" || !title.trim() || title.length > MAX_TITLE) {
+  if (
+    typeof title !== "string" ||
+    !title.trim() ||
+    title.length > MAX_TITLE ||
+    title.includes("\u0000")
+  ) {
     throw invalidRequest("Title must be 1 to 200 characters");
   }
-  if (typeof version !== "number" || !Number.isInteger(version)) {
+  if (
+    typeof version !== "number" ||
+    !Number.isInteger(version) ||
+    version < 1 ||
+    version > MAX_VERSION
+  ) {
     throw invalidRequest("Version is required");
   }
   const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, async (db) => {

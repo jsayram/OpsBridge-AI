@@ -1,6 +1,6 @@
 # OpsBridge AI master inbox
 
-Updated: 2026-11-06 (America/New_York), P0 phase session. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
+Updated: 2026-11-06 (America/New_York), P1 phase session. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
 
 ## Open decisions
 
@@ -18,39 +18,40 @@ Updated: 2026-11-06 (America/New_York), P0 phase session. The coordinator reads 
 
 ### DEC-002 — Provider, budget, identity and domain choices
 
-- State: open. Blocks P1 hosted work, not local work.
+- State: answered 2026-11-06 for free accounts. Jose creates them himself when asked; none exists yet.
 - Package and blocking dependency: P1.1, P1.2, P1.5; P3.3, P4.3 and P5.3 later.
 - Decision needed and why: P1 needs a real staging origin. Accounts, credentials and hosted resources are stop points.
 - Options: (a) create Cloudflare and Neon accounts now, free plans, all owned by Jose; (b) keep building local slices of P1 and delay hosting; (c) a different provider, which reopens ADR-000.
 - Consequence/cost: (a) $0 on Workers Free, Hyperdrive and Neon Free, no card needed for Neon. R2 and Zero Trust may ask for a payment method even at $0. Community reports say Zero Trust free checkout may ask to authorize overage charges, so read it before entering a card. `docs/design/COST-INVENTORY.md` has the full list as of 2026-11-06.
 - Recommendation: (a) for Cloudflare and Neon, capped at 0.25 CU. Add Access only when P1.2 needs it. Also review the database exposure residual risk in `THREAT-MODEL.md` (PRD 6.3) and decide `workers.dev` versus a domain; `workers.dev` is free and enough for staging.
 - Decision needed by: before P1.1 hosted work.
-- Actual owner answer: none recorded for provisioning, spending, identity provider, domain, live integrations or publication.
-- Authorized scope: none.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Yes, free accounts (Recommended)”.
+- Authorized scope, as the master stated it: free Cloudflare and Neon accounts on a `workers.dev` address, Access only when owner login needs it, and the database exposure risk accepted for review in `THREAT-MODEL.md`. Jose creates the accounts himself when asked. No session creates any. Excludes spending, a domain, live integrations and any deploy not yet asked for.
 - Evidence/affected scope: `PRD.md` Sections 17 and 23.3, `docs/design/COST-INVENTORY.md`.
 
 ### DEC-003 — Where PDF text extraction runs (ADR-000 proof 1b failed)
 
-- State: open. Blocks P5.1 only. Raised under the failed-proof stop rule.
+- State: answered 2026-11-06. Decide again at P5. Raised under the failed-proof stop rule.
 - Package and blocking dependency: P5.1 owner upload. Public demo is unaffected.
 - Decision needed and why: extraction works in workerd but costs about 2.5 ms of CPU a page locally: 1 page 4.7 ms warm and about 40 ms cold, 5 pages 13.1 ms, 20 pages 45.9 ms, against the Workers Free limit of 10 ms. It also can't be cron work on Free. Evidence: `docs/evidence/P0.2/`.
 - Options with consequence/cost: (A) stay on Free. Guests use text extracted at build time (already the P0.3 design). Owner uploads wait until P5.1, and decide then. $0 now. (B) Move to Workers Paid at $5 a month when P5.1 starts, and parse in the Worker up to about 20 pages. Simple, one code path, recurring cost only while wanted. (C) Parse in the owner's browser or a local script and send text. $0, but server trust in that text drops, and it's a second path to secure.
 - Recommendation: A now, then B at P5.1 if Jose wants hosted owner upload in the interview demo. No spend now, and nothing before P5 changes.
 - Decision needed by: start of P5.1. A yes to A now also closes this as a stop point for P1 through P4.
-- Actual owner answer: none.
-- Authorized scope: none.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Decide at P5 (Recommended)”.
+- Authorized scope, as the master stated it: stay on Free now. The stop point is closed for P1 through P4. Option B or C stays undecided until P5.1.
 - Resulting ADR/files: `ADR/000-stack-and-hosting.md` item 1b, `docs/reports/P0.2.md`.
 
 ### DEC-004 — Create the GitHub repository and push
 
-- State: open. Blocks P0-C closing fully.
+- State: answered 2026-11-06, carried out by the master for `main` and `phase/p0-foundation` only.
 - Package and blocking dependency: P0.5, P1.1.
 - Decision needed and why: the workflow has never run on GitHub, so P0-C stays partial. Creating the repo and pushing are stop points.
 - Options: (a) create a repo now and push the phase branch, private until release, then public per Jose's stated plan; (b) keep P0-C partial until P1.
 - Recommendation: (a). Repo private for now, protected `main`, push `phase/p0-foundation` only. The history contains only planning and synthetic material, and gitleaks found nothing across 7 commits. Before any public flip, re-check employer-name references in planning documents.
 - Decision needed by: before P1.1.
-- Actual owner answer: none.
-- Authorized scope: none.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Yes, public now”.
+- Authorized scope and what was done, as the master reported it: public repo https://github.com/jsayram/OpsBridge-AI, `origin` added, `main` and `phase/p0-foundation` pushed at `84c9694`, `main` protected against force-push and deletion, draft PR https://github.com/jsayram/OpsBridge-AI/pull/1 opened so CI can run. That PR must not be merged. Gitleaks found no secrets across 14 commits at the time of the push.
+- Exclusions: pushing is authorized only for what Jose approved. `phase/p1-shell` is not pushed until the master says so.
 
 ## Recorded user direction
 

@@ -16,6 +16,8 @@ permissions:
 
 jobs:
   release:
+    # Protected main only. CI must be green there, which the branch rules enforce.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: ${{ inputs.environment }}
@@ -30,6 +32,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
       - run: node scripts/check-release-config.mjs "$RELEASE_CONFIG"
       - run: npx vite build --config frontend/vite.config.ts
       - run: npm run check:bundle

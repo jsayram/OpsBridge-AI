@@ -46,11 +46,12 @@ export const originCheck: MiddlewareHandler<AppEnv> = async (c, next) => {
     throw new ApiError(403, "origin_rejected", "This request came from another site");
   }
   const type = c.req.header("content-type")?.split(";")[0]?.trim().toLowerCase();
-  // Headers, not raw.body: workerd gives an empty POST a non-null body stream.
+  // Headers, not raw.body: workerd gives an empty POST a non-null body stream. Any declared
+  // type that isn't JSON is refused even with no length, which covers a cross-site form.
   const hasBody =
     (c.req.header("content-length") ?? "0") !== "0" ||
     c.req.header("transfer-encoding") !== undefined;
-  if (hasBody && type !== "application/json") {
+  if ((type && type !== "application/json") || (hasBody && !type)) {
     throw new ApiError(415, "unsupported_media_type", "Send JSON");
   }
   return next();

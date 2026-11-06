@@ -67,7 +67,20 @@ const meBody = await me.json();
 check("session works", me.status === 200 && meBody.kind === "guest", meBody.demoRole);
 check("no admin capability", !meBody.capabilities?.includes("admin:access"));
 const list = await (await hit("/api/v1/cases?limit=5", { headers: { cookie } })).json();
-check("cases list is scoped", list.items?.length === 5 && list.items[0].readOnly === false);
+check(
+  "cases list opens with own rows",
+  list.items?.length === 5 && list.items[0].readOnly === false,
+);
+const other = await hit("/api/v1/demo/sessions", { method: "POST" });
+const otherCookie = cookieOf(other);
+const swapped = await hit(`/api/v1/cases/${list.items[0].id}`, {
+  headers: { cookie: otherCookie },
+});
+check(
+  "a second visitor can't read the first one's case",
+  other.status === 201 && swapped.status === 404,
+  `${swapped.status}`,
+);
 
 const evil = await hit("/api/v1/demo/reset", {
   method: "POST",

@@ -9,7 +9,16 @@ if (!file) {
   console.error("usage: check-release-config.mjs <config>");
   process.exit(2);
 }
-const text = readFileSync(file, "utf8");
+const raw = readFileSync(file, "utf8");
+const config = JSON.parse(
+  raw
+    .split("\n")
+    .filter((line) => !/^\s*\/\//.test(line))
+    .join("\n")
+    .replace(/,(\s*[}\]])/g, "$1"),
+);
+const text = JSON.stringify(config);
+const vars = config.vars ?? {};
 const errors = [];
 const need = (ok, message) => {
   if (!ok) errors.push(message);
@@ -19,17 +28,28 @@ need(!/OWNER_TEST_JWKS/.test(text), "test double keys in a release config");
 need(!/localConnectionString/.test(text), "local database connection");
 need(!/local_dev_only/.test(text), "local password");
 need(!/REPLACE_/.test(text), "unfilled placeholder");
-need(!/0{31}[12]/.test(text), "placeholder Hyperdrive ID");
-need(!/"ENVIRONMENT":\s*"local"/.test(text), "ENVIRONMENT is local");
 need(
-  /"ENVIRONMENT":\s*"(staging|production)"/.test(text),
+  ["staging", "production"].includes(vars.ENVIRONMENT),
   "ENVIRONMENT must be staging or production",
 );
-need(/"APP_ORIGIN":\s*"https:\/\//.test(text), "APP_ORIGIN must be an https origin");
-need(/"compatibility_date":\s*"\d{4}-\d{2}-\d{2}"/.test(text), "pinned compatibility date");
+need(/^https:\/\/[^/]+$/.test(vars.APP_ORIGIN ?? ""), "APP_ORIGIN must be an https origin");
+need(/^\d{4}-\d{2}-\d{2}$/.test(config.compatibility_date ?? ""), "pinned compatibility date");
+const worker = config.assets?.run_worker_first ?? [];
+for (const path of ["/api/*", "/health/*", "/admin", "/admin/*"]) {
+  need(worker.includes(path), `run_worker_first must include ${path}`);
+}
+need(config.triggers?.crons?.includes("*/30 * * * *"), "the purge cron is missing");
+const hd = config.hyperdrive ?? [];
+const id = (name) => hd.find((h) => h.binding === name)?.id;
+need(id("HYPERDRIVE") && id("HYPERDRIVE_CLEANUP"), "both Hyperdrive bindings are required");
 need(
-  !/DEMO_(LAUNCH_HOURLY_LIMIT|WORKSPACE_CAP|TTL_SECONDS|RESET_LIMIT)/.test(text),
-  "quota override",
+  id("HYPERDRIVE") !== id("HYPERDRIVE_CLEANUP"),
+  "app and cleanup need separate Hyperdrive configs",
+);
+need(!hd.some((h) => /^0+[12]$/.test(h.id ?? "")), "placeholder Hyperdrive ID");
+need(
+  config.ratelimits?.some((r) => r.name === "API_RATE_LIMITER"),
+  "rate limiter binding is missing",
 );
 if (errors.length) {
   console.error(`Release config FAILED:\n- ${errors.join("\n- ")}`);

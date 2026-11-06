@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { call, connect, cookieFrom, launch, tokenHash } from "./harness";
+import { call, connect, cookieFrom, launch, tokenHash, withLimits } from "./harness";
 
 const LAUNCH = "/api/v1/demo/sessions";
 const postJson = { method: "POST" };
@@ -130,26 +130,52 @@ describe("P1-A reset", () => {
   });
 
   it("E2E-18 repeated reset hits the session quota and affects nothing else", async () => {
-    let cookie = (await launch()).cookie;
-    const other = await launch();
-    for (let i = 0; i < 2; i++) {
-      const r = await call("/api/v1/demo/reset", {
-        ...postJson,
-        cookie,
-        env: { DEMO_RESET_LIMIT: "2" },
-      });
-      expect(r.status).toBe(200);
-      cookie = cookieFrom(r);
-    }
-    const over = await call("/api/v1/demo/reset", {
-      ...postJson,
-      cookie,
-      env: { DEMO_RESET_LIMIT: "2" },
+    await withLimits({ reset_limit: 2 }, async () => {
+      let cookie = (await launch()).cookie;
+      const other = await launch();
+      for (let i = 0; i < 2; i++) {
+        const r = await call("/api/v1/demo/reset", { ...postJson, cookie });
+        expect(r.status).toBe(200);
+        cookie = cookieFrom(r);
+      }
+      const over = await call("/api/v1/demo/reset", { ...postJson, cookie });
+      expect(over.status).toBe(429);
+      expect(over.json.code).toBe("reset_quota");
+      expect((await call("/api/v1/me", { cookie })).status).toBe(200);
+      expect((await call("/api/v1/me", { cookie: other.cookie })).status).toBe(200);
     });
-    expect(over.status).toBe(429);
-    expect(over.json.code).toBe("reset_quota");
-    expect((await call("/api/v1/me", { cookie })).status).toBe(200);
-    expect((await call("/api/v1/me", { cookie: other.cookie })).status).toBe(200);
+  });
+
+  it("launch pause also stops reset", async () => {
+    const a = await launch();
+    const res = await call("/api/v1/demo/reset", {
+      ...postJson,
+      cookie: a.cookie,
+      env: { DEMO_LAUNCH_PAUSED: "true" },
+    });
+    expect(res.status).toBe(503);
+    expect((await call("/api/v1/me", { cookie: a.cookie })).status).toBe(200);
+  });
+
+  it("reset spends the same hourly budget as launch, so one client can't outrun the purge", async () => {
+    const headers = { "cf-connecting-ip": "203.0.113.50" };
+    await withLimits({ hourly_limit: 3 }, async () => {
+      const first = await call(LAUNCH, { ...postJson, headers });
+      const r1 = await call("/api/v1/demo/reset", {
+        ...postJson,
+        headers,
+        cookie: cookieFrom(first),
+      });
+      const r2 = await call("/api/v1/demo/reset", { ...postJson, headers, cookie: cookieFrom(r1) });
+      expect([first.status, r1.status, r2.status]).toEqual([201, 200, 200]);
+      const over = await call("/api/v1/demo/reset", {
+        ...postJson,
+        headers,
+        cookie: cookieFrom(r2),
+      });
+      expect(over.status).toBe(429);
+      expect(over.json.code).toBe("launch_quota");
+    });
   });
 
   it("concurrent resets on one session give one winner and no orphan session", async () => {
@@ -165,55 +191,103 @@ describe("P1-A reset", () => {
 });
 
 describe("quotas", () => {
-  it("per-IP hourly launch cap, partitioned by client address", async () => {
-    const env = { DEMO_LAUNCH_HOURLY_LIMIT: "2" };
-    const headers = { "cf-connecting-ip": `198.51.100.${Math.floor(Math.random() * 250)}` };
-    const hit = () => call(LAUNCH, { ...postJson, env, headers });
-    expect((await hit()).status).toBe(201);
-    expect((await hit()).status).toBe(201);
-    const over = await hit();
-    expect(over.status).toBe(429);
-    expect(over.json.code).toBe("launch_quota");
-    const elsewhere = await call(LAUNCH, {
-      ...postJson,
-      env,
-      headers: { "cf-connecting-ip": "203.0.113.200" },
+  it("per-address hourly launch cap, partitioned by client address", async () => {
+    const hit = (ip: string) => call(LAUNCH, { ...postJson, headers: { "cf-connecting-ip": ip } });
+    await withLimits({ hourly_limit: 2 }, async () => {
+      const ip = `198.51.100.${Math.floor(Math.random() * 250)}`;
+      expect((await hit(ip)).status).toBe(201);
+      expect((await hit(ip)).status).toBe(201);
+      const over = await hit(ip);
+      expect(over.status).toBe(429);
+      expect(over.json.code).toBe("launch_quota");
+      expect((await hit("203.0.113.200")).status).toBe(201);
     });
-    expect(elsewhere.status).toBe(201);
+  });
+
+  it("one IPv6 /64 is one client, however many addresses it rotates through", async () => {
+    const hit = (suffix: string) =>
+      call(LAUNCH, { ...postJson, headers: { "cf-connecting-ip": `2001:db8:77:1:${suffix}` } });
+    await withLimits({ hourly_limit: 2 }, async () => {
+      expect((await hit("1::1")).status).toBe(201);
+      expect((await hit("2::2")).status).toBe(201);
+      expect((await hit("3::3")).status).toBe(429);
+      const other = await call(LAUNCH, {
+        ...postJson,
+        headers: { "cf-connecting-ip": "2001:db8:77:2::1" },
+      });
+      expect(other.status).toBe(201);
+    });
   });
 
   it("X-Forwarded-For cannot dodge the cap", async () => {
-    const env = { DEMO_LAUNCH_HOURLY_LIMIT: "1" };
     const ip = `192.0.2.${Math.floor(Math.random() * 250)}`;
     const hit = (xff: string) =>
       call(LAUNCH, {
         ...postJson,
-        env,
         headers: { "cf-connecting-ip": ip, "x-forwarded-for": xff },
       });
-    expect((await hit("1.1.1.1")).status).toBe(201);
-    expect((await hit("2.2.2.2")).status).toBe(429);
+    await withLimits({ hourly_limit: 1 }, async () => {
+      expect((await hit("1.1.1.1")).status).toBe(201);
+      expect((await hit("2.2.2.2")).status).toBe(429);
+    });
   });
 
-  it("the quota table holds no address", async () => {
-    await call(LAUNCH, { ...postJson, headers: { "cf-connecting-ip": "203.0.113.77" } });
+  it("capacity refuses launch and reset, and expired workspaces still count", async () => {
+    const a = await launch();
+    const gone = await launch();
     const mig = await connect("opsbridge_migrator");
+    await mig.query(
+      "UPDATE app.workspaces SET expires_at = now() - interval '1 minute' WHERE id = $1",
+      [gone.workspaceId],
+    );
     const { rows } = await mig.query(
-      "SELECT count(*)::int AS n FROM app.demo_quota WHERE encode(ip_bucket, 'escape') LIKE '%203.0.113.77%'",
+      "SELECT count(*)::int AS n FROM app.workspaces WHERE mode = 'demo'",
     );
     await mig.end();
-    expect(rows[0].n).toBe(0);
+    await withLimits({ workspace_cap: rows[0].n }, async () => {
+      const l = await call(LAUNCH, postJson);
+      expect(l.status).toBe(503);
+      expect(l.json.code).toBe("demo_capacity");
+      const r = await call("/api/v1/demo/reset", { ...postJson, cookie: a.cookie });
+      expect(r.status).toBe(503);
+      expect((await call("/api/v1/me", { cookie: a.cookie })).status).toBe(200);
+    });
   });
 
-  it("capacity refuses launch and reset, counting expired workspaces", async () => {
-    const a = await launch();
-    const env = { DEMO_WORKSPACE_CAP: "1" };
-    const l = await call(LAUNCH, { ...postJson, env });
-    expect(l.status).toBe(503);
-    expect(l.json.code).toBe("demo_capacity");
-    const r = await call("/api/v1/demo/reset", { ...postJson, cookie: a.cookie, env });
-    expect(r.status).toBe(503);
-    expect((await call("/api/v1/me", { cookie: a.cookie })).status).toBe(200);
+  it("concurrent launches can't pass the cap", async () => {
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      "SELECT count(*)::int AS n FROM app.workspaces WHERE mode = 'demo'",
+    );
+    await withLimits({ workspace_cap: rows[0].n + 3 }, async () => {
+      const rs = await Promise.all(Array.from({ length: 12 }, () => call(LAUNCH, postJson)));
+      expect(rs.filter((r) => r.status === 201)).toHaveLength(3);
+      expect(rs.filter((r) => r.status === 503)).toHaveLength(9);
+    });
+    await mig.end();
+  });
+
+  it("the runtime role can't read or change limits, or pass its own", async () => {
+    const app_ = await connect("opsbridge_app");
+    await expect(app_.query("SELECT * FROM app.demo_limits")).rejects.toThrow(/permission denied/);
+    await expect(app_.query("UPDATE app.demo_limits SET ttl_seconds = 999999")).rejects.toThrow(
+      /permission denied/,
+    );
+    await expect(
+      app_.query("SELECT app.launch_demo_session($1, $2, 31536000, 2147483647, 2147483647)", [
+        Buffer.alloc(32),
+        Buffer.alloc(32),
+      ]),
+    ).rejects.toThrow(/does not exist/);
+    await app_.end();
+  });
+
+  it("retention: the session lifetime can't be set above two hours, even by the migrator", async () => {
+    const mig = await connect("opsbridge_migrator");
+    await expect(mig.query("UPDATE app.demo_limits SET ttl_seconds = 7201")).rejects.toThrow(
+      /check constraint/,
+    );
+    await mig.end();
   });
 });
 
@@ -336,6 +410,15 @@ describe("CSRF", () => {
       cookie: a.cookie,
       rawBody: "role=viewer",
       headers: { "content-type": "application/x-www-form-urlencoded" },
+    });
+    expect(res.status).toBe(415);
+    expect((await call("/api/v1/me", { cookie: a.cookie })).json.demoRole).toBe("analyst");
+  });
+
+  it("an empty POST with a form type is refused too", async () => {
+    const res = await call("/api/v1/demo/sessions", {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
     });
     expect(res.status).toBe(415);
   });

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { call, cookieFrom, launch } from "./harness";
+import { call, cookieFrom, launch, ownerEnv } from "./harness";
 
 const logged = (spy: { mock: { calls: unknown[][] } }) => spy.mock.calls.flat().join("\n");
 
@@ -103,8 +103,10 @@ describe("P1-D log redaction", () => {
     await call(`/api/v1/cases?cursor=${canary}`, { cookie });
     await call("/api/v1/demo/role", { cookie, body: { role: canary } });
     await call("/api/v1/admin/status", {
+      env: ownerEnv,
       headers: { "cf-access-jwt-assertion": canary, authorization: `Bearer ${canary}` },
     });
+    await call("/api/v1/me", { env: ownerEnv, cookie: `CF_Authorization=${canary}` });
     await call("/api/v1/demo/sessions", {
       method: "POST",
       env: {

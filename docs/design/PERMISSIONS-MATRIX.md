@@ -53,8 +53,14 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 
 | Layer | Rule |
 |---|---|
-| Grants | `opsbridge_app` has no DELETE or TRUNCATE and only SELECT on `workspaces`. `opsbridge_cleanup` has no table rights. PRD 7.4 lists all three roles. |
-| RLS | Read: own workspace or template. Write: own workspace only. |
+| Grants | `opsbridge_app` has no DELETE or TRUNCATE, only SELECT on `workspaces`, and nothing at all on `demo_sessions`, `demo_quota`, `demo_limits`, `users` or `memberships`. `opsbridge_cleanup` has no table rights. PRD 7.4 lists all three roles. Exact grants are held by a test in `tests/integration/migrations.test.ts`. |
+| RLS | Read: own workspace or template. Write: own workspace only, and never the template even if a bug sets it as current (`app.writable_workspace()`). Every `app` table has RLS on. |
 | Composite FKs | Child rows reference `(workspace_id, id)`, so a row can't point across workspaces. |
 | Guard trigger | `audit_events` update and delete rules. |
-| Functions | `claim_due_outbox`, `finish_outbox`, `create_demo_workspace`, `expire_demo_workspace`, `seed_demo_workspace`, `expired_demo_workspaces` and `purge_demo_workspace` are narrow `SECURITY DEFINER` with a fixed `search_path`. |
+| Functions | Narrow `SECURITY DEFINER` with a fixed `search_path`. Runtime: `launch_demo_session`, `resolve_demo_session`, `reset_demo_session`, `set_demo_role`, `resolve_owner`, `revoke_owner_sessions`. Cleanup: `expired_demo_workspaces`, `purge_demo_workspace`, `purge_stale_demo_quota`. Internal, granted to nobody: `create_demo_workspace`, `seed_demo_workspace`, `take_workspace_quota`. P4 adds `claim_due_outbox` and `finish_outbox`. |
+
+## P1 status
+
+`backend/src/auth/policy.ts` implements the rows that exist so far: read and edit cases, reset, switch role, `GET /me` and admin. Every other row stays denied by default because its route doesn't exist yet. The owner column runs only against the local test double, so it is Pending Owner Configuration.
+
+A guest with `analyst` or `manager` can edit a case title, the one write in P1. Status moves and the rest of "Create and edit cases" arrive in P2.2.

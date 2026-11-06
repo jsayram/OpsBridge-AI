@@ -4,7 +4,7 @@ import { ErrorCard, SimBadge, Skeleton, StatusChip } from "../components/ui";
 import { Link, useRouteFocus } from "../router";
 import { can, useSession } from "../session";
 
-function useLoad<T>(path: string | null) {
+function useLoad<T>(path: string | null, { guestPath = true } = {}) {
   const { sessionEnded } = useSession();
   const [data, setData] = useState<T | null>(null);
   const [failure, setFailure] = useState<ApiFailure | null>(null);
@@ -19,11 +19,11 @@ function useLoad<T>(path: string | null) {
     api<T>(path, { signal: controller.signal })
       .then(setData)
       .catch((e) => {
-        if (e instanceof ApiFailure && e.status === 401) sessionEnded();
+        if (e instanceof ApiFailure && e.status === 401 && guestPath) sessionEnded();
         else if (e instanceof ApiFailure) setFailure(e);
       });
     return () => controller.abort();
-  }, [path, nonce, sessionEnded]);
+  }, [path, nonce, sessionEnded, guestPath]);
 
   return { data, failure, reload: useCallback(() => setNonce((n) => n + 1), []) };
 }
@@ -376,11 +376,22 @@ type AdminStatus = { ownerIdentity: string; identityMode: string; simulated: boo
 
 export function Admin() {
   useRouteFocus("Administration");
-  const { data, failure, reload } = useLoad<AdminStatus>("/admin/status");
+  const { data, failure, reload } = useLoad<AdminStatus>("/admin/status", { guestPath: false });
   const [signedOut, setSignedOut] = useState(false);
+  const [logoutFailure, setLogoutFailure] = useState<ApiFailure | null>(null);
   const logout = async () => {
-    await api("/admin/logout", { method: "POST" });
-    setSignedOut(true);
+    setLogoutFailure(null);
+    try {
+      const { providerLogoutPath } = await api<{ providerLogoutPath: string }>("/admin/logout", {
+        method: "POST",
+      });
+      // Only the provider can end its own session. The double has no provider to visit.
+      if (data?.simulated) setSignedOut(true);
+      else window.location.assign(providerLogoutPath);
+    } catch (e) {
+      if (e instanceof ApiFailure) setLogoutFailure(e);
+      else throw e;
+    }
   };
   return (
     <>
@@ -397,12 +408,13 @@ export function Admin() {
             </p>
           )}
           {signedOut ? (
-            <p role="status">Signed out.</p>
+            <p role="status">Signed out here. No provider session exists in this mode.</p>
           ) : (
             <button type="button" onClick={() => void logout()}>
               Sign out
             </button>
           )}
+          {logoutFailure && <ErrorCard failure={logoutFailure} />}
         </section>
       )}
     </>

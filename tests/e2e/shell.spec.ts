@@ -310,14 +310,23 @@ test.describe("P1-F keyboard, motion, mobile", () => {
     expect(outline).toBe("solid");
   });
 
-  test("reset can be cancelled and confirmed by keyboard", async ({ page }, info) => {
+  test("reset can be cancelled and confirmed by keyboard, keeping focus", async ({
+    page,
+  }, info) => {
     test.skip(info.project.name === "mobile", "keyboard path runs on desktop");
     await openOverview(page);
-    await page.getByRole("button", { name: "Reset demo" }).focus();
+    const reset = page.getByRole("button", { name: "Reset demo" });
+    await reset.focus();
     await page.keyboard.press("Enter");
-    await page.getByRole("button", { name: "Cancel" }).focus();
+    await expect(page.getByRole("button", { name: "Confirm reset" })).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Cancel" })).toBeFocused();
     await page.keyboard.press("Enter");
-    await expect(page.getByRole("button", { name: "Reset demo" })).toBeVisible();
+    await expect(reset).toBeFocused();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("Demo reset to a fresh workspace.").first()).toBeVisible();
+    await expect(reset).toBeFocused();
   });
 
   test("reduced motion removes animation", async ({ page }) => {
@@ -375,6 +384,8 @@ test.describe("P1-F keyboard, motion, mobile", () => {
   test("light theme passes the same accessibility checks", async ({ page }) => {
     await openOverview(page);
     await page.getByRole("button", { name: "Light theme" }).click();
+    // Button colors transition for 120 ms. Contrast is measured on the settled state.
+    await page.waitForTimeout(300);
     await expectNoAxeViolations(page);
   });
 });
@@ -406,7 +417,7 @@ test.describe("P1-C admin through the local test double", () => {
     await expect(page.getByText("Local test double")).toBeVisible();
     await expectNoAxeViolations(page);
     await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page.getByText("Signed out.")).toBeVisible();
+    await expect(page.getByText("Signed out here.")).toBeVisible();
     const res = await page.goto("/admin");
     expect(res?.status()).toBe(401);
   });

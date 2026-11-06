@@ -1,0 +1,32 @@
+# Mutation canaries, 2026-11-06T18:57:04Z. Each mutation was made in the working tree, tested, then reverted.
+## M0 baseline
+      Tests  57 passed (57)
+## M1 API scope removed from cases.ts (a missed WHERE). RLS alone must still hold.
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > owner reads its own case but not guest or template rows
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > lists never mix workspaces
+      Tests  2 failed | 55 passed (57)
+## M2 M1 plus cases_read policy opened to all rows. Tests must now fail.
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > owner reads its own case but not guest or template rows
+ FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > lists never mix workspaces
+ FAIL  tests/integration/roles-isolation.test.ts > isolation and least privilege > P3.a no workspace set returns only template rows
+ FAIL  tests/integration/roles-isolation.test.ts > isolation and least privilege > P3.b A cannot read B or owner by id
+      Tests  4 failed | 53 passed (57)
+## M3 subject allowlist check removed from verifyOwnerToken. Tests must fail.
+ FAIL  tests/integration/owner-identity.test.ts > token verification > unknown subject gets 403 even with a perfect signature
+ FAIL  tests/integration/owner-identity.test.ts > token verification > the subject match is exact, not a prefix or case fold
+      Tests  2 failed | 55 passed (57)
+## M4 audience check removed. Tests must fail.
+ FAIL  tests/integration/owner-identity.test.ts > token verification > wrong audience gets 401
+      Tests  1 failed | 56 passed (57)
+## M5 reset keeps the old token. Tests must fail.
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > swaps in a fresh workspace, rotates the token and kills the old cookie
+ FAIL  tests/integration/sessions.test.ts > P1-A reset > E2E-18 repeated reset hits the session quota and affects nothing else
+ FAIL  tests/integration/sessions.test.ts > CSRF > rejects a form-encoded body, the classic cross-site form
+      Tests  3 failed | 24 passed (27)
+## M6 reverted, baseline again
+      Tests  57 passed (57)
+
+Reading the results:
+- M1: guest-to-guest checks still pass with the API scope gone, so RLS held by itself. The two failures are the owner seeing shared template rows, which RLS allows for every runtime role and only the API scope narrows. That is synthetic read-only data, not a cross-tenant leak.
+- M2: the guest ID-swap 404 still held because the query joins customers, and customers has its own policy. Direct reads fail P3.a and P3.b.
+- M5: the third failure, on the form-encoded CSRF test, was not caused by the mutation. It was a real regression from the empty-POST fix, sitting in the working tree. That run's baseline covered other test files, so it was first misread here as a side effect. The clean-copy CI run caught it and it is fixed in middleware.ts.

@@ -112,6 +112,18 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Me" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/v1/workspace/summary:
+    get:
+      tags: [demo]
+      operationId: getWorkspaceSummary
+      summary: Case counts by status for the current workspace and the shared template
+      responses:
+        "200":
+          description: Counts, labeled synthetic
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceSummary" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/v1/cases:
     get:
       tags: [cases]
@@ -498,6 +510,41 @@ paths:
             text/csv:
               schema: { type: string }
         "400": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/status:
+    get:
+      tags: [admin]
+      operationId: adminStatus
+      summary: Owner identity state. 404 for everyone while identity is unconfigured
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Identity state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminStatus" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/logout:
+    post:
+      tags: [admin]
+      operationId: adminLogout
+      summary: Revoke every owner token issued up to now, and audit it
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Signed out here. The browser then ends the provider session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [signedOut, providerLogoutPath]
+                properties:
+                  signedOut: { const: true }
+                  providerLogoutPath: { type: string }
+        "401": { $ref: "#/components/responses/Error" }
   /api/v1/admin/integrations/{id}/sync:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -622,6 +669,7 @@ components:
       properties:
         expiresAt: { type: string, format: date-time }
         packVersion: { type: string }
+        demoRole: { enum: [viewer, analyst, manager] }
     Me:
       type: object
       required: [kind, capabilities]
@@ -629,6 +677,25 @@ components:
         kind: { enum: [guest, owner] }
         demoRole: { enum: [viewer, analyst, manager] }
         capabilities: { type: array, items: { type: string } }
+        workspaceMode: { enum: [demo, owner] }
+        workspaceName: { type: string }
+        expiresAt: { type: string, format: date-time }
+        expiresInSeconds: { type: integer, minimum: 0 }
+        environment: { type: string }
+    WorkspaceSummary:
+      type: object
+      required: [provenance, workspaceCases, templateCases]
+      properties:
+        provenance: { const: SYNTHETIC }
+        workspaceCases: { type: object, additionalProperties: { type: integer } }
+        templateCases: { type: object, additionalProperties: { type: integer } }
+    AdminStatus:
+      type: object
+      required: [ownerIdentity, identityMode, simulated]
+      properties:
+        ownerIdentity: { type: string, description: Pending Owner Configuration until a real provider is verified }
+        identityMode: { enum: [access, local-test-double] }
+        simulated: { type: boolean }
     CaseStatus:
       enum: [Draft, Intake, Needs Review, Ready, Approved, Closed]
     Case:
@@ -637,6 +704,8 @@ components:
       properties:
         id: { type: string, format: uuid }
         title: { type: string }
+        caseType: { type: string }
+        customer: { type: string }
         status: { $ref: "#/components/schemas/CaseStatus" }
         assigneeId: { type: [string, "null"], format: uuid }
         dueAt: { type: [string, "null"], format: date-time }
@@ -656,6 +725,11 @@ components:
       required: [version]
       properties:
         version: { type: integer }
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: P1 implements title and version only. The other fields arrive with P2.
         status:
           enum: [Intake, Needs Review, Ready, Closed]
           description: Approved is reachable only through the approval command.

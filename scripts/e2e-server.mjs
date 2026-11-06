@@ -4,7 +4,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { exportJWK, generateKeyPair } from "jose";
-import { localUrl, migrate, seed, setupLocal } from "./db.mjs";
+import { localUrl, migrate, relaxLimits, seed, setupLocal } from "./db.mjs";
 
 const DB = "opsbridge_e2e";
 const PORT = "8788";
@@ -13,6 +13,7 @@ const OWNER_SUBJECT = "e2e-double-owner-subject";
 await setupLocal(DB, { recreate: true });
 await migrate(localUrl("opsbridge_migrator", DB));
 await seed(localUrl("opsbridge_migrator", DB));
+await relaxLimits(localUrl("opsbridge_migrator", DB));
 
 const pair = await generateKeyPair("RS256", { extractable: true });
 const pub = { ...(await exportJWK(pair.publicKey)), kid: "double-1", alg: "RS256" };
@@ -25,8 +26,6 @@ writeFileSync(
   ".wrangler/e2e/dev.vars",
   [
     "IP_HASH_KEY=e2e-only-not-a-secret",
-    "DEMO_LAUNCH_HOURLY_LIMIT=100000",
-    "DEMO_WORKSPACE_CAP=100000",
     "OWNER_IDENTITY_MODE=local-test-double",
     `OWNER_SUBJECT_ALLOWLIST=${OWNER_SUBJECT}`,
     `OWNER_TEST_JWKS='${JSON.stringify({ keys: [pub] })}'`,

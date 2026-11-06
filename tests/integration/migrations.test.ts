@@ -93,6 +93,16 @@ describe("roles match PRD 7.4", () => {
     ]);
   });
 
+  it("runtime roles carry statement timeouts", async () => {
+    const c = await connect("opsbridge_migrator");
+    const { rows } = await c.query(
+      "SELECT rolname, rolconfig FROM pg_roles WHERE rolname IN ('opsbridge_app','opsbridge_cleanup') ORDER BY 1",
+    );
+    await c.end();
+    expect(rows[0].rolconfig).toContain("statement_timeout=5s");
+    expect(rows[1].rolconfig).toContain("statement_timeout=30s");
+  });
+
   it("every definer function pins search_path", async () => {
     const c = await connect("opsbridge_migrator");
     const { rows } = await c.query(

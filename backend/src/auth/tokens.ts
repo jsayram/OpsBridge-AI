@@ -29,11 +29,27 @@ const hmac = async (secret: string, value: string): Promise<Uint8Array> => {
   return new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value)));
 };
 
+// One client usually owns a whole IPv6 /64, so that is the unit a quota can count.
+export function clientNetwork(ip: string): string {
+  const mapped = ip.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (mapped?.[1]) return mapped[1];
+  if (!ip.includes(":")) return ip;
+  const [head = "", tail] = ip.toLowerCase().split("::");
+  const front = head ? head.split(":") : [];
+  const back = tail ? tail.split(":") : [];
+  const missing = tail === undefined ? 0 : 8 - front.length - back.length;
+  const groups = [...front, ...Array<string>(Math.max(0, missing)).fill("0"), ...back];
+  return `${groups
+    .slice(0, 4)
+    .map((g) => g.replace(/^0+(?=.)/, ""))
+    .join(":")}::/64`;
+}
+
 // Keyed, so the quota table holds no address and can't be reversed by hashing all of IPv4.
-export const ipBucket = (secret: string, ip: string) => hmac(secret, ip);
+export const ipBucket = (secret: string, ip: string) => hmac(secret, clientNetwork(ip));
 
 export const ipBucketKey = async (env: Bindings, ip: string) =>
-  env.IP_HASH_KEY ? toBase64Url(await hmac(env.IP_HASH_KEY, ip)) : "unkeyed";
+  env.IP_HASH_KEY ? toBase64Url(await hmac(env.IP_HASH_KEY, clientNetwork(ip))) : "unkeyed";
 
 export const hashHex = async (value: unknown): Promise<string> => {
   const digest = await crypto.subtle.digest(

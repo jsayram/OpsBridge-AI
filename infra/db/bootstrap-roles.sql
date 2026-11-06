@@ -10,6 +10,9 @@ BEGIN
     END IF;
     EXECUTE format('ALTER ROLE %I NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS', r);
   END LOOP;
+  -- A flood must fail fast instead of holding connections.
+  ALTER ROLE opsbridge_app SET statement_timeout = '5s';
+  ALTER ROLE opsbridge_cleanup SET statement_timeout = '30s';
   EXECUTE format('GRANT CREATE, CONNECT ON DATABASE %I TO opsbridge_migrator', current_database());
   EXECUTE format('GRANT CONNECT ON DATABASE %I TO opsbridge_app, opsbridge_cleanup', current_database());
 END $$;

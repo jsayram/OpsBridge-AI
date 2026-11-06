@@ -1,4 +1,4 @@
-import { type ChangeEvent, type ReactNode, useEffect, useState } from "react";
+import { type ChangeEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { ApiFailure, api, type Me } from "../api";
 import { Link } from "../router";
 import { can, useSession } from "../session";
@@ -56,6 +56,21 @@ function GuestControls({ me }: { me: Extract<Me, { kind: "guest" }> }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const resetButton = useRef<HTMLButtonElement>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+
+  // The control that held focus goes away, so hand focus to its replacement.
+  useEffect(() => {
+    if (confirming) confirmButton.current?.focus();
+    else if (restoreFocus.current) resetButton.current?.focus();
+    restoreFocus.current = false;
+  }, [confirming]);
+
+  const closeConfirm = () => {
+    restoreFocus.current = true;
+    setConfirming(false);
+  };
 
   const run = async (action: () => Promise<unknown>, done: string) => {
     setBusy(true);
@@ -68,7 +83,7 @@ function GuestControls({ me }: { me: Extract<Me, { kind: "guest" }> }) {
       else setMessage(e instanceof ApiFailure ? e.message : "That didn't work.");
     } finally {
       setBusy(false);
-      setConfirming(false);
+      if (confirming) closeConfirm();
     }
   };
 
@@ -90,7 +105,7 @@ function GuestControls({ me }: { me: Extract<Me, { kind: "guest" }> }) {
       </span>
       <span>
         <label htmlFor="demo-role">Demo role (simulation)</label>
-        <select id="demo-role" value={me.demoRole} onChange={onRole} disabled={busy}>
+        <select id="demo-role" value={me.demoRole} onChange={onRole} aria-busy={busy}>
           <option value="viewer">Viewer</option>
           <option value="analyst">Analyst</option>
           <option value="manager">Manager</option>
@@ -100,6 +115,7 @@ function GuestControls({ me }: { me: Extract<Me, { kind: "guest" }> }) {
         (confirming ? (
           <>
             <button
+              ref={confirmButton}
               type="button"
               className="danger"
               disabled={busy}
@@ -112,12 +128,12 @@ function GuestControls({ me }: { me: Extract<Me, { kind: "guest" }> }) {
             >
               Confirm reset
             </button>
-            <button type="button" disabled={busy} onClick={() => setConfirming(false)}>
+            <button type="button" disabled={busy} onClick={closeConfirm}>
               Cancel
             </button>
           </>
         ) : (
-          <button type="button" onClick={() => setConfirming(true)}>
+          <button ref={resetButton} type="button" onClick={() => setConfirming(true)}>
             Reset demo
           </button>
         ))}

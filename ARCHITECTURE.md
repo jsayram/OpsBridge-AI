@@ -1,6 +1,6 @@
 # Architecture
 
-Design at P0. Nothing here is deployed. The scaffold implements only the health route and one domain module, and P1 onward fills in the rest. Stack decision: `ADR/000-stack-and-hosting.md`.
+Design from P0, updated at P1. Nothing here is deployed. Locally, the shell, demo sessions, scoped case reads, the identity boundary and the cron purge run; later phases fill in the rest. Stack decision: `ADR/000-stack-and-hosting.md`.
 
 ## Runtime
 
@@ -71,7 +71,7 @@ Dashed lines stay disabled and show **Not configured** or **Simulated** until Jo
 
 ## Main flows
 
-**Launch demo (TB1, TB3).** `POST /api/v1/demo/sessions`: rate check, then one transaction inserts the workspace and session hash and runs `seed_demo_workspace`. The response sets a `__Host-` cookie. While Neon wakes, the browser shows the waking state from PRD 13.2.
+**Launch demo (TB1, TB3).** `POST /api/v1/demo/sessions` makes one call to `launch_demo_session`, which takes the quota, inserts the workspace, seeds it, stores the session hash and audits, all in one transaction. The response sets a `__Host-` cookie. While Neon wakes, the browser shows the waking state from PRD 13.2.
 
 **Scoped read (TB1, TB3).** Middleware resolves the session to a workspace, then `BEGIN`, `set_config('app.workspace_id', $1, true)`, the query with `workspace_id` in its `WHERE`, `COMMIT`. RLS is a second lock, so a missed `WHERE` returns nothing rather than leaking. Reads through Hyperdrive use a new client per request, as Cloudflare recommends.
 
@@ -87,7 +87,7 @@ Dashed lines stay disabled and show **Not configured** or **Simulated** until Jo
 
 | Environment | Database | Worker | State |
 |---|---|---|---|
-| Local | Docker Postgres through `localConnectionString` | `wrangler dev` | Working |
+| Local | Docker Postgres through `localConnectionString`, migrated by `scripts/db.mjs` | `wrangler dev` | Working |
 | Staging | Neon branch with its own credentials | Separate Worker | Not created |
 | Production | Neon main | Worker | Not created |
 
@@ -97,11 +97,11 @@ Local mode does not run Hyperdrive, so transaction tests must repeat against rea
 
 | Path | Contents |
 |---|---|
-| `backend/` | Worker entry, routes, domain modules |
+| `backend/` | Worker entry, routes, auth, domain modules, SQL migrations |
 | `frontend/` | React SPA |
-| `tests/` | Unit now; integration and E2E later |
-| `infra/` | Local Docker, Wrangler templates |
+| `tests/` | Unit, integration on real Postgres, Playwright on real workerd |
+| `infra/` | Local Docker, role bootstrap, Wrangler staging template |
 | `sample-data/` | Seed manifest and fixtures |
 | `scripts/` | Local CI and helpers |
 | `spikes/` | Throwaway P0.2 proofs; not application code |
-| `docs/` | Design, briefs, reports, evidence |
+| `docs/` | Design, runbooks, environment reference, briefs, reports, evidence |

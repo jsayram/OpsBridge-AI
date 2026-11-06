@@ -1,6 +1,6 @@
 # Threat model
 
-Review date: 2026-11-06, P0.3. Next review: end of P4 and at P7.1. This is engineering work against OWASP ASVS, the API and LLM Top 10 lists and NIST SSDF as checklists. It is not a compliance claim and not an independent audit. PRD 12.2 stays the master threat-to-control table; this document adds the system-specific analysis.
+Review date: 2026-11-06, P0.3, updated at P1. Next review: end of P4 and at P7.1. This is engineering work against OWASP ASVS, the API and LLM Top 10 lists and NIST SSDF as checklists. It is not a compliance claim and not an independent audit. PRD 12.2 stays the master threat-to-control table; this document adds the system-specific analysis.
 
 Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 
@@ -32,8 +32,17 @@ Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 
 | Flow | Threat | Control | Test | Residual |
 |---|---|---|---|---|
-| Launch demo | Session flood burns Neon compute and storage | Per IP-hash hourly launch cap in `demo_quota` (5), a cap of 150 unpurged demo workspaces that counts expired ones, the Workers rate-limit binding as an approximate outer layer if the plan offers it, 2-hour TTL | Quota exhaustion, E2E-18 | Distributed flood could still wake Neon. A separate launch-pause flag then stops new workspaces and shows the recorded walkthrough; emergency mode itself keeps the demo, per PRD 17 |
-| Launch demo | Token guessing | 256-bit random token, SHA-256 hash stored, `__Host-` cookie | Forged cookie test | None known |
+| Launch demo | Session flood burns Neon compute and storage | Per network hourly cap in `demo_quota` (5 new workspaces, launch and reset together; an IPv6 client counts as its /64), a cap of 150 unpurged demo workspaces that counts expired ones, the Workers rate-limit binding as an approximate outer layer if the plan offers it, 2-hour TTL | Quota exhaustion, E2E-18 | Distributed flood could still wake Neon. A separate launch-pause flag then stops new workspaces and shows the recorded walkthrough; emergency mode itself keeps the demo, per PRD 17 |
+| Launch demo | Token guessing | 256-bit random token, SHA-256 hash stored, `__Host-` cookie | Forged cookie and fixation tests, `tests/integration/sessions.test.ts` | None known |
+| Any session | Stolen cookie replayed | 2-hour TTL, HttpOnly, token rotated on reset, old token dead at once | Reset rotation test | A stolen cookie works until expiry or reset. The data is synthetic |
+| Launch demo | Reset used as a workspace factory | Reset spends the same hourly budget as launch, 5 resets a session, plus the 150 workspace cap | E2E-18 test, shared budget test | Many networks together can still fill the cap, which makes the demo refuse visitors until the purge catches up. Launch pause and the walkthrough are the response |
+| Launch demo | Limits stretched by a Worker variable or leaked credential | Limits are in `app.demo_limits`, with no runtime grant and a CHECK on TTL | Limit tests in `sessions.test.ts` | None known |
+| Launch demo | Flood queues on the capacity lock | `lock_timeout` on lifecycle functions, role `statement_timeout`, typed 503 | Settings tested; **not load-tested** | Behavior under real concurrency unknown until P7.4 |
+| Launch demo | Header spoofing dodges the cap | Only `CF-Connecting-IP` is read, never `X-Forwarded-For`. Keyed hash in the table | XFF test | Relies on Cloudflare setting that header; unverified until hosted |
+| Identity | Test double left on in a hosted config | Refused unless `ENVIRONMENT` is `local` and the host is loopback; missing `ENVIRONMENT` counts as production; release check rejects it | `owner-identity.test.ts`, `check-release-config.mjs` | None known |
+| Identity | Stolen owner token after logout | `sessions_valid_after` refuses tokens issued at or before logout | Revocation test | Real token lifetime and claims unverified until a provider exists |
+| Template | Bug sets the template as current and writes to it | Write policies use `app.writable_workspace()`, which excludes the template | `roles-isolation.test.ts` | None known |
+| Sessions | Query bug reads token hashes | Runtime role has no grant on `demo_sessions`; lookups go through a definer function | Grant test | None known |
 | Any read | Missing workspace filter | Query scoping, then RLS, then composite FKs | P3.a to P3.e proofs; ID-swap matrix in P1.3, P2.2 | A bug in `set_config` handling; tested by a canary query in integration tests |
 | Any read | Connection reuse leaks workspace | `set_config(..., true)` scope ends with the transaction | P3.e local; **must repeat through real Hyperdrive** | Pending Hyperdrive |
 | Any write | CSRF | `SameSite=Strict`, Origin must equal the app origin on every non-GET, JSON content type required | Cross-origin rejection | None known |
@@ -51,7 +60,7 @@ Trust boundaries TB1 to TB10 and the diagram are in `ARCHITECTURE.md`.
 | Documents | Malicious upload | Guests can't upload. Owner path: byte sniffing, limits, quarantine | Guest denial now; P5.1 for the rest | PDF parser bugs on the owner path |
 | AI | Prompt injection | No tools, no secrets, strict schema, human decision, abstention | Adversarial suite in P5.5 | Quality of extraction is bounded by the fixture set |
 | Reports | CSV formula injection | Prefix neutralization, row and range caps | JOB-TEST-04 | None known |
-| Admin | Guest reaches admin | Verified JWT, subject allowlist; path 404 when unconfigured | E2E-03, E2E-04 | Provider choice pending DEC-002; behavior fixed either way |
+| Admin | Guest reaches admin | Verified JWT, subject allowlist; path 404 when unconfigured | `owner-identity.test.ts`, browser test on real workerd | Provider choice pending DEC-002; behavior fixed either way |
 | Secrets | Leak to bundle, logs, repo | Env bindings, log allowlist, gitleaks in CI | P0.5 canary, E2E-27 | Local history scan only until a remote exists |
 | Supply chain | Malicious package | Lockfile, `npm ci`, pinned actions by SHA, `npm audit` | P0.5 | `npm audit` covers known issues only |
 | Cost | Neon compute exhausted, DB suspended | 0.25 CU cap, 30-minute sweep, no keep-warm, launch caps | Budget table in `docs/design/COST-INVENTORY.md` | Suspension until the next billing period is a real outage; landing page and recording survive |
@@ -68,7 +77,9 @@ Nothing security-critical is unspecified. These are pending configuration, each 
 
 | Item | Safe default | Decide by |
 |---|---|---|
-| Owner identity provider (DEC-002) | Admin paths return 404 | P1.2 |
+| Owner identity provider (DEC-002) | Admin paths return 404. Verifier built against a local test double | P1.5 |
+| `sub` and `iat` in real Access tokens | Unknown subject or missing claim is refused | First real sign-in, see `docs/runbooks/IDENTITY.md` |
+| Rate-limit binding on Workers Free | App runs without it; database quotas remain the hard limit | P1.5 |
 | Hyperdrive repeat of proofs 2 and 3 | Stay local, no release | P1.5 |
 | Neon exposure review | No hosted database | P1.1 |
 | Live AI provider | Fixtures only | P5.3 |

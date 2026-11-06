@@ -120,8 +120,9 @@ describe("isolation and least privilege", () => {
       () => app_.query("SELECT app.seed_demo_workspace($1)", [A.workspaceId]),
       /permission denied/,
     );
+    await denied(() => app_.query("SELECT app.create_demo_workspace()"), /permission denied/);
     await denied(
-      () => app_.query("SELECT app.create_demo_workspace(7200, 100)"),
+      () => app_.query("SELECT app.take_workspace_quota($1)", [Buffer.alloc(32)]),
       /permission denied/,
     );
   });
@@ -202,6 +203,17 @@ describe("isolation and least privilege", () => {
           ),
         ),
       /row-level security/,
+    );
+  });
+  it("even the migrator can't delete audit rows of an expired demo workspace", async () => {
+    const victim = await launch();
+    await mig.query(
+      "UPDATE app.workspaces SET expires_at = now() - interval '1 minute' WHERE id = $1",
+      [victim.workspaceId],
+    );
+    await denied(
+      () => mig.query("DELETE FROM app.audit_events WHERE workspace_id = $1", [victim.workspaceId]),
+      /append-only/,
     );
   });
   it("P3.t0-u purge lists and removes only expired demo data, with a retention record", async () => {

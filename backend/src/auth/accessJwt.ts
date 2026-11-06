@@ -1,15 +1,59 @@
-import { createLocalJWKSet, createRemoteJWKSet, type JWTPayload, jwtVerify } from "jose";
+import {
+  createLocalJWKSet,
+  errors,
+  type JSONWebKeySet,
+  type JWTPayload,
+  type JWTVerifyGetKey,
+  jwtVerify,
+} from "jose";
 import type { Bindings } from "../env";
 
 // Owner identity boundary. Provider status: Pending Owner Configuration (DEC-002).
 // Cloudflare Access is proposed, so this verifies Access-shaped tokens. Nothing here has
-// met a real Access team yet; the JWKS fetch path is only exercised with a stub.
+// met a real Access team yet; the JWKS fetch path only runs against a stub in tests.
 
 export const IDENTITY_LABEL = "Pending Owner Configuration";
 export const LOCAL_DOUBLE_ISSUER = "https://local-test-double.invalid";
 export const LOCAL_DOUBLE_AUDIENCE = "opsbridge-local-test-double";
 const TEAM_DOMAIN = /^[a-z0-9-]+\.cloudflareaccess\.com$/;
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+const KEYS_FRESH_MS = 10 * 60_000;
+const KEYS_MIN_REFETCH_MS = 60_000;
+const KEYS_TIMEOUT_MS = 5000;
+
+type KeyCache = { jwks: JSONWebKeySet; fetchedAt: number };
+const keyCaches = new Map<string, KeyCache>();
+
+export const clearKeyCache = () => keyCaches.clear();
+
+// Keys are plain JSON, cached per isolate. No promise or socket is shared across requests,
+// which workerd forbids. An unknown key ID refetches at most once a minute, so anonymous
+// tokens can't turn into a stream of outbound requests. Access rotates keys about every
+// 6 weeks and keeps the old one valid for 7 days.
+async function loadKeys(url: string): Promise<KeyCache> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(KEYS_TIMEOUT_MS) });
+  if (!res.ok) throw new Error("jwks_unavailable");
+  const cache = { jwks: (await res.json()) as JSONWebKeySet, fetchedAt: Date.now() };
+  keyCaches.set(url, cache);
+  return cache;
+}
+
+type KeyResolver = JWTVerifyGetKey;
+
+const cachedKeys =
+  (url: string): KeyResolver =>
+  async (header, token) => {
+    let cache = keyCaches.get(url);
+    if (!cache || Date.now() - cache.fetchedAt > KEYS_FRESH_MS) cache = await loadKeys(url);
+    try {
+      return await createLocalJWKSet(cache.jwks)(header, token);
+    } catch (e) {
+      if (!(e instanceof errors.JWKSNoMatchingKey)) throw e;
+      if (Date.now() - cache.fetchedAt < KEYS_MIN_REFETCH_MS) throw e;
+      return await createLocalJWKSet((await loadKeys(url)).jwks)(header, token);
+    }
+  };
 
 export type IdentityMode = "access" | "local-test-double";
 
@@ -18,7 +62,7 @@ export type IdentityConfig = {
   issuer: string;
   audience: string;
   subjects: ReadonlySet<string>;
-  keys: Parameters<typeof jwtVerify>[1];
+  keys: KeyResolver;
 };
 
 const allowlist = (raw: string | undefined) =>
@@ -44,7 +88,7 @@ export function identityConfig(env: Bindings, requestUrl: string): IdentityConfi
       issuer,
       audience: env.ACCESS_AUD,
       subjects,
-      keys: createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`)),
+      keys: cachedKeys(`${issuer}/cdn-cgi/access/certs`),
     };
   }
 
@@ -76,7 +120,7 @@ export async function verifyOwnerToken(
 ): Promise<VerifyResult> {
   let payload: JWTPayload;
   try {
-    ({ payload } = await jwtVerify(token, config.keys as never, {
+    ({ payload } = await jwtVerify(token, config.keys, {
       issuer: config.issuer,
       audience: config.audience,
       algorithms: ["RS256"],

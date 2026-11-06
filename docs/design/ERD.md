@@ -1,6 +1,6 @@
 # Entity relationship design
 
-Migrations arrive in P2.1. This is the schema those migrations must implement. `spikes/p0.2/sql/001_schema.sql` proves the role, RLS and audit parts on a subset.
+This is the schema the migrations must implement. `backend/migrations/0001_foundation.sql` (P1) covers workspaces, users, memberships, demo sessions, demo quota, customers, cases, audit events and retention log. P2.1 adds the rest with new migrations. `spikes/p0.2/sql/001_schema.sql` was the earlier proof on a subset.
 
 Conventions: UUID keys, UTC `timestamptz`, `workspace_id` on every business table, composite primary keys `(workspace_id, id)` so child foreign keys carry the workspace. Field lists match PRD 7 and 7.3.
 
@@ -145,12 +145,14 @@ erDiagram
 
 Tables without a line in the diagram but with the same conventions: `consultant_handoffs`, `case_checklist_items`, `external_connections`, `external_record_links`, `sync_runs`, `workflow_rules`, `metric_snapshots`, `inventory_items`, `inventory_snapshots`, `source_definition_mappings`, `customer_source_relationships`. Their fields are in PRD 7 and 7.3 and are not repeated here, so the PRD stays the single list.
 
+P1 additions not in the diagram: `users.sessions_valid_after` (owner revocation), `workspaces.seed_clock_shift` (recorded date shift), and `pack_key` on customers and cases, which marks template rows that belong to the scenario pack. `cases.assignee_id` has no foreign key yet because assignees arrive in P2.3.
+
 ## Constraints that carry weight
 
 | Constraint | Why |
 |---|---|
 | `CHECK ((mode = 'demo') = (expires_at IS NOT NULL))` | A demo workspace can't live forever, and an owner workspace can't expire |
-| Partial unique index on `workspaces(mode) WHERE mode = 'template'` | Exactly one template |
+| Partial unique indexes on `workspaces(mode)` for `template` and for `owner` | Exactly one of each |
 | `UNIQUE (workspace_id, idempotency_key)` on outbox | One durable event per business intent |
 | `UNIQUE (workspace_id, provider, external_type, external_id)` | Repeat sync can't duplicate |
 | `CHECK ((object_key IS NULL) <> (fixture_id IS NULL))` on documents | A document is an upload or a fixture |

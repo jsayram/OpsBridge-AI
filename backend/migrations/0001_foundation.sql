@@ -54,6 +54,17 @@ CREATE TABLE app.demo_quota (
   PRIMARY KEY (ip_bucket, hour)
 );
 
+-- Limits live here, not in the Worker. Only a migration can change them, so neither a
+-- Worker variable nor a leaked runtime credential can stretch the retention rule.
+CREATE TABLE app.demo_limits (
+  id boolean PRIMARY KEY DEFAULT true CHECK (id),
+  ttl_seconds int NOT NULL DEFAULT 7200 CHECK (ttl_seconds BETWEEN 60 AND 7200),
+  workspace_cap int NOT NULL DEFAULT 150 CHECK (workspace_cap > 0),
+  hourly_limit int NOT NULL DEFAULT 5 CHECK (hourly_limit > 0),
+  reset_limit int NOT NULL DEFAULT 5 CHECK (reset_limit >= 0)
+);
+INSERT INTO app.demo_limits DEFAULT VALUES;
+
 CREATE TABLE app.customers (
   workspace_id uuid NOT NULL REFERENCES app.workspaces(id),
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -134,6 +145,7 @@ ALTER TABLE app.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.memberships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.demo_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.demo_quota ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app.demo_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.cases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app.audit_events ENABLE ROW LEVEL SECURITY;
@@ -174,20 +186,35 @@ GRANT SELECT, INSERT ON app.audit_events TO opsbridge_app;
 
 -- Demo lifecycle. Everything here acts only on demo workspaces. Internal helpers are not
 -- granted to any runtime role.
-CREATE FUNCTION app.create_demo_workspace(ttl_seconds int, cap int) RETURNS uuid
+CREATE FUNCTION app.create_demo_workspace() RETURNS uuid
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
-DECLARE ws uuid;
+DECLARE ws uuid; lim app.demo_limits;
 BEGIN
+  SELECT * INTO lim FROM app.demo_limits;
   -- Counts every unpurged demo workspace, expired ones included, so launches can't
   -- outrun the purge and breach the 24-hour retention rule.
   PERFORM pg_advisory_xact_lock(727001);
-  IF (SELECT count(*) FROM app.workspaces WHERE mode = 'demo') >= cap THEN
+  IF (SELECT count(*) FROM app.workspaces WHERE mode = 'demo') >= lim.workspace_cap THEN
     RAISE EXCEPTION 'demo_capacity' USING ERRCODE = 'P0003';
   END IF;
   INSERT INTO app.workspaces (name, mode, expires_at)
-  VALUES ('Northstar Operations (fictional)', 'demo', now() + make_interval(secs => ttl_seconds))
+  VALUES ('Northstar Operations (fictional)', 'demo', now() + make_interval(secs => lim.ttl_seconds))
   RETURNING id INTO ws;
   RETURN ws;
+END $$;
+
+-- One hourly budget per client network for every new workspace, launch or reset. Without
+-- reset in here, one address could outrun the purge and fill the cap for everyone.
+CREATE FUNCTION app.take_workspace_quota(bucket bytea) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+BEGIN
+  INSERT INTO app.demo_quota AS q (ip_bucket, hour, launches)
+  VALUES (bucket, date_trunc('hour', now()), 1)
+  ON CONFLICT (ip_bucket, hour) DO UPDATE SET launches = q.launches + 1
+    WHERE q.launches < (SELECT hourly_limit FROM app.demo_limits);
+  IF NOT FOUND OR (SELECT hourly_limit FROM app.demo_limits) < 1 THEN
+    RAISE EXCEPTION 'launch_quota' USING ERRCODE = 'P0004';
+  END IF;
 END $$;
 
 -- Copies the scenario pack (rows with a pack_key) from the template. The same pack always
@@ -220,23 +247,16 @@ BEGIN
   RETURN total;
 END $$;
 
-CREATE FUNCTION app.launch_demo_session(
-  new_hash bytea, bucket bytea, ttl_seconds int, cap int, hourly_limit int)
+CREATE FUNCTION app.launch_demo_session(new_hash bytea, bucket bytea)
 RETURNS TABLE (session_id uuid, ws_id uuid, role text, session_expires_at timestamptz)
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp SET lock_timeout = '3s' AS $$
 DECLARE ws uuid; s app.demo_sessions;
 BEGIN
-  INSERT INTO app.demo_quota AS q (ip_bucket, hour, launches)
-  VALUES (bucket, date_trunc('hour', now()), 1)
-  ON CONFLICT (ip_bucket, hour) DO UPDATE SET launches = q.launches + 1
-    WHERE q.launches < hourly_limit;
-  IF NOT FOUND OR hourly_limit < 1 THEN
-    RAISE EXCEPTION 'launch_quota' USING ERRCODE = 'P0004';
-  END IF;
-  ws := app.create_demo_workspace(ttl_seconds, cap);
+  PERFORM app.take_workspace_quota(bucket);
+  ws := app.create_demo_workspace();
   PERFORM app.seed_demo_workspace(ws);
   INSERT INTO app.demo_sessions (workspace_id, token_hash, expires_at)
-  VALUES (ws, new_hash, now() + make_interval(secs => ttl_seconds)) RETURNING * INTO s;
+  SELECT ws, new_hash, w.expires_at FROM app.workspaces w WHERE w.id = ws RETURNING * INTO s;
   INSERT INTO app.audit_events (workspace_id, actor_type, actor_id, action, target)
   VALUES (ws, 'demo_session', s.id::text, 'demo.launched', ws::text);
   RETURN QUERY SELECT s.id, ws, s.demo_role, s.expires_at;
@@ -253,10 +273,9 @@ $$;
 
 -- Reset never deletes. It makes a fresh workspace, moves the session to it, rotates the
 -- token so the old cookie dies, and expires the old workspace for the sweep to purge.
-CREATE FUNCTION app.reset_demo_session(
-  old_hash bytea, new_hash bytea, ttl_seconds int, cap int, reset_limit int)
+CREATE FUNCTION app.reset_demo_session(old_hash bytea, new_hash bytea, bucket bytea)
 RETURNS TABLE (session_id uuid, ws_id uuid, role text, session_expires_at timestamptz)
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp SET lock_timeout = '3s' AS $$
 DECLARE s app.demo_sessions; ws uuid; resets int;
 BEGIN
   SELECT d.* INTO s FROM app.demo_sessions d JOIN app.workspaces w ON w.id = d.workspace_id
@@ -264,14 +283,17 @@ BEGIN
    FOR UPDATE OF d;
   IF NOT FOUND THEN RETURN; END IF;
   resets := coalesce((s.quota_counters ->> 'resets')::int, 0);
-  IF resets >= reset_limit THEN RAISE EXCEPTION 'reset_quota' USING ERRCODE = 'P0005'; END IF;
-  ws := app.create_demo_workspace(ttl_seconds, cap);
+  IF resets >= (SELECT reset_limit FROM app.demo_limits) THEN
+    RAISE EXCEPTION 'reset_quota' USING ERRCODE = 'P0005';
+  END IF;
+  PERFORM app.take_workspace_quota(bucket);
+  ws := app.create_demo_workspace();
   PERFORM app.seed_demo_workspace(ws);
   UPDATE app.workspaces SET expires_at = now() WHERE id = s.workspace_id AND mode = 'demo';
-  UPDATE app.demo_sessions SET workspace_id = ws, token_hash = new_hash,
-         expires_at = now() + make_interval(secs => ttl_seconds),
-         quota_counters = jsonb_set(quota_counters, '{resets}', to_jsonb(resets + 1))
-   WHERE id = s.id RETURNING * INTO s;
+  UPDATE app.demo_sessions d SET workspace_id = ws, token_hash = new_hash,
+         expires_at = (SELECT w.expires_at FROM app.workspaces w WHERE w.id = ws),
+         quota_counters = jsonb_set(d.quota_counters, '{resets}', to_jsonb(resets + 1))
+   WHERE d.id = s.id RETURNING d.* INTO s;
   INSERT INTO app.audit_events (workspace_id, actor_type, actor_id, action, target)
   VALUES (ws, 'demo_session', s.id::text, 'demo.reset', ws::text);
   RETURN QUERY SELECT s.id, ws, s.demo_role, s.expires_at;
@@ -358,9 +380,9 @@ REVOKE ALL ON ALL FUNCTIONS IN SCHEMA app FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION
   app.current_workspace(),
   app.writable_workspace(),
-  app.launch_demo_session(bytea, bytea, int, int, int),
+  app.launch_demo_session(bytea, bytea),
   app.resolve_demo_session(bytea),
-  app.reset_demo_session(bytea, bytea, int, int, int),
+  app.reset_demo_session(bytea, bytea, bytea),
   app.set_demo_role(bytea, text),
   app.resolve_owner(text),
   app.revoke_owner_sessions(text, text)

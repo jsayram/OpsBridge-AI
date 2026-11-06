@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { hashToken, ipBucket, isDemoTokenShape, newDemoToken } from "../../backend/src/auth/tokens";
+import {
+  clientNetwork,
+  hashToken,
+  ipBucket,
+  isDemoTokenShape,
+  newDemoToken,
+} from "../../backend/src/auth/tokens";
+
+describe("client network", () => {
+  it.each([
+    ["203.0.113.9", "203.0.113.9"],
+    ["::ffff:203.0.113.9", "203.0.113.9"],
+    ["2001:db8:1:2:3:4:5:6", "2001:db8:1:2::/64"],
+    ["2001:db8:1:2::9", "2001:db8:1:2::/64"],
+    ["2001:0DB8:0001:0002:ffff::", "2001:db8:1:2::/64"],
+    ["2001:db8::1", "2001:db8:0:0::/64"],
+    ["::1", "0:0:0:0::/64"],
+    ["local", "local"],
+  ])("%s", (ip, want) => {
+    expect(clientNetwork(ip)).toBe(want);
+  });
+});
 
 describe("demo tokens", () => {
   it("are 256 random bits in URL-safe form, and never repeat", () => {

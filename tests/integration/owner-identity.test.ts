@@ -1,7 +1,19 @@
 import { generateKeyPair, SignJWT } from "jose";
-import { describe, expect, it } from "vitest";
-import { LOCAL_DOUBLE_AUDIENCE, LOCAL_DOUBLE_ISSUER } from "../../backend/src/auth/accessJwt";
-import { call, connect, launch, mintOwnerToken, OWNER_SUBJECT, ownerEnv } from "./harness";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  clearKeyCache,
+  LOCAL_DOUBLE_AUDIENCE,
+  LOCAL_DOUBLE_ISSUER,
+} from "../../backend/src/auth/accessJwt";
+import {
+  call,
+  connect,
+  doubleJwks,
+  launch,
+  mintOwnerToken,
+  OWNER_SUBJECT,
+  ownerEnv,
+} from "./harness";
 
 const STATUS = "/api/v1/admin/status";
 const header = (token: string) => ({ "cf-access-jwt-assertion": token });
@@ -157,6 +169,60 @@ describe("token verification", () => {
     expect((await asOwner(await mintOwnerToken({ sub: OWNER_SUBJECT.toUpperCase() }))).status).toBe(
       403,
     );
+  });
+});
+
+describe("access mode, against a stub provider only", () => {
+  const team = "stub-team.cloudflareaccess.com";
+  const env = {
+    OWNER_IDENTITY_MODE: "access",
+    ACCESS_TEAM_DOMAIN: team,
+    ACCESS_AUD: "stub-aud",
+    OWNER_SUBJECT_ALLOWLIST: OWNER_SUBJECT,
+    ENVIRONMENT: "staging",
+  };
+  const base = "https://staging.example.com";
+  afterEach(() => {
+    vi.restoreAllMocks();
+    clearKeyCache();
+  });
+
+  it("verifies a token against the team's own JWKS URL, and caches the keys", async () => {
+    const fetchStub = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => new Response(doubleJwks));
+    const token = await mintOwnerToken({ iss: `https://${team}`, aud: "stub-aud" });
+    for (let i = 0; i < 3; i++) {
+      const res = await call(STATUS, { base, env, headers: header(token) });
+      expect(res.status).toBe(200);
+      expect(res.json.simulated).toBe(false);
+      expect(res.json.identityMode).toBe("access");
+    }
+    expect(fetchStub).toHaveBeenCalledTimes(1);
+    expect(String(fetchStub.mock.calls[0]?.[0])).toBe(`https://${team}/cdn-cgi/access/certs`);
+  });
+
+  it("rejects a token signed for the test double", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(doubleJwks));
+    const res = await call(STATUS, { base, env, headers: header(await mintOwnerToken()) });
+    expect(res.status).toBe(401);
+  });
+
+  it("an unknown key ID can't drive repeated JWKS fetches", async () => {
+    const fetchStub = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => new Response('{"keys":[]}'));
+    const token = await mintOwnerToken({ iss: `https://${team}`, aud: "stub-aud" });
+    for (let i = 0; i < 5; i++) {
+      expect((await call(STATUS, { base, env, headers: header(token) })).status).toBe(401);
+    }
+    expect(fetchStub).toHaveBeenCalledTimes(1);
+  });
+
+  it("a JWKS outage refuses sign-in", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response("", { status: 503 }));
+    const token = await mintOwnerToken({ iss: `https://${team}`, aud: "stub-aud" });
+    expect((await call(STATUS, { base, env, headers: header(token) })).status).toBe(401);
   });
 });
 
