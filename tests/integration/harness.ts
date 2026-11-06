@@ -5,7 +5,8 @@ import { LOCAL_DOUBLE_AUDIENCE, LOCAL_DOUBLE_ISSUER } from "../../backend/src/au
 import type { Bindings } from "../../backend/src/env";
 
 export const ORIGIN = "http://localhost:8787";
-const url = (user: string) => `postgres://${user}:local_dev_only@127.0.0.1:54330/opsbridge_test`;
+const DB = process.env.OPSBRIDGE_TEST_DB ?? "opsbridge_test";
+const url = (user: string) => `postgres://${user}:local_dev_only@127.0.0.1:54330/${DB}`;
 
 export const connect = async (user: string) => {
   const c = new pg.Client({ connectionString: url(user) });
@@ -154,4 +155,39 @@ export async function workspaceOf(cookie: string): Promise<string> {
   );
   await admin.end();
   return rows[0].workspace_id;
+}
+
+let keyCounter = 0;
+export const idempotencyKey = () => ({
+  "idempotency-key": `test-key-${Date.now()}-${keyCounter++}`,
+});
+
+type PackCase = { id: string; version: number; status: string; pack_key: string };
+
+// The three pack cases by key, read directly so a test can start from a known state.
+export async function packCases(guest: Guest): Promise<Record<string, PackCase>> {
+  const mig = await connect("opsbridge_migrator");
+  const { rows } = await mig.query(
+    "SELECT id, version, status, pack_key FROM app.cases WHERE workspace_id = $1 AND pack_key IS NOT NULL",
+    [guest.workspaceId],
+  );
+  await mig.end();
+  return Object.fromEntries(rows.map((r) => [r.pack_key, r]));
+}
+
+export const setRole = (cookie: string, role: string) =>
+  call("/api/v1/demo/role", { method: "POST", cookie, body: { role } });
+
+export async function counts(workspaceId: string, tables: string[]) {
+  const mig = await connect("opsbridge_migrator");
+  const out: Record<string, number> = {};
+  for (const t of tables) {
+    const { rows } = await mig.query(
+      `SELECT count(*)::int AS n FROM app.${t} WHERE workspace_id = $1`,
+      [workspaceId],
+    );
+    out[t] = rows[0].n;
+  }
+  await mig.end();
+  return out;
 }

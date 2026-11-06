@@ -91,7 +91,9 @@ describe("cross-workspace matrix", () => {
     expect(ids).not.toContain(B.caseId);
     expect(ids).not.toContain(ownerCase);
     const own = await ownerCall("/api/v1/cases?limit=100");
-    expect(own.json.items.map((x: { id: string }) => x.id)).toEqual([ownerCase]);
+    const ownerIds = own.json.items.map((x: { id: string }) => x.id);
+    expect(ownerIds).toContain(ownerCase);
+    for (const other of [A.caseId, B.caseId, templateCase]) expect(ownerIds).not.toContain(other);
   });
 
   it("pagination walks a bounded list without repeats", async () => {

@@ -9,8 +9,10 @@ import { ApiError, databaseError, errorBody, notFound } from "./http/errors";
 import { log } from "./http/log";
 import { noStore, originCheck, rateLimit, requestContext } from "./http/middleware";
 import { admin } from "./routes/admin";
+import { approvals } from "./routes/approvals";
 import { cases } from "./routes/cases";
 import { demo } from "./routes/demo";
+import { directory } from "./routes/directory";
 import { me } from "./routes/me";
 
 export type { Bindings } from "./env";
@@ -68,6 +70,8 @@ app.use("/api/v1/admin/*", ownerGate);
 app.route("/api/v1/admin", admin);
 app.route("/api/v1/demo", demo);
 app.route("/api/v1/cases", cases);
+app.route("/api/v1/approvals", approvals);
+app.route("/api/v1", directory);
 app.route("/api/v1", me);
 
 // The SPA page for /admin is only served to a verified owner.

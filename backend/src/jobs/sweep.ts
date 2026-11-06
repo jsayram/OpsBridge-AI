@@ -17,6 +17,7 @@ export async function sweepDemoWorkspaces(env: Bindings): Promise<number> {
       }
     }
     await db.query("SELECT app.purge_stale_demo_quota()");
+    await db.query("SELECT app.purge_expired_idempotency_keys()");
     log({ level: "info", event: "sweep", purged });
     return purged;
   });

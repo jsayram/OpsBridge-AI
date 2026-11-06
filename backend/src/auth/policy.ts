@@ -6,6 +6,10 @@ export const DEMO_ROLES: readonly DemoRole[] = ["viewer", "analyst", "manager"];
 export type Capability =
   | "cases:read"
   | "cases:edit"
+  | "cases:handoff"
+  | "cases:review"
+  | "cases:reopen"
+  | "approvals:decide"
   | "demo:reset"
   | "demo:switch_role"
   | "admin:access";
@@ -14,11 +18,26 @@ const GUEST_BASE: readonly Capability[] = ["cases:read", "demo:reset", "demo:swi
 
 const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
   viewer: GUEST_BASE,
-  analyst: [...GUEST_BASE, "cases:edit"],
-  manager: [...GUEST_BASE, "cases:edit"],
+  analyst: [...GUEST_BASE, "cases:edit", "cases:handoff"],
+  manager: [
+    ...GUEST_BASE,
+    "cases:edit",
+    "cases:handoff",
+    "cases:review",
+    "cases:reopen",
+    "approvals:decide",
+  ],
 };
 
-const OWNER: readonly Capability[] = ["cases:read", "cases:edit", "admin:access"];
+const OWNER: readonly Capability[] = [
+  "cases:read",
+  "cases:edit",
+  "cases:handoff",
+  "cases:review",
+  "cases:reopen",
+  "approvals:decide",
+  "admin:access",
+];
 
 export const guestCapabilities = (role: DemoRole) => GUEST[role];
 export const ownerCapabilities = () => OWNER;

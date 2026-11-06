@@ -54,12 +54,7 @@ describe("P2.1 schema", () => {
     );
     await c.end();
     const unscoped = rows.filter((r) => !r.scoped).map((r) => r.relname);
-    expect(unscoped.sort()).toEqual([
-      "demo_limits",
-      "demo_quota",
-      "users",
-      "workspaces",
-    ]);
+    expect(unscoped.sort()).toEqual(["demo_limits", "demo_quota", "users", "workspaces"]);
     expect(rows.every((r) => r.relrowsecurity)).toBe(true);
   });
 

@@ -15,6 +15,17 @@ describe("capabilities match the permissions matrix", () => {
     expect(guestCapabilities("analyst")).toContain("cases:edit");
     expect(guestCapabilities("manager")).toContain("cases:edit");
   });
+  it("workflow rows follow the matrix", () => {
+    const reviewer = ["cases:review", "cases:reopen", "approvals:decide"] as const;
+    for (const cap of reviewer) {
+      expect(guestCapabilities("viewer")).not.toContain(cap);
+      expect(guestCapabilities("analyst")).not.toContain(cap);
+      expect(guestCapabilities("manager")).toContain(cap);
+      expect(ownerCapabilities()).toContain(cap);
+    }
+    expect(guestCapabilities("viewer")).not.toContain("cases:handoff");
+    expect(guestCapabilities("analyst")).toContain("cases:handoff");
+  });
   it("owner has admin but no demo controls", () => {
     expect(ownerCapabilities()).toContain("admin:access");
     expect(ownerCapabilities()).not.toContain("demo:reset");

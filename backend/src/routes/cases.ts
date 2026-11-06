@@ -1,135 +1,252 @@
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { requireActor, requireCapability } from "../auth/actor";
 import { hashHex } from "../auth/tokens";
-import { type Db, withWorkspace } from "../db";
+import { withWorkspace } from "../db";
+import { CASE_STATUSES } from "../domain/caseStatus";
+import { CASE_TYPES, QUEUES } from "../domain/caseVocabulary";
+import { CHECKLIST_STATES } from "../domain/checklist";
 import type { AppEnv } from "../env";
-import { ApiError, forbidden, invalidRequest, notFound } from "../http/errors";
-import { isUuid, readStrictJson } from "../http/validate";
+import { invalidRequest, notFound } from "../http/errors";
+import {
+  isUuid,
+  isVersion,
+  optionalText,
+  readStrictJson,
+  requireDate,
+  requireIdempotencyKey,
+  requireOneOf,
+  requireText,
+  requireVersion,
+} from "../http/validate";
+import {
+  createCase,
+  handOffCase,
+  reopenCase,
+  updateCase,
+  updateChecklistItem,
+} from "../repo/caseCommands";
+import { type CaseQuery, caseActivity, caseDetail, findCase, listCases } from "../repo/cases";
+import { commandContext, idempotent } from "../repo/records";
 
-const STATUSES = ["Draft", "Intake", "Needs Review", "Ready", "Approved", "Closed"];
-const MAX_VERSION = 2_147_483_647;
 const MAX_TITLE = 200;
+const MAX_REASON = 500;
+const CURSOR = /^([01])_(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z)_([0-9a-f-]{36})$/;
 
-const SELECT = `SELECT c.id, c.title, c.case_type, c.status, c.due_at, c.version,
-                       cu.canonical_name AS customer, c.workspace_id <> $1 AS read_only
-                  FROM app.cases c
-                  JOIN app.customers cu ON cu.workspace_id = c.workspace_id AND cu.id = c.customer_id`;
+const pageLimit = (c: Context) => {
+  const limit = Number(c.req.query("limit") ?? 25);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw invalidRequest("Bad limit");
+  return limit;
+};
 
-// Both id and workspace appear in every lookup. RLS is the second lock, not the first.
-const SCOPE = `(c.workspace_id = $1
-  OR ($2 AND c.workspace_id = (SELECT id FROM app.workspaces WHERE mode = 'template')))`;
-
-const dto = (r: Record<string, unknown>) => ({
-  id: r.id,
-  title: r.title,
-  caseType: r.case_type,
-  status: r.status,
-  dueAt: r.due_at instanceof Date ? r.due_at.toISOString() : null,
-  version: r.version,
-  customer: r.customer,
-  readOnly: r.read_only,
-});
-
-const findCase = async (db: Db, workspaceId: string, seesTemplate: boolean, id: string) =>
-  (await db.query(`${SELECT} WHERE ${SCOPE} AND c.id = $3`, [workspaceId, seesTemplate, id]))
-    .rows[0];
+function caseQuery(c: Context<AppEnv>): CaseQuery {
+  const actor = c.get("actor");
+  const q: CaseQuery = {
+    workspaceId: actor.workspaceId,
+    seesTemplate: actor.kind === "guest",
+    limit: pageLimit(c),
+  };
+  const { status, queue, caseType, assignee, overdue, q: search, cursor } = c.req.query();
+  if (status !== undefined) q.status = requireOneOf(status, CASE_STATUSES, "status");
+  if (queue !== undefined) q.queue = requireOneOf(queue, QUEUES, "queue");
+  if (caseType !== undefined) q.caseType = requireOneOf(caseType, CASE_TYPES, "case type");
+  if (assignee === "unassigned") q.unassigned = true;
+  else if (assignee !== undefined) {
+    if (!isUuid(assignee)) throw invalidRequest("Bad assignee");
+    q.assigneeId = assignee;
+  }
+  if (overdue !== undefined) {
+    if (overdue !== "true") throw invalidRequest("Bad overdue filter");
+    q.overdue = true;
+  }
+  if (search !== undefined) q.search = requireText(search, "Search", 100);
+  if (cursor !== undefined) {
+    const m = CURSOR.exec(cursor);
+    if (!m || !isUuid(m[3] as string)) throw invalidRequest("Bad cursor");
+    q.cursor = { rank: m[1] === "1" ? 1 : 0, at: m[2] as string, id: m[3] as string };
+  }
+  return q;
+}
 
 export const cases = new Hono<AppEnv>();
 
 cases.use("*", requireActor, requireCapability("cases:read"));
 
 cases.get("/", async (c) => {
-  const actor = c.get("actor");
-  const seesTemplate = actor.kind === "guest";
-  const limit = Number(c.req.query("limit") ?? 25);
-  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw invalidRequest("Bad limit");
-  const status = c.req.query("status");
-  if (status !== undefined && !STATUSES.includes(status)) throw invalidRequest("Bad status");
-  const cursor = c.req.query("cursor");
-  const [rank, afterId] = cursor ? cursor.split(":") : [null, null];
-  if (cursor !== undefined && !((rank === "0" || rank === "1") && isUuid(afterId ?? ""))) {
-    throw invalidRequest("Bad cursor");
-  }
-  const { rows } = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
-    db.query(
-      `${SELECT} WHERE ${SCOPE}
-         AND ($3::text IS NULL OR c.status = $3)
-         AND ($4::int IS NULL OR ((c.workspace_id <> $1)::int, c.id) > ($4::int, $5::uuid))
-       ORDER BY (c.workspace_id <> $1)::int, c.id
-       LIMIT $6`,
-      [actor.workspaceId, seesTemplate, status ?? null, rank, afterId, limit + 1],
-    ),
+  const query = caseQuery(c);
+  return c.json(
+    await withWorkspace(c.env.HYPERDRIVE, query.workspaceId, (db) => listCases(db, query)),
   );
-  const page = rows.slice(0, limit);
-  const last = page.at(-1);
-  return c.json({
-    items: page.map(dto),
-    ...(rows.length > limit && last ? { nextCursor: `${last.read_only ? 1 : 0}:${last.id}` } : {}),
+});
+
+cases.post("/", requireCapability("cases:edit"), async (c) => {
+  const actor = c.get("actor");
+  const key = requireIdempotencyKey(c);
+  const body = await readStrictJson(c, [
+    "title",
+    "customerId",
+    "caseType",
+    "queue",
+    "dueAt",
+    "draft",
+  ]);
+  const customerId = body.customerId;
+  if (typeof customerId !== "string" || !isUuid(customerId)) throw invalidRequest("Bad customer");
+  if (body.draft !== undefined && typeof body.draft !== "boolean") {
+    throw invalidRequest("Bad draft flag");
+  }
+  const input = {
+    title: requireText(body.title, "Title", MAX_TITLE),
+    customerId,
+    caseType: requireOneOf(body.caseType, CASE_TYPES, "case type"),
+    queue: body.queue === undefined ? QUEUES[0] : requireOneOf(body.queue, QUEUES, "queue"),
+    dueAt: body.dueAt === undefined ? null : requireDate(body.dueAt, "due date"),
+    draft: body.draft === true,
+  };
+  const hash = await hashHex({ route: "POST /cases", input });
+  const out = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) => {
+    const ctx = commandContext(db, actor, c.get("requestId"));
+    return idempotent(ctx, key, hash, async () => ({
+      status: 201,
+      body: await createCase(ctx, input),
+    }));
   });
+  if (out.replayed) c.header("Idempotency-Replayed", "true");
+  return c.json(out.body as object, out.status as 201);
 });
 
 cases.get("/:id", async (c) => {
   const actor = c.get("actor");
   const id = c.req.param("id");
   if (!isUuid(id)) throw notFound();
-  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
-    findCase(db, actor.workspaceId, actor.kind === "guest", id),
-  );
-  if (!row) throw notFound();
-  return c.json(dto(row));
+  const detail = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, async (db) => {
+    const row = await findCase(db, actor.workspaceId, actor.kind === "guest", id);
+    return row ? caseDetail(db, row, actor.workspaceId) : null;
+  });
+  if (!detail) throw notFound();
+  return c.json(detail);
 });
 
-// The one write in P1: a title edit, so the isolation matrix tests a real write path.
-// Status moves and the rest of the case workflow belong to P2.
+cases.get("/:id/activity", async (c) => {
+  const actor = c.get("actor");
+  const id = c.req.param("id");
+  if (!isUuid(id)) throw notFound();
+  const limit = pageLimit(c);
+  const cursor = c.req.query("cursor");
+  if (cursor !== undefined && !/^\d{1,18}$/.test(cursor)) throw invalidRequest("Bad cursor");
+  const page = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, async (db) => {
+    const row = await findCase(db, actor.workspaceId, actor.kind === "guest", id);
+    if (!row) return null;
+    // Audit rows are private to a workspace, so shared sample cases show no history.
+    return row.read_only ? { items: [] } : caseActivity(db, actor.workspaceId, id, limit, cursor);
+  });
+  if (!page) throw notFound();
+  return c.json(page);
+});
+
+// PATCH covers details and status. Approved and leaving Closed each have their own command.
 cases.patch("/:id", requireCapability("cases:edit"), async (c) => {
   const actor = c.get("actor");
   const id = c.req.param("id");
   if (!isUuid(id)) throw notFound();
-  const { title, version } = await readStrictJson(c, ["title", "version"]);
-  if (
-    typeof title !== "string" ||
-    !title.trim() ||
-    title.length > MAX_TITLE ||
-    title.includes("\u0000")
-  ) {
-    throw invalidRequest("Title must be 1 to 200 characters");
+  const body = await readStrictJson(c, ["version", "title", "dueAt", "status", "reason"]);
+  const version = requireVersion(body.version);
+  if (body.title === undefined && body.dueAt === undefined && body.status === undefined) {
+    throw invalidRequest("Nothing to change");
   }
-  if (
-    typeof version !== "number" ||
-    !Number.isInteger(version) ||
-    version < 1 ||
-    version > MAX_VERSION
-  ) {
-    throw invalidRequest("Version is required");
+  if (body.reason !== undefined && body.status === undefined) {
+    throw invalidRequest("A reason goes with a status change");
   }
-  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, async (db) => {
-    const before = await findCase(db, actor.workspaceId, actor.kind === "guest", id);
-    if (!before) throw notFound();
-    if (before.read_only) throw forbidden();
-    const updated = await db.query(
-      `UPDATE app.cases SET title = $3, version = version + 1
-        WHERE workspace_id = $1 AND id = $2 AND version = $4 RETURNING id`,
-      [actor.workspaceId, id, title.trim(), version],
-    );
-    if (updated.rowCount === 0) {
-      throw new ApiError(409, "stale_version", "Someone changed this case. Reload and try again.");
-    }
-    const after = await findCase(db, actor.workspaceId, false, id);
-    await db.query(
-      `INSERT INTO app.audit_events
-         (workspace_id, actor_type, actor_id, action, target, before_hash, after_hash, request_id)
-       VALUES ($1, $2, $3, 'case.updated', $4, $5, $6, $7)`,
-      [
-        actor.workspaceId,
-        actor.kind === "owner" ? "owner" : "demo_session",
-        actor.kind === "owner" ? actor.userId : actor.sessionId,
-        id,
-        await hashHex(dto(before)),
-        await hashHex(dto(after)),
-        c.get("requestId"),
-      ],
-    );
-    return after;
-  });
-  return c.json(dto(row));
+  const reason = optionalText(body.reason, "Reason", MAX_REASON);
+  const patch = {
+    version,
+    ...(body.title !== undefined ? { title: requireText(body.title, "Title", MAX_TITLE) } : {}),
+    ...(body.dueAt !== undefined
+      ? { dueAt: body.dueAt === null ? null : requireDate(body.dueAt, "due date") }
+      : {}),
+    ...(body.status !== undefined
+      ? { status: requireOneOf(body.status, CASE_STATUSES, "status") }
+      : {}),
+    ...(reason ? { reason } : {}),
+  };
+  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    updateCase(commandContext(db, actor, c.get("requestId")), actor.kind === "guest", id, patch),
+  );
+  return c.json(row);
+});
+
+cases.post("/:id/reopen", requireCapability("cases:reopen"), async (c) => {
+  const actor = c.get("actor");
+  const id = c.req.param("id");
+  if (!isUuid(id)) throw notFound();
+  const body = await readStrictJson(c, ["reason", "version"]);
+  const version = requireVersion(body.version);
+  const reason = requireText(body.reason, "Reason", MAX_REASON);
+  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    reopenCase(
+      commandContext(db, actor, c.get("requestId")),
+      actor.kind === "guest",
+      id,
+      version,
+      reason,
+    ),
+  );
+  return c.json(row);
+});
+
+cases.post("/:id/handoffs", requireCapability("cases:handoff"), async (c) => {
+  const actor = c.get("actor");
+  const id = c.req.param("id");
+  if (!isUuid(id)) throw notFound();
+  const body = await readStrictJson(c, [
+    "toAssigneeId",
+    "toQueue",
+    "reason",
+    "dueAt",
+    "expectedCaseVersion",
+  ]);
+  if ((body.toAssigneeId === undefined) === (body.toQueue === undefined)) {
+    throw invalidRequest("Name either a person or a queue");
+  }
+  if (!isVersion(body.expectedCaseVersion)) throw invalidRequest("Version is required");
+  if (
+    body.toAssigneeId !== undefined &&
+    (typeof body.toAssigneeId !== "string" || !isUuid(body.toAssigneeId))
+  ) {
+    throw invalidRequest("Bad assignee");
+  }
+  const input = {
+    ...(body.toAssigneeId !== undefined ? { toAssigneeId: body.toAssigneeId as string } : {}),
+    ...(body.toQueue !== undefined ? { toQueue: requireOneOf(body.toQueue, QUEUES, "queue") } : {}),
+    reason: requireText(body.reason, "Reason", MAX_REASON),
+    ...(body.dueAt !== undefined ? { dueAt: requireDate(body.dueAt, "due date") } : {}),
+    expectedCaseVersion: body.expectedCaseVersion,
+  };
+  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    handOffCase(commandContext(db, actor, c.get("requestId")), actor.kind === "guest", id, input),
+  );
+  return c.json(row, 201);
+});
+
+cases.patch("/:id/checklist/:itemId", requireCapability("cases:edit"), async (c) => {
+  const actor = c.get("actor");
+  const id = c.req.param("id");
+  const itemId = c.req.param("itemId");
+  if (!isUuid(id) || !isUuid(itemId)) throw notFound();
+  const body = await readStrictJson(c, ["state", "version", "evidenceRef"]);
+  const evidenceRef = optionalText(body.evidenceRef, "Evidence reference", 200);
+  const input = {
+    state: requireOneOf(body.state, CHECKLIST_STATES, "state"),
+    version: requireVersion(body.version),
+    ...(evidenceRef ? { evidenceRef } : {}),
+  };
+  const row = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    updateChecklistItem(
+      commandContext(db, actor, c.get("requestId")),
+      actor.kind === "guest",
+      id,
+      itemId,
+      input,
+    ),
+  );
+  return c.json(row);
 });
