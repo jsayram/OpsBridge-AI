@@ -879,3 +879,19 @@ input[type="date"] {
     color-scheme: light;
   }
 }
+
+/* ---------- source evidence ---------- */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+  margin: 0;
+}
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+details.card summary {
+  cursor: pointer;
+  font-weight: 600;
+}

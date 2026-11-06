@@ -3,6 +3,7 @@ import { ApiFailure, api, type Summary } from "../api";
 import { ErrorCard, SimBadge, Skeleton, StatusChip } from "../components/ui";
 import { Link, useRouteFocus } from "../router";
 import { useSession } from "../session";
+import { SalesforceAdmin } from "./integration";
 import { Head, STATUSES, useLoad } from "./shared";
 
 const sum = (o: Record<string, number>) => Object.values(o).reduce((a, b) => a + b, 0);
@@ -69,7 +70,9 @@ export function Overview() {
           <section className="card">
             <h2>Next</h2>
             <p className="muted">
-              Start with <Link to="/app/cases">Cases</Link>. Other areas say which phase adds them.
+              Start with <Link to="/app/cases">Cases</Link>, then{" "}
+              <Link to="/app/reconciliation">Reconciliation</Link>. Other areas say which phase adds
+              them.
             </p>
           </section>
         </div>
@@ -79,11 +82,6 @@ export function Overview() {
 }
 
 const LATER: Record<string, { title: string; phase: string; note: string }> = {
-  reconciliation: {
-    title: "Reconciliation",
-    phase: "P3",
-    note: "Compares simulated CRM and ERP records and shows the evidence for each mismatch.",
-  },
   automations: {
     title: "Automations",
     phase: "P4",
@@ -93,11 +91,6 @@ const LATER: Record<string, { title: string; phase: string; note: string }> = {
     title: "Analytics",
     phase: "P6",
     note: "Trends, source freshness and ROI with clear provenance.",
-  },
-  integrations: {
-    title: "Integrations",
-    phase: "P3",
-    note: "Connector status. Nothing is connected in this build.",
   },
 };
 
@@ -161,6 +154,7 @@ export function Admin() {
           {logoutFailure && <ErrorCard failure={logoutFailure} />}
         </section>
       )}
+      {data && <SalesforceAdmin />}
     </>
   );
 }

@@ -1,14 +1,14 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
-  ApiFailure,
   type ActivityRow,
+  ApiFailure,
   type Assignee,
   api,
-  intentKeys,
   type CaseFull,
   type CaseRow,
   type ChecklistItem,
   type Customer,
+  intentKeys,
 } from "../api";
 import { ErrorCard, Skeleton, StatusChip } from "../components/ui";
 import { Link, navigate, useRouteFocus } from "../router";
@@ -463,12 +463,16 @@ function HandoffSection({
 }) {
   const canHand = useCapability("cases:handoff");
   const people = useLoad<{ items: Assignee[] }>("/assignees");
+  const stock = useLoad<{ items: { id: string; code: string; description: string }[] }>(
+    "/inventory?limit=25",
+  );
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formEl = e.currentTarget;
     const form = new FormData(formEl);
     const target = String(form.get("target") ?? "");
     const due = String(form.get("dueAt") ?? "");
+    const item = String(form.get("inventoryItemId") ?? "");
     void act(
       () =>
         api(`/cases/${encodeURIComponent(data.id)}/handoffs`, {
@@ -479,6 +483,7 @@ function HandoffSection({
               : { toAssigneeId: target }),
             reason: form.get("reason"),
             ...(due ? { dueAt: toIso(due) } : {}),
+            ...(item ? { inventoryItemId: item } : {}),
             expectedCaseVersion: data.version,
           },
         }),
@@ -493,7 +498,8 @@ function HandoffSection({
           {data.handoffs.map((h) => (
             <li key={h.id}>
               To {h.toAssignee ?? `${h.toQueue} queue`}: {h.reason}
-              {h.openRequired > 0 ? ` (${h.openRequired} required item open)` : ""}{" "}
+              {h.openRequired > 0 ? ` (${h.openRequired} required item open)` : ""}
+              {h.itemCode ? ` Inventory reference ${h.itemCode}.` : ""}{" "}
               <time dateTime={h.occurredAt}>{new Date(h.occurredAt).toLocaleString()}</time>
             </li>
           ))}
@@ -526,6 +532,17 @@ function HandoffSection({
               New due date (optional)
               <input name="dueAt" type="date" />
             </label>
+            <label className="field">
+              Inventory reference (optional)
+              <select name="inventoryItemId" defaultValue="">
+                <option value="">None</option>
+                {stock.data?.items.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.code}, {i.description}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <label className="field">
             Handoff reason
@@ -539,6 +556,36 @@ function HandoffSection({
         </form>
       )}
       {!data.readOnly && !canHand && <p className="small muted">{EDIT_ONLY}</p>}
+    </section>
+  );
+}
+
+function SourceReferencesSection({ refs }: { refs: CaseFull["sourceReferences"] }) {
+  return (
+    <section className="card">
+      <h2>Source references</h2>
+      <p className="small muted">What simulated sources hold for this client. Read-only.</p>
+      {refs.links.length === 0 ? (
+        <p className="muted">No source record is mapped to this client yet.</p>
+      ) : (
+        <ul className="list">
+          {refs.links.map((l) => (
+            <li key={`${l.provider}-${l.externalId}`}>
+              {l.provider === "erp_simulator" ? "ERP Simulator" : "CRM (simulated)"}{" "}
+              <span className="mono">{l.externalId}</span>
+              {l.role === "erp_bill_to" ? ", bill-to" : ""}
+            </li>
+          ))}
+        </ul>
+      )}
+      {refs.openFindings.length > 0 && (
+        <p>
+          <Link to={`/app/reconciliation/${refs.openFindings[0]?.id}`}>
+            {refs.openFindings.length} open finding{refs.openFindings.length === 1 ? "" : "s"} on
+            this client
+          </Link>
+        </p>
+      )}
     </section>
   );
 }
@@ -776,6 +823,7 @@ export function CaseDetail({ id }: { id: string }) {
         )}
         <ChecklistSection data={data} canEdit={canEdit} act={act} busy={busy} />
         <HandoffSection data={data} act={act} busy={busy} />
+        <SourceReferencesSection refs={data.sourceReferences} />
         <section className="card">
           <h2>Documents</h2>
           {data.documents.length === 0 ? (

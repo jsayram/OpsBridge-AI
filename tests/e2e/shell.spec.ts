@@ -217,7 +217,7 @@ test.describe("states", () => {
 
   test("not-yet-built areas say so and offer no fake controls", async ({ page }) => {
     await openOverview(page);
-    for (const name of ["Reconciliation", "Automations", "Analytics", "Integrations"]) {
+    for (const name of ["Automations", "Analytics"]) {
       await page.getByRole("link", { name }).first().click();
       await expect(page.getByRole("heading", { name: "Not built yet" })).toBeVisible();
       await expect(page.locator("main button")).toHaveCount(0);

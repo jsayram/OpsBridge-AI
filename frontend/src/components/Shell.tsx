@@ -23,6 +23,7 @@ const NAV = [
   ["/app/overview", "Overview"],
   ["/app/cases", "Cases"],
   ["/app/reconciliation", "Reconciliation"],
+  ["/app/inventory", "Inventory"],
   ["/app/automations", "Automations"],
   ["/app/analytics", "Analytics"],
   ["/app/integrations", "Integrations"],

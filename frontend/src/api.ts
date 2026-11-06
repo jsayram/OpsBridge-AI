@@ -114,6 +114,18 @@ export type HandoffRow = {
   reason: string;
   openRequired: number;
   occurredAt: string;
+  itemCode: string | null;
+};
+
+export type SourceReferences = {
+  links: {
+    provider: string;
+    recordType: string;
+    externalId: string;
+    role: string | null;
+    lastSeen: string;
+  }[];
+  openFindings: { id: string; kind: string; severity: string; status: string }[];
 };
 
 export type CaseFull = CaseRow & {
@@ -121,6 +133,7 @@ export type CaseFull = CaseRow & {
   handoffs: HandoffRow[];
   approval: { id: string; status: string; reason: string | null } | null;
   documents: { id: string; title: string; category: string | null; status: string }[];
+  sourceReferences: SourceReferences;
 };
 
 export type ActivityRow = {

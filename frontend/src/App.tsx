@@ -3,6 +3,7 @@ import { Shell } from "./components/Shell";
 import { ErrorCard, SessionNotice, Skeleton } from "./components/ui";
 import { Admin, Later, Overview } from "./pages/app";
 import { CaseDetail, Cases } from "./pages/cases";
+import { FindingDetail, Integrations, Inventory, Reconciliation } from "./pages/integration";
 import { Demo, Engineering, Landing, NotFoundPage } from "./pages/public";
 import { usePath } from "./router";
 import { SessionProvider, useSession } from "./session";
@@ -20,6 +21,10 @@ function AppArea({ path }: { path: string }) {
   } else if (section === "overview") body = <Overview />;
   else if (section === "cases" && id) body = <CaseDetail id={id} />;
   else if (section === "cases") body = <Cases />;
+  else if (section === "reconciliation" && id) body = <FindingDetail id={id} />;
+  else if (section === "reconciliation") body = <Reconciliation />;
+  else if (section === "integrations") body = <Integrations />;
+  else if (section === "inventory") body = <Inventory />;
   else body = <Later area={section ?? ""} />;
   return (
     <Shell path={path} me={me}>
