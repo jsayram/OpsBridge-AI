@@ -8,7 +8,7 @@ Verified: 2026-11-06T12:40:12-05:00. Vault: `Jose-Ramirez-Vault`. All writes use
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
 | `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `8c0bf287b79d7a30f90a50bdacc89dba8074d24b0a49bb460455917f1cfc11ea` | 17844 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `e7af1cf7019b616b097cec22a057b8060099b1eda37cd05ac15db6d8759fae3e` | 7788 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `90b5c4f81ae89321c47991c533c7f180a786d8f53a1b4988a514dd0851a5bbf0` | 8631 | Verified 2026-11-06T13:31:58-05:00 (P1 start, master's P0 gate record) |
 | `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `a10c2b379a270698df4bbc22b04ec2738782ef10e8ad76c2938d4cdbd623a95b` | 7716 | Verified |
 | `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `f46447f07b6e154f8c0b6e715717399ca392f5e5671469802edb3e092845ddd5` | 7618 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |

@@ -1,0 +1,22 @@
+# Local backup and clean restore, 2026-11-06T18:31:34Z, source opsbridge
+dump bytes: 87213
+PASS data approvals 64 rows
+PASS data audit_events 60 rows
+PASS data cases 1599 rows
+PASS data outbox 61 rows
+PASS data retention_log 1 rows
+PASS data workspaces 68 rows
+PASS RLS flags
+PASS policies
+FAIL table grants: got [opsbridge_app:outbox:INSERT,opsbridge_app:outbox:SELECT,opsbridge_app:outbox:UPDATE,opsbridge_app:approvals:INSERT,opsbridge_app:approvals:SELECT,opsbridge_app:approvals:UPDATE,opsbridge_app:audit_events:INSERT,opsbridge_app:audit_events:SELECT,opsbridge_app:cases:INSERT,opsbridge_app:cases:SELECT,opsbridge_app:cases:UPDATE,opsbridge_app:workspaces:SELECT] want [opsbridge_app:workspaces:SELECT,opsbridge_app:cases:INSERT,opsbridge_app:cases:SELECT,opsbridge_app:cases:UPDATE,opsbridge_app:approvals:INSERT,opsbridge_app:approvals:SELECT,opsbridge_app:approvals:UPDATE,opsbridge_app:outbox:INSERT,opsbridge_app:outbox:SELECT,opsbridge_app:outbox:UPDATE,opsbridge_app:audit_events:INSERT,opsbridge_app:audit_events:SELECT]
+PASS function grants
+PASS triggers
+PASS cleanup role has no table rights
+PASS guard on restored copy: admin UPDATE audit row
+PASS guard on restored copy: admin DELETE audit row
+PASS guard on restored copy: admin TRUNCATE audit
+PASS restored copy: app role cannot DELETE audit
+PASS restored copy: app role cannot write workspaces
+PASS restored copy: cleanup cannot read cases
+PASS restored copy: no-context app read returns nothing but template
+RESTORE PROOF FAILED
