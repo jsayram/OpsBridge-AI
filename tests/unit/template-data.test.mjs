@@ -5,10 +5,11 @@ import { buildTemplate } from "../../scripts/lib/template-data.mjs";
 const manifest = JSON.parse(readFileSync("sample-data/seed-manifest.json", "utf8"));
 
 describe("template data", () => {
-  const { customers, cases } = buildTemplate(manifest);
+  const template = buildTemplate(manifest);
+  const { customers, cases } = template;
 
   it("is deterministic", () => {
-    expect(buildTemplate(manifest)).toEqual({ customers, cases });
+    expect(buildTemplate(manifest)).toEqual(template);
   });
   it("meets the manifest counts", () => {
     expect(customers).toHaveLength(manifest.template.organizations);
@@ -27,7 +28,7 @@ describe("template data", () => {
   });
   it("names every organization as fictional and uses no real-looking identifiers", () => {
     expect(customers.every((c) => c.canonical_name.endsWith("(fictional)"))).toBe(true);
-    const text = JSON.stringify({ customers, cases });
+    const text = JSON.stringify(template);
     expect(text).not.toMatch(/\b\d{3}-\d{2}-\d{4}\b/);
     expect(text).not.toMatch(/@/);
   });

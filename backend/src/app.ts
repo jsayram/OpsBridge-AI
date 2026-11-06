@@ -5,7 +5,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { ownerGate } from "./auth/actor";
 import { pgCode } from "./db";
 import type { AppEnv } from "./env";
-import { ApiError, errorBody, notFound } from "./http/errors";
+import { ApiError, databaseError, errorBody, notFound } from "./http/errors";
 import { log } from "./http/log";
 import { noStore, originCheck, rateLimit, requestContext } from "./http/middleware";
 import { admin } from "./routes/admin";
@@ -97,6 +97,11 @@ app.onError((err, c) => {
   if (err instanceof HTTPException) {
     c.set("errorCode", "http_exception");
     return c.json(errorBody("invalid_request", "Invalid request", requestId), err.status);
+  }
+  const known = databaseError(pgCode(err));
+  if (known) {
+    c.set("errorCode", known.code);
+    return c.json(errorBody(known.code, known.message, requestId), known.status);
   }
   c.set("errorCode", "internal_error");
   log({

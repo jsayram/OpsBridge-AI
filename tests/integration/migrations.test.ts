@@ -21,6 +21,7 @@ describe("migrations on an empty database", () => {
     first = run("migrate");
     second = run("migrate");
     expect(first).toContain("0001_foundation.sql");
+    expect(first).toContain("0003_core_records.sql");
     expect(second).toContain("nothing pending");
   });
 
@@ -81,14 +82,36 @@ describe("roles match PRD 7.4", () => {
     );
     await c.end();
     expect(rows.map((r) => `${r.grantee}:${r.table_name}:${r.privilege_type}`)).toEqual([
+      "opsbridge_app:ai_reviews:SELECT",
+      "opsbridge_app:approvals:INSERT",
+      "opsbridge_app:approvals:SELECT",
+      "opsbridge_app:approvals:UPDATE",
+      "opsbridge_app:assignees:SELECT",
       "opsbridge_app:audit_events:INSERT",
       "opsbridge_app:audit_events:SELECT",
+      "opsbridge_app:case_checklist_items:INSERT",
+      "opsbridge_app:case_checklist_items:SELECT",
+      "opsbridge_app:case_checklist_items:UPDATE",
       "opsbridge_app:cases:INSERT",
       "opsbridge_app:cases:SELECT",
       "opsbridge_app:cases:UPDATE",
+      "opsbridge_app:consultant_handoffs:INSERT",
+      "opsbridge_app:consultant_handoffs:SELECT",
+      "opsbridge_app:customer_source_relationships:SELECT",
       "opsbridge_app:customers:INSERT",
       "opsbridge_app:customers:SELECT",
       "opsbridge_app:customers:UPDATE",
+      "opsbridge_app:documents:SELECT",
+      "opsbridge_app:external_record_links:SELECT",
+      "opsbridge_app:idempotency_keys:INSERT",
+      "opsbridge_app:idempotency_keys:SELECT",
+      "opsbridge_app:idempotency_keys:UPDATE",
+      "opsbridge_app:inventory_items:SELECT",
+      "opsbridge_app:inventory_snapshots:SELECT",
+      "opsbridge_app:outbox:INSERT",
+      "opsbridge_app:outbox:SELECT",
+      "opsbridge_app:reconciliation_findings:SELECT",
+      "opsbridge_app:workflow_rules:SELECT",
       "opsbridge_app:workspaces:SELECT",
     ]);
   });

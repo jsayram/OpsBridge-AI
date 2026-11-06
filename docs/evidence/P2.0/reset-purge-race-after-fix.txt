@@ -1,0 +1,43 @@
+
+ RUN  v5.1.0 /Users/jramirez/Git/OpsBridge-AI
+
+stdout | tests/integration/sweep.test.ts > cron sweep > the sweep drains a backlog across runs
+{"ts":"2026-11-06T20:31:39.231Z","level":"info","event":"sweep","purged":4}
+
+stdout | tests/integration/sweep.test.ts > cron sweep > the sweep drains a backlog across runs
+{"ts":"2026-11-06T20:31:39.249Z","level":"info","event":"sweep","purged":0}
+
+ ❯ tests/integration/sweep.test.ts (2 tests | 1 failed) 567ms
+   ❯ cron sweep (2)
+     × the sweep drains a backlog across runs 79ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/sweep.test.ts > cron sweep > the sweep drains a backlog across runs
+AssertionError: expected 9 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 9
+
+ ❯ tests/integration/sweep.test.ts:60:23
+     58|     );
+     59|     await mig.end();
+     60|     expect(rows[0].n).toBe(0);
+       |                       ^
+     61|     expect(total).toBeGreaterThan(0);
+     62|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 7 passed (8)
+      Tests  1 failed | 117 passed (118)
+   Start at  15:31:24
+   Duration  14.66s (tests 88%, import 9%, transform 3%)
+
+    Isolate  8 workers spawned · ~118ms startup each (spawn + environment, per file)
+             at least ~824ms faster with isolate: false — reuses workers across files instead of one per file
+

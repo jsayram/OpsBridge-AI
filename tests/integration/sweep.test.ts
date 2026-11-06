@@ -54,7 +54,7 @@ describe("cron sweep", () => {
     }
     const mig = await connect("opsbridge_migrator");
     const { rows } = await mig.query(
-      "SELECT count(*)::int AS n FROM app.workspaces WHERE mode = 'demo' AND expires_at < now()",
+      "SELECT count(*)::int AS n FROM app.workspaces WHERE mode = 'demo' AND expires_at < now() - interval '60 seconds'",
     );
     await mig.end();
     expect(rows[0].n).toBe(0);

@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
   buildTemplate,
+  OWNER_ASSIGNEE_ID,
   OWNER_CASE_ID,
   OWNER_CUSTOMER_ID,
   OWNER_WORKSPACE_ID,
@@ -100,9 +101,21 @@ export async function migrate(url) {
   return applied;
 }
 
+// One idempotent insert per table. Conflicts mean the row is already seeded, so nothing changes.
+async function insertRows(c, table, workspaceId, rows) {
+  for (const row of rows) {
+    const cols = ["workspace_id", ...Object.keys(row)];
+    const marks = cols.map((_, i) => `$${i + 1}`).join(", ");
+    await c.query(
+      `INSERT INTO app.${table} (${cols.join(", ")}) VALUES (${marks}) ON CONFLICT DO NOTHING`,
+      [workspaceId, ...Object.values(row)],
+    );
+  }
+}
+
 export async function seed(url) {
   const manifest = JSON.parse(readFileSync(join(root, "sample-data/seed-manifest.json"), "utf8"));
-  const { customers, cases } = buildTemplate(manifest);
+  const t = buildTemplate(manifest);
   const c = await connect(url);
   try {
     await c.query("BEGIN");
@@ -116,46 +129,51 @@ export async function seed(url) {
        ON CONFLICT DO NOTHING`,
       [OWNER_WORKSPACE_ID],
     );
-    for (const x of customers) {
-      await c.query(
-        `INSERT INTO app.customers (workspace_id, id, canonical_name, account_code, lifecycle_status, pack_key)
-         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING`,
-        [
-          TEMPLATE_WORKSPACE_ID,
-          x.id,
-          x.canonical_name,
-          x.account_code,
-          x.lifecycle_status,
-          x.pack_key,
-        ],
-      );
-    }
-    for (const x of cases) {
-      await c.query(
-        `INSERT INTO app.cases (workspace_id, id, customer_id, title, case_type, status, due_at, pack_key)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT DO NOTHING`,
-        [
-          TEMPLATE_WORKSPACE_ID,
-          x.id,
-          x.customer_id,
-          x.title,
-          x.case_type,
-          x.status,
-          x.due_at,
-          x.pack_key,
-        ],
-      );
-    }
-    await c.query(
-      `INSERT INTO app.customers (workspace_id, id, canonical_name, account_code, lifecycle_status)
-       VALUES ($1, $2, 'Owner sample client (fictional)', 'OWNER-1', 'Active') ON CONFLICT DO NOTHING`,
-      [OWNER_WORKSPACE_ID, OWNER_CUSTOMER_ID],
+    const tables = [
+      ["customers", t.customers],
+      ["assignees", t.assignees],
+      ["cases", t.cases],
+      ["case_checklist_items", t.checklist],
+      ["approvals", t.approvals],
+      ["documents", t.documents],
+      ["ai_reviews", t.ai_reviews],
+      ["external_record_links", t.links],
+      ["customer_source_relationships", t.relationships],
+      ["reconciliation_findings", t.findings],
+      ["inventory_items", t.inventory_items],
+      ["inventory_snapshots", t.inventory_snapshots],
+      ["workflow_rules", t.workflow_rules],
+      ["outbox", t.outbox],
+    ];
+    for (const [table, rows] of tables) await insertRows(c, table, TEMPLATE_WORKSPACE_ID, rows);
+    // audit_events has no natural key, and its guard rightly refuses a rewrite.
+    const seededAudit = await c.query(
+      "SELECT 1 FROM app.audit_events WHERE workspace_id = $1 AND actor_id = 'seed' LIMIT 1",
+      [TEMPLATE_WORKSPACE_ID],
     );
-    await c.query(
-      `INSERT INTO app.cases (workspace_id, id, customer_id, title, case_type, status)
-       VALUES ($1, $2, $3, 'Owner workspace sample case', 'Onboarding', 'Draft') ON CONFLICT DO NOTHING`,
-      [OWNER_WORKSPACE_ID, OWNER_CASE_ID, OWNER_CUSTOMER_ID],
-    );
+    if (seededAudit.rowCount === 0) {
+      await insertRows(c, "audit_events", TEMPLATE_WORKSPACE_ID, t.activity);
+    }
+    await insertRows(c, "customers", OWNER_WORKSPACE_ID, [
+      {
+        id: OWNER_CUSTOMER_ID,
+        canonical_name: "Owner sample client (fictional)",
+        account_code: "OWNER-1",
+        lifecycle_status: "Active",
+      },
+    ]);
+    await insertRows(c, "assignees", OWNER_WORKSPACE_ID, [
+      { id: OWNER_ASSIGNEE_ID, display_name: "Owner (fictional seat)", team: "Field Services" },
+    ]);
+    await insertRows(c, "cases", OWNER_WORKSPACE_ID, [
+      {
+        id: OWNER_CASE_ID,
+        customer_id: OWNER_CUSTOMER_ID,
+        title: "Owner workspace sample case",
+        case_type: "Onboarding",
+        status: "Draft",
+      },
+    ]);
     await c.query("COMMIT");
   } catch (e) {
     await c.query("ROLLBACK");
@@ -163,7 +181,7 @@ export async function seed(url) {
   } finally {
     await c.end();
   }
-  return { customers: customers.length, cases: cases.length };
+  return { customers: t.customers.length, cases: t.cases.length };
 }
 
 // Test databases only: many launches from one address, so limits are set by each test.

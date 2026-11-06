@@ -10,7 +10,7 @@ import { log } from "../http/log";
 import { clientIp } from "../http/middleware";
 import { readStrictJson } from "../http/validate";
 
-const PACK_VERSION = "pack-1";
+const PACK_VERSION = "pack-2";
 
 const setSessionCookie = (c: Context<AppEnv>, token: string, maxAge: number) =>
   setCookie(c, DEMO_COOKIE, token, {

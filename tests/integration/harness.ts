@@ -18,6 +18,7 @@ type Limits = Partial<{
   workspace_cap: number;
   hourly_limit: number;
   reset_limit: number;
+  write_cap: number;
 }>;
 
 // Limits are migrator-owned data, so tests change them the way a migration would.

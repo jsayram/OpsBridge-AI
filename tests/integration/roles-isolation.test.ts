@@ -240,7 +240,7 @@ describe("isolation and least privilege", () => {
       "SELECT audit_rows, business_rows FROM app.retention_log WHERE workspace_id = $1",
       [victim.workspaceId],
     );
-    expect(rl.rows[0]).toEqual({ audit_rows: 1, business_rows: 6 });
+    expect(rl.rows[0]).toEqual({ audit_rows: 1, business_rows: 37 });
     const survivors = await mig.query(
       "SELECT count(*)::int AS n FROM app.cases WHERE workspace_id = $1",
       [B.workspaceId],
