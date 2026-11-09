@@ -218,8 +218,12 @@ describe("isolation and least privilege", () => {
   });
   it("P3.t0-u purge lists and removes only expired demo data, with a retention record", async () => {
     const victim = await launch();
+    // The list is the five oldest expired workspaces. Other files leave workspaces that expired
+    // minutes ago, and Vitest orders files by cached duration, so a victim expired only a minute
+    // ago could miss the batch: the P5 intermittent, reproduced and fixed in P7.2. A year back
+    // makes it the oldest whatever ran first.
     await mig.query(
-      "UPDATE app.workspaces SET expires_at = now() - interval '1 minute' WHERE id = $1",
+      "UPDATE app.workspaces SET expires_at = now() - interval '365 days' WHERE id = $1",
       [victim.workspaceId],
     );
     const listed = (await clean.query("SELECT * FROM app.expired_demo_workspaces(5)")).rows.map(
