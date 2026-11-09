@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-09 (America/New_York), end of the local P4 phase session.
+Updated: 2026-11-09 (America/New_York), end of the local P5 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -11,7 +11,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P2 Records/audit | P2.1–P2.5 | 5 | Run locally | Case workflow, approvals, audit and outbox insert on `phase/p2-core` | Local checks passed; P2-A to P2-E met locally, hosted repeats pending; see `docs/reports/P2.md` | | No | No |
 | P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Run locally | Simulated ingestion, reconciliation, inventory slice and an owner-only Salesforce connector on `phase/p3-integration` | Local checks passed at `6e504aa`; P3-A to P3-C and P3-E to P3-H met locally on simulated sources; P3-D Pending Owner Credentials; see `docs/reports/P3.md` | | No | No |
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Run locally | Typed rules, durable dispatcher, Sheet bridge on a labeled double and operator controls on `phase/p4-automation` | Local checks passed at `89334a1`; P4-A, B, D and E met locally; P4-C Pending Owner Credentials; see `docs/reports/P4.md` | | No | No |
-| P5 AI review/evaluation | P5.1–P5.5 | 5 | Planned | No | No | No | No | No |
+| P5 AI review/evaluation | P5.1–P5.5 | 5 | Run locally | Fixture document lifecycle, validated fixture review, owner-only live gateway on a labeled double, reviewer decisions through the checklist command, 40-document evaluation on `phase/p5-ai-review` | Local checks passed; P5-A to P5-F met locally in fixture mode; P5.3 live provider Pending Owner Credentials; see `docs/reports/P5.md` | | No | No |
 | P6 Analytics/business insight | P6.1–P6.5 | 5 | Planned | No | No | No | No | No |
 | P7 Hardening/recovery | P7.1–P7.5 | 5 | Planned | No | No | No | No | No |
 | P8 Demo/launch/handoff | P8.1–P8.5 | 5 | Planned | No | No | No | No | No |
@@ -37,6 +37,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P4:** Local run on `phase/p4-automation` from `943eaf1`, waiting for coordinator review. P4-A, P4-B, P4-D and P4-E are met locally on Docker Postgres and workerd. **P4-C is Pending Owner Credentials** under the DEC-008 standing deferral: the Sheet bridge is built and tested against a labeled double, and no Google sheet, service account or Zap exists. JOB-TEST-06 is met locally. One unplanned request reached Google's token endpoint during testing with a throwaway key and was rejected (D-060). Owner Accepted stays empty. Nothing from P4 is pushed, merged or deployed.
 
 **P4:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `ae52ad6`. The master reran `npm run ci:local`, which passed: 314 integration tests, and 80 Playwright passed with 6 skipped, 0 vulnerabilities, no leaks. P4-A, B, D and E and JOB-TEST-06 are met locally. P4-C is Pending Owner Credentials under the DEC-008 standing deferral. One test sent one unplanned request to Google's token endpoint with a throwaway key (D-060); it was reported to Jose, and the fix stops non-local dispatch in tests. Owner Accepted stays empty. Nothing from P4 is pushed, merged or deployed.
+
+**P5:** Local run on `phase/p5-ai-review` from `18f63e4`, waiting for coordinator review. DEC-003 closed as "Stay free, fixtures only", so P5.1 is a fixture document lifecycle with no hosted upload. P5-A to P5-F are met locally in fixture mode on Docker Postgres and workerd. **P5.3 is Pending Owner Credentials** under the DEC-008 standing deferral: the live gateway is built and tested against a labeled in-process double, and no provider was contacted. The 40-document evaluation reports fixture results, not live-model accuracy. Owner Accepted stays empty. Nothing from P5 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -69,11 +71,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P4.3 | Local run, code only | Built against a labeled double; P4-C Pending Owner Credentials | Check-before-append, late append, 401, 429, 403, 404, row cap, formula guard on the double only; no real sheet or Zap | Not reviewed | | No | No |
 | P4.4 | Local run | Done: five labels with uncertainty, attempts, owner retry, confirm and emergency stop, audited | Accepted never Confirmed, duplicate retry, pause and resume, guest denial, Chromium and axe | Not reviewed | | No | No |
 | P4.5 | Local run | Done: fault rehearsal on the full path, reports, P5 brief | Clean-copy CI on Node 22 at 89334a1; P4-A, B, D, E on the complete path | Not reviewed | | No | No |
-| P5.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P5.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P5.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P5.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P5.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P5.1 | Local run, reshaped by DEC-003 | Done: 40 fixture PDFs, build-time extraction, fixture library, attach and read, upload validated then refused, migration 0008 | Byte-identical rebuild, hash checks, attach and read isolation, upload refusals, E2E-13 | Not reviewed | | No | No |
+| P5.2 | Local run | Done: `doc-review-v1` contract, validator, citations, deterministic rules, stored fixture answers, sweep and retry | 40 of 40 outputs valid, 23 invalid shapes refused, replay identical, abstention, no outbound request | Not reviewed | | No | No |
+| P5.3 | Local run, code only | Built against a labeled double; Pending Owner Credentials | Off-unless-configured, caps, one call, 9 failure mappings, budgets in the database, fallback, no key leak, network guard; no real provider | Not reviewed | | No | No |
+| P5.4 | Local run | Done: accept, edit, reject; apply through the checklist command; review UI | Reject changes nothing, stale and invalid refused, 10 injected documents change nothing unauthorized, E2E-11 to E2E-14 in Chromium with axe | Not reviewed | | No | No |
+| P5.5 | Local run, fixture mode | Done: eval manifest, runner, report, P5 report, P6 brief | All PRD 10.4 thresholds met in fixture mode; one messy failure reported; not live-model accuracy | Not reviewed | | No | No |
 | P6.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P6.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P6.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |

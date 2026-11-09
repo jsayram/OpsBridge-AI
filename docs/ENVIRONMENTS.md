@@ -35,6 +35,14 @@ Set in the Wrangler config. Not secret.
 | `SHEET_ID` | The owner's test sheet ID, 20 to 100 URL-safe characters. Anything else keeps the bridge off | Unset | Owner's sheet |
 | `GOOGLE_SA_KEY` | Secret. The service account's JSON key, shared as editor on that one sheet only | Unset | `wrangler secret put` by Jose |
 | `SALESFORCE_REDIRECT_URI` | `<origin>/api/v1/admin/integrations/salesforce/callback` | Unset | Must match the app |
+| `AI_LIVE_ENABLED` | `true` turns on owner-only live AI review (P5.3). Off unless every `AI_*` value below is valid | Unset | Unset until Jose approves a provider, key and budget |
+| `AI_PROVIDER` | `anthropic`, the one allowlisted provider. The URL is fixed in code | Unset | Owner's choice |
+| `AI_MODEL` | Model ID, lower-case letters, digits, dots and dashes | Unset | Owner's choice |
+| `AI_MAX_REQUESTS_PER_DAY` | 1 to 200, per workspace and UTC day, counted in `app.ai_usage` | Unset | Owner's budget |
+| `AI_MAX_INPUT_TOKENS`, `AI_MAX_OUTPUT_TOKENS` | 1 to 8,000 and 1 to 2,000 | Unset | Owner's budget |
+| `AI_MAX_CONCURRENCY` | 1 to 2 live calls at once per workspace | Unset | `1` |
+| `AI_TIMEOUT_MS` | 1 to 20,000. One call, no retries | Unset | `15000` |
+| `AI_PRICE_IN_MICRO_USD_PER_MTOK`, `AI_PRICE_OUT_MICRO_USD_PER_MTOK` | Price per million tokens from the provider's price page, for the cost estimate | Unset | From the provider |
 
 Demo limits are not variables. They live in `app.demo_limits`, which only a migration can change: 5 new workspaces an hour per client network (launch and reset share it), 5 resets a session, 150 workspaces and a 2-hour TTL that a CHECK constraint keeps at or below 2 hours. An IPv6 client counts as its /64.
 
@@ -46,6 +54,7 @@ Set with `wrangler secret put`. Never in a file, command line or chat.
 |---|---|---|
 | `IP_HASH_KEY` | Keys the HMAC on client addresses, so quota rows hold no address | Demo launch answers 503 |
 | `OWNER_SUBJECT_ALLOWLIST` | Comma-separated exact subjects | Admin paths answer 404 |
+| `AI_API_KEY` | Owner-only live AI review key, set by Jose with `wrangler secret put` once a provider and budget are approved | Live review falls back to the labeled fixture with `live_ai_key_missing` |
 
 Local uses a throwaway value in `.dev.vars`, copied from `.dev.vars.example`.
 

@@ -58,6 +58,8 @@ Accepted states don't touch canonical records. The reviewer then commits a norma
 
 Abstention reasons: `no_extractable_text`, `ambiguous`, `adversarial_content`, `missing_required_fields`.
 
+Implemented at P5 in `backend/src/repo/aiReviews.ts`. A fixture review goes Queued to Processing to its result inside one transaction, so Queued is never seen. A live review commits Processing, calls the provider outside any transaction, then stores the result in a second one. Retry moves Failed back to Processing on the same row through the fixture path, at most 5 attempts. Accept and Accept with Edits can carry a case version: the checklist changes the rules allow are then committed through `updateChecklistItem` in the same transaction, and a stale version rolls back the decision too.
+
 ## Outbox
 
 `dispatch_state` is what the dispatcher did. `delivery_evidence` is what we can prove. They are separate columns because a dispatcher can finish without knowing whether anyone received anything.

@@ -166,6 +166,8 @@ Additions not in the diagram: `users.sessions_valid_after` (owner revocation), `
 
 Grants are narrower than PRD 7.4 allows: documents, AI reviews, rules, assignees and inventory items are read-only for the runtime role until a phase writes them (D-028), and inventory snapshots are insert-only. A later phase widens them in its own migration.
 
+P5 (`0008_ai_review.sql`): documents become insert-only for the runtime role (attach a fixture), AI reviews insert and update, with a trigger that keeps the stored suggestion, citations, versions and input hash fixed and refuses any change to a decided review. Reviews also carry `version`, `mode` (`fixture` or `live`), `input_sha256`, `validation` (codes only), `error_code`, `attempts`, `latency_ms`, token counts, `requested_at`, the decision fields and `applied`. `cost_units` holds the estimated cost in micro-USD. New tables: `fixture_documents` (the 40 fictional documents, their hash and page-numbered text segments) and `fixture_review_outputs` (stored fixture answers keyed by input hash and prompt version), both shared and read-only with RLS on and no workspace column (D-063); and `ai_usage` (live calls, tokens and estimated cost per workspace and UTC day).
+
 ## Constraints that carry weight
 
 | Constraint | Why |

@@ -27,7 +27,7 @@ Classification of every posting clause, from the four-page posting re-read on 20
 | JOB-10 | Internal tools for consultant workflows | Product | Case queue, checklist, handoff and history: `frontend/src/pages/cases.tsx`, `tests/integration/workflow.test.ts`, `tests/e2e/core.spec.ts` | Verified locally; fictional workflow only | P0, P2, P3 |
 | JOB-11 | Connect an inventory platform | Product (synthetic, read-only) | `backend/src/repo/inventory.ts`, `tests/integration/inventory.test.ts` | Local, simulated, read-only | P0, P3, P6 |
 | JOB-12 | Eliminate manual workflow and reporting | Product + Artifact | `docs/BUSINESS-BRIEF.md` before/after map (assumed baseline) | Designed | P0, P3, P4, P6 |
-| JOB-13 | Pilot generative AI | Product (small synthetic pilot) | PRD 10 revisions, eval plan in `docs/design/FIXTURE-PLAN.md` | Designed | P5, P7 |
+| JOB-13 | Pilot generative AI | Product (small synthetic pilot) | P5: 40-document fixture set, validated fixture review with citations, human decision through the checklist command, live gateway on a labeled double, `docs/evidence/P5.5/eval-report.md` (fixture results, not live-model accuracy) | Met locally in fixture mode; live provider Pending Owner Credentials | P5, P7 |
 | JOB-14 | Documentation that outlives the author | Artifact | This repo's docs plus vault read-back | In use | Every package, P8 |
 | JOB-15 | Priorities, sprints, coaching | Artifact + Real-experience | `docs/BACKLOG.md`; coaching stays real-experience | Started | P0-P8 |
 | JOB-16 | Hiring and onboarding | Real-experience; illustrative artifacts only | None yet | Planned | P0, P8 + interview |

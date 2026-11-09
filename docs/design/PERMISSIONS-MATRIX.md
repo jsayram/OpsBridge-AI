@@ -30,10 +30,10 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | Handoff | D | D | S | S | S | Unauthorized assignee, JOB-TEST-02 |
 | Reopen case | D | D | D | S | S | Analyst denied, stale version |
 | Attach fixture document | D | D | S | S | S | Non-allowlisted fixture ID |
-| Upload a file | D | D | D | D | S | Guest denied, E2E-13 |
+| Upload a file | D | D | D | D | S, validated then refused (DEC-003) | Guest denied, E2E-13 |
 | Download a document | D | R | R | R | S | Other workspace's object |
 | Request review | D | D | S | S | S | Quota |
-| Live AI review | D | D | D | D | S (flag + budget) | Guest denied, E2E-14 |
+| Live AI review | D | D | D | D | S (flag + budget), Pending Owner Credentials | Guest denied, E2E-14 |
 | Decide AI review | D | D | D | S | S | Invalid edit, E2E-11 |
 | Decide approval | D | D | D | S | S | Duplicate decision, E2E-06 |
 | View reconciliation | D | R | R | R | S | |
