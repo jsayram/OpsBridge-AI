@@ -36,6 +36,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P4:** Local run on `phase/p4-automation` from `943eaf1`, waiting for coordinator review. P4-A, P4-B, P4-D and P4-E are met locally on Docker Postgres and workerd. **P4-C is Pending Owner Credentials** under the DEC-008 standing deferral: the Sheet bridge is built and tested against a labeled double, and no Google sheet, service account or Zap exists. JOB-TEST-06 is met locally. One unplanned request reached Google's token endpoint during testing with a throwaway key and was rejected (D-060). Owner Accepted stays empty. Nothing from P4 is pushed, merged or deployed.
 
+**P4:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `ae52ad6`. The master reran `npm run ci:local`, which passed: 314 integration tests, and 80 Playwright passed with 6 skipped, 0 vulnerabilities, no leaks. P4-A, B, D and E and JOB-TEST-06 are met locally. P4-C is Pending Owner Credentials under the DEC-008 standing deferral. One test sent one unplanned request to Google's token endpoint with a throwaway key (D-060); it was reported to Jose, and the fix stops non-local dispatch in tests. Owner Accepted stays empty. Nothing from P4 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
