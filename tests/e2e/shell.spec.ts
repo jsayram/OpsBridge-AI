@@ -7,6 +7,10 @@ import {
   ownerToken,
 } from "./helpers";
 
+// Safari moves Tab through form fields only; a keyboard user reaches links and buttons with
+// Option-Tab, or turns on "Press Tab to highlight each item". WebKit runs press Option-Tab (P7.4).
+const tabKey = (browserName: string) => (browserName === "webkit" ? "Alt+Tab" : "Tab");
+
 // Each test gets its own client address, so one test run can't trip the shared rate limit.
 test.beforeEach(async ({ page }) => {
   await page.setExtraHTTPHeaders(clientAddress());
@@ -276,21 +280,25 @@ test.describe("waking state, PRD 13.2", () => {
 });
 
 test.describe("P1-F keyboard, motion, mobile", () => {
-  test("keyboard alone reaches launch, navigation and a case", async ({ page }, info) => {
+  test("keyboard alone reaches launch, navigation and a case", async ({
+    page,
+    browserName,
+  }, info) => {
     test.skip(info.project.name === "mobile", "keyboard path runs on desktop");
+    const tab = tabKey(browserName);
     await page.goto("/");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     const skip = page.getByRole("link", { name: "Skip to main content" });
     await expect(skip).toBeFocused();
     const box = await skip.boundingBox();
     expect(box?.y ?? -1).toBeGreaterThanOrEqual(0);
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     await expect(page.getByRole("button", { name: "Launch Guided Demo" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.getByText("Your workspace is ready.")).toBeVisible({ timeout: 15_000 });
     const go = page.getByRole("link", { name: "Go to Overview" });
     for (let i = 0; i < 8 && !(await go.evaluate((el) => el === document.activeElement)); i++) {
-      await page.keyboard.press("Tab");
+      await page.keyboard.press(tab);
     }
     await expect(go).toBeFocused();
     await page.keyboard.press("Enter");
@@ -301,10 +309,10 @@ test.describe("P1-F keyboard, motion, mobile", () => {
     await expect(page.getByRole("heading", { name: "Cases", level: 1 })).toBeVisible();
     await expect(page).toHaveTitle(/Cases/);
     await expect(page.locator("main")).toBeFocused();
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     await expect(page.getByLabel("Search title or client")).toBeFocused();
-    await page.keyboard.press("Tab");
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
+    await page.keyboard.press(tab);
     await expect(page.getByLabel("Status")).toBeFocused();
     const outline = await page
       .getByLabel("Status")
@@ -314,14 +322,16 @@ test.describe("P1-F keyboard, motion, mobile", () => {
 
   test("reset can be cancelled and confirmed by keyboard, keeping focus", async ({
     page,
+    browserName,
   }, info) => {
     test.skip(info.project.name === "mobile", "keyboard path runs on desktop");
+    const tab = tabKey(browserName);
     await openOverview(page);
     const reset = page.getByRole("button", { name: "Reset demo" });
     await reset.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("button", { name: "Confirm reset" })).toBeFocused();
-    await page.keyboard.press("Tab");
+    await page.keyboard.press(tab);
     await expect(page.getByRole("button", { name: "Cancel" })).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(reset).toBeFocused();

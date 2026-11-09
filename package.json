@@ -23,6 +23,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:profile": "vitest run --config vitest.profile.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:webkit": "E2E_WEBKIT=1 playwright test --project=webkit-desktop --project=webkit-iphone",
     "check:bundle": "node scripts/check-bundle.mjs",
     "db:up": "docker compose -f infra/docker-compose.yml up -d --wait",
     "db:setup": "node scripts/db.mjs setup-local opsbridge_dev && DATABASE_MIGRATOR_URL=postgres://opsbridge_migrator:local_dev_only@127.0.0.1:54330/opsbridge_dev node scripts/db.mjs migrate && DATABASE_MIGRATOR_URL=postgres://opsbridge_migrator:local_dev_only@127.0.0.1:54330/opsbridge_dev node scripts/db.mjs seed",

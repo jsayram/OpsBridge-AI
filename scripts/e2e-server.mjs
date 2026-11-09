@@ -50,6 +50,9 @@ const child = spawn(
     "9240",
     "--env-file",
     ".wrangler/e2e/dev.vars",
+    // WebKit won't store a Secure cookie over plain http, even on localhost, so the WebKit run
+    // serves https with wrangler's local certificate. The cookie stays Secure (P7.4).
+    ...(process.env.E2E_HTTPS === "1" ? ["--local-protocol", "https"] : []),
   ],
   {
     stdio: "inherit",
