@@ -515,10 +515,10 @@ describe("P6.3 reports and export", () => {
     for (const t of F8) expect(bTitles).not.toContain(t);
   });
 
-  it("a viewer can read the report but not export it", async () => {
+  it("a viewer can read and export, as the permissions matrix allows", async () => {
     await setRole(B.cookie, "viewer");
     expect((await report(B.cookie, "")).status).toBe(200);
-    expect((await exportCsv(B.cookie, "")).status).toBe(403);
+    expect((await exportCsv(B.cookie, "")).status).toBe(200);
   });
 
   it("refuses an export over the row cap instead of cutting it short", async () => {

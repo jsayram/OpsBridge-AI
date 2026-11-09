@@ -854,43 +854,109 @@ paths:
     get:
       tags: [reporting]
       operationId: analyticsOverview
-      summary: Deterministic metrics with provenance
+      summary: Metrics computed now from the caller's scope, each with formula and provenance (P6.1)
+      description: >-
+        A guest's scope is its workspace plus the read-only shared samples, the rows the case list
+        shows. An owner's is the owner workspace. Any query parameter is refused.
       responses:
         "200":
-          description: Metrics
+          description: Overview
           content:
             application/json:
               schema:
-                type: array
-                items: { $ref: "#/components/schemas/Metric" }
+                type: object
+                required: [definitionVersion, computedAt, scope, provenanceText, glossary, pulse,
+                  funnel, integration, quality, ai, automation]
+                properties:
+                  definitionVersion: { type: string }
+                  computedAt: { type: string, format: date-time }
+                  scope: { enum: [workspace, workspace_and_shared_samples] }
+                  provenanceText: { type: object }
+                  glossary: { type: object }
+                  pulse: { type: array, items: { $ref: "#/components/schemas/Metric" } }
+                  funnel: { type: object }
+                  integration: { type: object, description: "Sources, each labeled Simulated or Connected test, with lastSuccessAt" }
+                  quality: { type: object }
+                  ai: { type: object, description: "Fixture evaluation summary; live cost null with provenance UNKNOWN until configured" }
+                  automation: { type: object, description: "Counts by the five delivery labels only" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/analytics/trends:
+    get:
+      tags: [reporting]
+      operationId: analyticsTrend
+      summary: Up to 90 daily snapshot values for one metric, shared history and own days apart
+      parameters:
+        - name: metric
+          in: query
+          required: true
+          schema: { enum: [open_cases, completed_cases, review_queue, open_findings, automation_failed] }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/analytics/snapshots:
+    post:
+      tags: [reporting]
+      operationId: recordSnapshot
+      summary: Record today's values for the caller's own workspace (manager, owner). Audited
+      description: One row per metric and UTC day; a repeat replaces that day's values.
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [period, values]
+                properties:
+                  period: { type: string, format: date }
+                  values: { type: object }
+        "403": { $ref: "#/components/responses/Error" }
   /api/v1/reports/operations:
     get:
       tags: [reporting]
       operationId: operationsReport
-      summary: Validated filters, bounded rows
+      summary: Filtered cases with totals by status and source freshness (P6.3)
+      description: >-
+        Dates are UTC days, inclusive, at most 366 apart; both default to the last 366 days. The
+        table, the totals and the export use one WHERE clause. Unknown or repeated parameters are
+        refused. Page is bounded so that (page - 1) x limit is at most 5,000.
       parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { enum: [Draft, Intake, Needs Review, Ready, Approved, Closed] } }
+        - { name: assignee, in: query, schema: { type: string, description: "uuid or unassigned" } }
+        - { name: source, in: query, schema: { enum: [crm_simulator, erp_simulator, none] } }
+        - { name: sort, in: query, schema: { enum: [created_desc, created_asc, due_asc, status], default: created_desc } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { $ref: "#/components/parameters/Limit" }
-        - { $ref: "#/components/parameters/Cursor" }
-        - { name: from, in: query, required: true, schema: { type: string, format: date } }
-        - { name: to, in: query, required: true, schema: { type: string, format: date } }
       responses:
         "200": { $ref: "#/components/responses/Accepted" }
         "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/v1/reports/operations/export:
     get:
       tags: [reporting]
       operationId: operationsExport
-      summary: Same criteria, capped, formula-safe CSV
+      summary: The same rows as the report, as formula-safe CSV, refused over 1,000 rows
       parameters:
-        - { name: from, in: query, required: true, schema: { type: string, format: date } }
-        - { name: to, in: query, required: true, schema: { type: string, format: date } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: assignee, in: query, schema: { type: string } }
+        - { name: source, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string } }
       responses:
         "200":
-          description: CSV
+          description: CSV. Every cell quoted; a cell starting with = + - @ tab or CR gets a leading apostrophe
+          headers:
+            X-Row-Count: { schema: { type: integer } }
           content:
             text/csv:
               schema: { type: string }
         "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
   /api/v1/admin/status:
     get:
       tags: [admin]
@@ -1372,8 +1438,10 @@ components:
         reusable: { type: boolean }
     Metric:
       type: object
-      required: [key, value, provenance]
+      required: [key, label, unit, value, provenance]
       properties:
         key: { type: string }
-        value: { type: number }
+        label: { type: string }
+        unit: { enum: [count, days, hours, minutes, ratio, usd] }
+        value: { type: [number, "null"], description: "Null when no source exists or nothing is measured yet" }
         provenance: { enum: [SYNTHETIC, MEASURED_DEMO, ESTIMATED, UNKNOWN] }

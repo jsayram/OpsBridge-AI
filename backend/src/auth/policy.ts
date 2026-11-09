@@ -39,6 +39,7 @@ const GUEST_BASE: readonly Capability[] = [
   "inventory:read",
   "automations:read",
   "analytics:read",
+  "reports:export",
   "demo:reset",
   "demo:switch_role",
 ];
@@ -53,7 +54,6 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "integrations:sync_simulated",
     "documents:attach",
     "ai:request",
-    "reports:export",
   ],
   manager: [
     ...GUEST_BASE,
@@ -71,7 +71,6 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "ai:request",
     "ai:decide",
     "analytics:snapshot",
-    "reports:export",
   ],
 };
 

@@ -47,9 +47,10 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | Preview a rule against a sample event | D | S | S | S | S | Read-only, nothing queued |
 | Emergency stop, resume | D | D | D | D | S | Guest denied, audited |
 | Retry dead letter, record confirmation | D | D | D | D | S | Guest denied |
-| View analytics, reports | D | R | R | R | S | Cross-workspace export |
-| Export CSV | D | S | S | S | S | Formula injection, row limit |
-| ROI calculator | D | S | S | S | S | Assumptions are per session |
+| View analytics, reports | D | R | R | R | S | Cross-workspace export, unknown parameter refused (P6.1, P6.3) |
+| Export CSV | D | S | S | S | S | Formula injection, row limit, other workspace's assignee finds nothing. A guest's export holds the same rows as the report: its own workspace plus the read-only shared samples, never another visitor's (D-071) |
+| Record a daily metric snapshot (P6.1) | D | D | D | S | S | Viewer denied; one row per metric and day; template write refused by RLS |
+| ROI calculator | D | S | S | S | S | Runs in the browser; assumptions are not stored |
 | Any `/admin` route | D | D | D | D | A | Edited cookie and body, E2E-03, E2E-04 |
 | Live sync, connect, disconnect | D | D | D | D | A | Guest denied, P3-E. Runs only against the labeled double so far |
 | Emergency mode | D | D | D | D | A | |

@@ -56,3 +56,5 @@ Derivation from `dispatch_state` and `delivery_evidence` is in PRD 7.2.
 ## Metric provenance
 
 `SYNTHETIC`, `MEASURED_DEMO`, `ESTIMATED`, `UNKNOWN` (PRD 11.2). Every metric response carries one.
+
+The formulas, the metric glossary, snapshot rules and report limits are in `docs/design/METRICS.md` (P6, definitions `metrics-1`). An "open case" is one in Intake, Needs Review or Ready; the "exception queue" is findings not Resolved and not Dismissed.

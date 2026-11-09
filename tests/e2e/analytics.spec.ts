@@ -140,12 +140,15 @@ test("P6.3 / JOB-TEST-04: report filter, chart table and CSV agree", async ({ pa
   await expectNoAxeViolations(page);
 });
 
-test("P6.3: a viewer gets the report but no export link", async ({ page }) => {
+test("P6.3: a viewer gets the report and the export, and no snapshot button", async ({ page }) => {
   await openOverview(page);
   await role(page, "viewer");
   await page.goto("/app/reports");
   await expect(page.getByRole("heading", { name: /matching cases/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Export CSV" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Export CSV" })).toHaveCount(1);
+  await page.goto("/app/analytics");
+  await expect(page.getByRole("heading", { name: "Operations pulse" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Record today's snapshot" })).toHaveCount(0);
 });
 
 test("E2E-19: changing ROI assumptions recalculates exactly and keeps the Estimated label", async ({

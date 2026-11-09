@@ -1,6 +1,6 @@
 # Entity relationship design
 
-This is the schema the migrations implement. `backend/migrations/0001_foundation.sql` (P1) covers workspaces, users, memberships, demo sessions, demo quota, customers, cases, audit events and retention log. `0002_expiry_lock_order.sql` fixes the reset and purge lock order. `0003_core_records.sql` (P2.1) adds everything below except `external_connections`, `sync_runs`, `source_definition_mappings` and `metric_snapshots`, which arrive with P3 and P6. `spikes/p0.2/sql/001_schema.sql` was the earlier proof on a subset.
+This is the schema the migrations implement. `backend/migrations/0001_foundation.sql` (P1) covers workspaces, users, memberships, demo sessions, demo quota, customers, cases, audit events and retention log. `0002_expiry_lock_order.sql` fixes the reset and purge lock order. `0003_core_records.sql` (P2.1) adds everything below except `external_connections`, `sync_runs`, `source_definition_mappings` and `metric_snapshots`, which arrive with P3 and P6 (`0009_analytics.sql`; fields in `docs/design/METRICS.md`). `spikes/p0.2/sql/001_schema.sql` was the earlier proof on a subset.
 
 Conventions: UUID keys, UTC `timestamptz`, `workspace_id` on every business table, composite primary keys `(workspace_id, id)` so child foreign keys carry the workspace. Field lists match PRD 7 and 7.3.
 
