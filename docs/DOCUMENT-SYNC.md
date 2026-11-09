@@ -8,9 +8,9 @@ Verified: 2026-11-06T17:55:00-05:00, P3 rows and every row they replaced; PRD an
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
 | `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `dcf59fbf7f8e17346c955744f55d7935e6e934a6bacd7ed4f30d3a48fd706ecd` | 17883 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `127f94922922a99a31dd8e9baab77d6a2b5a552400b7a6420b85070ad91504d1` | 14159 | Verified |
-| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `bc7ec5d3a08cbd254929f5a9a5fcaa1f3b66516671ace25d02de16fa81896ac6` | 13773 | Verified |
-| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `d5bc222c10f1037af40eac58bd58b64c1ac31edb001e830a88d19cf9834ee061` | 8773 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `f0ee22167c144e32f9f344488d3b0ea1cbeb81bf6e51e48bb4fd1d5248fb09ce` | 14595 | Verified |
+| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `4af898a5abbd19151df8b673d63faa378dbe7c194eea047792b4a72a27be4e7a` | 14276 | Verified |
+| `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `02eba71c3aacd401a2553db3cc3dadb27efbc2bf88b8718cd70e4b1b5d1ee2ec` | 9195 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |
 | `templates/work-package-report.md` | `Projects/OpsBridge AI/Templates/work-package-report.md` | `5ef61afc8dab62d10dc37f052e56e2be679020fe0d9e48adb84587da26be671e` | 2406 | Verified |
 | `templates/phase-review.md` | `Projects/OpsBridge AI/Templates/phase-review.md` | `bdbb64ff92f86d1f9b6ffcea9ff51ba90b897d76715b0a823a6f51d19bbc3734` | 1785 | Verified |

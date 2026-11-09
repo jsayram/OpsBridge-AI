@@ -32,7 +32,7 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P3:** Local run on `phase/p3-integration` from `0e7e4aa`, waiting for coordinator review. P3-A to P3-C and P3-E to P3-H are met locally on simulated sources. **P3-D is Pending Owner Credentials:** the owner-only Salesforce code is built and tested against a labeled double, and no real org has been connected. The ERP Simulator follows documented SuiteTalk REST conventions and is not NetSuite. An independent AI review found two High defects, both fixed with tests. Moving to P4 needs Jose's recorded deferral naming P3-D, raised as DEC-008. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
 
-**P3:** Reviewed by the master on 2026-11-06 at `bf7a396`, with `npm run ci:local` rerun. P3-A, B, C, E, F, G and H are met locally on simulated sources. P3-D is Pending Owner Credentials, so acceptance waits on DEC-008. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
+**P3:** Reviewed by the master on 2026-11-06 at `bf7a396`, with `npm run ci:local` rerun. P3-A, B, C, E, F, G and H are met locally on simulated sources. P3-D is Pending Owner Credentials. Coordinator accepted for limited scope under Jose's DEC-008 answer, “Defer all live gaps (Recommended)”, which is a standing deferral for later live-account criteria. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.

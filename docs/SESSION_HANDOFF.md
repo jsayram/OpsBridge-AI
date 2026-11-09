@@ -32,6 +32,8 @@ Approved for local use: `psql` via Homebrew, Hono, Drizzle, Vitest, Playwright, 
 
 Everything else is routine. Do not stop for it.
 
+Standing deferral (DEC-008, 2026-11-06): a live-account acceptance criterion that cannot be met without an account, such as Salesforce, Google Sheets and Zapier, the AI provider, hosted Access, or Hyperdrive and Neon proofs, does not need a new question. Mark it Pending Owner Credentials/Configuration, build and test it against a labeled double, and keep going. Creating accounts and credentials is still a stop point.
+
 ## How phases run
 
 P0 Foundation; P1 Hosted shell/identity; P2 Core records/audit; P3 Integrations/reconciliation; P4 Automation/Zapier; P5 AI review; P6 Analytics; P7 Release hardening; P8 Demo/launch/handoff. `PRD.md` and `docs/ROADMAP.md` own the bounded package IDs and prerequisites. The master coordinates phase briefs, actual evidence review, owner questions, and continuity. A fresh implementation phase session owns one approved phase on its own branch from the latest accepted head; only one writer owns a file set at a time. Bounded subagents may research/review or implement disjoint assigned files. They cannot accept their own work or authorize paid/external actions.
