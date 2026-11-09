@@ -31,6 +31,9 @@ Set in the Wrangler config. Not secret.
 | `SALESFORCE_ENABLED` | `true` turns on the owner-only connector. Off unless every Salesforce value is set | Unset | Unset until P3-D is authorized |
 | `SALESFORCE_LOGIN_URL` | `https://` host under `salesforce.com`. Anything else keeps the connector off | Unset | Owner's org |
 | `SALESFORCE_CLIENT_ID` | External client app consumer key | Unset | Owner's app |
+| `SHEETS_ENABLED` | `true` turns on the owner-only Google Sheet bridge (PRD 9.2 Mode A). Off unless `SHEET_ID` and `GOOGLE_SA_KEY` are also valid | Unset | Unset until P4-C is authorized |
+| `SHEET_ID` | The owner's test sheet ID, 20 to 100 URL-safe characters. Anything else keeps the bridge off | Unset | Owner's sheet |
+| `GOOGLE_SA_KEY` | Secret. The service account's JSON key, shared as editor on that one sheet only | Unset | `wrangler secret put` by Jose |
 | `SALESFORCE_REDIRECT_URI` | `<origin>/api/v1/admin/integrations/salesforce/callback` | Unset | Must match the app |
 
 Demo limits are not variables. They live in `app.demo_limits`, which only a migration can change: 5 new workspaces an hour per client network (launch and reset share it), 5 resets a session, 150 workspaces and a 2-hour TTL that a CHECK constraint keeps at or below 2 hours. An IPv6 client counts as its /64.

@@ -43,7 +43,9 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | Run a simulated sync, closed scenario list | D | D | S | S | S | Unknown scenario, other workspace, P3-E |
 | Resume a failed run | D | D | D | S | S | Analyst denied, bounded |
 | View automations | D | R | R | R | S | Redacted, E2E-03 |
-| Change a workflow rule | D | D | D | D | S | Free-form URL rejected, E2E-17 |
+| Change a workflow rule in its own demo workspace: enable, narrow, reuse for a team (D-059) | D | D | D | S | S | Free-form URL, recipient and code rejected, other workspace 404, E2E-17 |
+| Preview a rule against a sample event | D | S | S | S | S | Read-only, nothing queued |
+| Emergency stop, resume | D | D | D | D | S | Guest denied, audited |
 | Retry dead letter, record confirmation | D | D | D | D | S | Guest denied |
 | View analytics, reports | D | R | R | R | S | Cross-workspace export |
 | Export CSV | D | S | S | S | S | Formula injection, row limit |
@@ -60,7 +62,7 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | RLS | Read: own workspace or template. Write: own workspace only, and never the template even if a bug sets it as current (`app.writable_workspace()`). Every `app` table has RLS on. |
 | Composite FKs | Child rows reference `(workspace_id, id)`, so a row can't point across workspaces. |
 | Guard trigger | `audit_events` update and delete rules. |
-| Functions | Narrow `SECURITY DEFINER` with a fixed `search_path`. Runtime: `launch_demo_session`, `resolve_demo_session`, `reset_demo_session`, `set_demo_role`, `resolve_owner`, `revoke_owner_sessions`. Cleanup: `expired_demo_workspaces`, `purge_demo_workspace`, `purge_stale_demo_quota`, `purge_expired_idempotency_keys`. Internal, granted to nobody: `create_demo_workspace`, `seed_demo_workspace`, `take_workspace_quota`. `release_deferred_findings` is cleanup-only. P4 adds `claim_due_outbox` and `finish_outbox`. |
+| Functions | Narrow `SECURITY DEFINER` with a fixed `search_path`. Runtime: `launch_demo_session`, `resolve_demo_session`, `reset_demo_session`, `set_demo_role`, `resolve_owner`, `revoke_owner_sessions`. Cleanup: `expired_demo_workspaces`, `purge_demo_workspace`, `purge_stale_demo_quota`, `purge_expired_idempotency_keys`. Internal, granted to nobody: `create_demo_workspace`, `seed_demo_workspace`, `take_workspace_quota`. `release_deferred_findings` is cleanup-only. P4 adds, for the runtime role: `claim_due_outbox`, `finish_outbox`, and the owner-workspace-only `retry_dead_letter`, `confirm_outbox`, `set_automation_pause`, which check `current_mode()` themselves. |
 | Connection guards | `connection_mode_guard` refuses a live connection outside the owner workspace, and `owner_only_row` does the same for `connection_secrets` and `oauth_states`, whatever the application does. |
 
 ## Status at P3

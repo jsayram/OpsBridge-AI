@@ -80,6 +80,8 @@ Abstention reasons: `no_extractable_text`, `ambiguous`, `adversarial_content`, `
 | Provider Accepted | Provider took it; row range stored in `evidence_ref` for Sheets | Accepted transition |
 | Confirmed | Effect verified | Owner action with an evidence reference; future signed callback for Mode B |
 
+Implementation (P4, migration `0007`): every row in this table is a definer function, and the runtime role still can't UPDATE an outbox row. `claim_due_outbox(max, workspace)` claims with `SKIP LOCKED`, issues a fresh `lease_token`, skips template rows and expired demo workspaces, and returns nothing while the emergency stop is on. `finish_outbox` needs the current token, otherwise it returns `stale` and changes nothing (D-054). Backoff is 120 s doubling to 1 h with ±20% jitter, never under 120 s and never under `Retry-After`, which is honored up to a day. Every attempt writes a row to `outbox_attempts` (`accepted`, `simulated`, `retry_scheduled`, `dead_letter`, `lease_expired`). An event with no matching rule finishes Simulated with evidence `no-matching-rule` (D-053). `finish_outbox` also refuses Accepted or the Sheet bridge for any workspace that isn't the owner's, and any effect that doesn't match a real rule (D-061). The emergency stop (`automation_control.dispatch_paused`) holds every event in its current state; resuming picks them up.
+
 Label derivation: PRD 7.2. A Mode A event stays **Accepted** until the owner records a Zap run reference. That is the honest end state for most events, and it's why `Confirmed` is optional and not a stuck state.
 
 ## Integration status

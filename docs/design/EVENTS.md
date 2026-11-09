@@ -1,6 +1,6 @@
 # Event outline
 
-The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON Schema is `docs/design/event-envelope.schema.json`. From P2.4 the outbox stores the whole envelope in `payload`, written in the business transaction, and a test holds its keys to the schema. Nothing is sent before P4.
+The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON Schema is `docs/design/event-envelope.schema.json`. From P2.4 the outbox stores the whole envelope in `payload`, written in the business transaction, and a test holds its keys to the schema. From P4 the dispatcher delivers each event to the sink its workspace allows (simulated for every demo workspace).
 
 ## Envelope
 
@@ -18,13 +18,13 @@ The allowlist from PRD 9.1 is closed. Adding a type needs a PRD change. The JSON
 
 | Type | Emitted when | `data` |
 |---|---|---|
-| `case.created` | Draft → Intake | `caseRef`, `caseType` |
-| `case.needs_review` | Moves to Needs Review, including reopen | `caseRef`, `reason` (`intake`, `returned`, `reopened`) |
-| `approval.completed` | Approval decided | `caseRef`, `decision` |
+| `case.created` | Draft → Intake | `caseRef`, `caseType`, `queue` |
+| `case.needs_review` | Moves to Needs Review, including reopen | `caseRef`, `reason` (`intake`, `returned`, `reopened`), `queue` |
+| `approval.completed` | Approval decided | `caseRef`, `decision`, `queue` |
 | `reconciliation.resolved` | Finding Resolved | `findingRef`, `kind` |
 | `integration.degraded` | Connector degrades | `provider`, `status` |
 
-`caseRef` and `findingRef` are short display references, never internal UUIDs, and carry no names.
+`caseRef` and `findingRef` are short display references, never internal UUIDs, and carry no names. `queue` (P4, D-052) is the fictional team that owns the case, `Field Services` or `Seasonal Staffing`; rules use it to scope one typed workflow to a team. Seeded history rows carry it too.
 
 ## Idempotency keys
 

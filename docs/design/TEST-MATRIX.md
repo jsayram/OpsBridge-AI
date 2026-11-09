@@ -9,7 +9,9 @@ Layers from PRD 13.1. "Now" means a real check exists at the end of local P2. Ev
 | Approval atomicity | Integration | Race, injected failure, stale version | P2.4 | `tests/integration/approvals.test.ts`, canaries in `docs/evidence/P2.4/`. Local only, Hyperdrive repeat pending |
 | Isolation | Integration + API | ID swap, no-context read, reused connection | P1.3 | `tests/integration/isolation-matrix.test.ts`, `roles-isolation.test.ts`, mutation canaries in `docs/evidence/P1.3/`. Local only, Hyperdrive repeat pending |
 | Roles and audit | Integration | Grants, guard trigger, purge limits | P1.3 | P3 checks repeated on real migrations, `roles-isolation.test.ts`, `migrations.test.ts` |
-| Outbox | Integration | Crash replay, parallel claim, sweep | P4.2 | Spike P4.a to P4.e |
+| Outbox | Integration | Crash replay, parallel claim, stale finisher, lease at cap, backoff, dead letter, pause, template rows never claimed | P4.2 | `tests/integration/dispatch.test.ts`, `automation-operator.test.ts`. Local only, Hyperdrive repeat pending |
+| Rules | Unit + integration | Allowlist, URL, recipient and code refused, five triggers, reuse for a second team (JOB-TEST-06), other workspace 404 | P4.1 | `tests/unit/rules.test.ts`, `tests/integration/automation-rules.test.ts`, `tests/e2e/automation.spec.ts` |
+| Automation path | Integration + E2E | Duplicate approvals, unavailable sink, blocked destination, restart and replay, demo never reaches a live sink | P4.5 | `tests/integration/automation-operator.test.ts`, `tests/e2e/automation.spec.ts` on workerd |
 | Restore | Operational | Clean restore, guards survive | P2.5, P7.3 | `scripts/restore-proof.sh` on real history, `scripts/restart-proof.mjs`, two-seed comparison in `migrations.test.ts`. Local only |
 | Sessions, CSRF, cookies | API security | Flags, Origin, fixation | P1.3 | `tests/integration/sessions.test.ts`, `tests/e2e/shell.spec.ts` |
 | Owner identity | API security | Wrong issuer, audience, expiry, signature, subject; `none` and HS256; logout | P1.2 | `tests/integration/owner-identity.test.ts`, test double only |
@@ -20,7 +22,7 @@ Layers from PRD 13.1. "Now" means a real check exists at the end of local P2. Ev
 | Expiry races | Integration | Reset meeting purge | P2 | `tests/integration/expiry-race.test.ts` |
 | Reconciliation | Unit + integration | ID-first match, no fuzzy merge, replay | P3.4 | Local, `tests/unit/reconcile.test.ts`, `tests/integration/reconciliation.test.ts` |
 | Sync faults | Contract | All PRD 8.4 faults | P3.6 | Local, `tests/integration/faults.test.ts`, `tests/unit/integration-http.test.ts`, `tests/unit/erp-simulator.test.ts` |
-| Sheet bridge | Integration | Check-before-append, formula guard, 403 dead letter | P4.3 | Simulated only |
+| Sheet bridge | Integration | Check-before-append, late-landing append, 401 refresh, 429, 403 and 404 dead letter, row cap, formula guard | P4.3 | `tests/integration/dispatch.test.ts` against the labeled double only. Real sheet and Zap: Pending Owner Credentials |
 | AI schema and citations | Unit + eval | Invalid output, adversarial suite | P5.2, P5.5 | No |
 | Edits to suggestions | Unit | Field limits, revalidation | P5.4 | No |
 | Reports | Integration | Totals agree, caps, CSV injection | P6.3 | No |

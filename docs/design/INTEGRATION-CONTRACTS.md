@@ -130,6 +130,8 @@ The Sheets API offers no idempotency key on `values.append`, so an event ID colu
 
 **Bounds.** Sheet capped at 2,000 rows; the owner archives by hand before that. A Zapier Free account has 100 tasks a month, and only the owner workspace produces rows. The dispatcher sends at most 3 events per cron tick to stay inside 10 ms of CPU.
 
+**As built (P4.3), tested only against the labeled double in `tests/integration/sheets-double.ts`.** `backend/src/integrations/sinks.ts`. The token is signed with `jose` (already a dependency) and held per isolate. A 401 on a Sheets call gets one token refresh inside the attempt. At 2,000 rows the bridge dead-letters with `sheet_full` instead of appending. Cells that would start a formula get a leading apostrophe, and input is `RAW` anyway. The test double is honored only when `ENVIRONMENT` is `local` and only as an in-process function (D-060). **P4-C stays Pending Owner Credentials**: no real sheet, service account or Zap exists.
+
 **Evidence.** Accepted says the row exists. Whether the email arrived is known only from the Zap run, which the owner records through the confirm endpoint.
 
 ## Mode B: webhook
@@ -149,4 +151,4 @@ The fixture provider is keyed by document hash. Live provider stays absent until
 
 ## Dispatch timing
 
-`ctx.waitUntil` runs one dispatch for the event just committed. The sweep at `*/30 * * * *` catches the rest. It does nothing else unless due rows exist, so it wakes Neon only for the time one indexed query takes, plus the 5-minute autosuspend tail.
+`ctx.waitUntil` runs one bounded dispatch pass for the workspace whose command just committed (`backend/src/jobs/afterCommit.ts`, D-058). The sweep at `*/30 * * * *` catches the rest. It does nothing else unless due rows exist, so it wakes Neon only for the time one indexed query takes, plus the 5-minute autosuspend tail.

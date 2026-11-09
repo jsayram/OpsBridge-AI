@@ -1,6 +1,6 @@
 # Requirements traceability
 
-Updated 2026-11-06 at local P3. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
+Updated 2026-11-09 at local P4. Status words follow PRD 19.5. Nothing below is Owner Accepted, Merged or Deployed. "Designed" means a checked design artifact exists; it is not an implementation claim.
 
 Each row points to the artifact that covers the requirement today. Later phases replace "Planned" with code paths, test names and run evidence.
 
@@ -94,6 +94,18 @@ Scenarios with a first real check at P1: E2E-02, E2E-03 and E2E-04 (denial paths
 
 E2E-06, E2E-07, E2E-08, E2E-09 (simulated and double), E2E-10, JOB-TEST-01 and JOB-TEST-03 pass locally.
 
+## P4 acceptance
+
+| Criterion | Evidence | State |
+|---|---|---|
+| P4-A One approval, one durable event under duplicate click and retry | `automation-operator.test.ts`, `approvals.test.ts` | Met locally |
+| P4-B Unavailable provider loses no event, corrupts no case | `automation-operator.test.ts`, `dispatch.test.ts` | Met locally, on the Sheets double |
+| P4-C Zapier test action verified by the owner | Bridge on a labeled double, `dispatch.test.ts`; steps in `docs/runbooks/AUTOMATION.md` | **Pending Owner Credentials** |
+| P4-D No visitor can send to an arbitrary destination | `automation-rules.test.ts`, `automation-operator.test.ts`, `tests/unit/rules.test.ts` | Met locally |
+| P4-E Replay creates no duplicate consequential action | `dispatch.test.ts`, `automation-operator.test.ts` | Met locally |
+
+JOB-TEST-06 passes locally: `automation-rules.test.ts`, `tests/e2e/automation.spec.ts`. E2E-05 and E2E-06 still pass, now through dispatch.
+
 ## ADR-000 proof items
 
 See `ADR/000-stack-and-hosting.md` for the state of each item and `docs/reports/P0.2.md` for the evidence.
@@ -102,8 +114,8 @@ See `ADR/000-stack-and-hosting.md` for the state of each item and `docs/reports/
 
 | Decision | Requirement | PRD section | Later test |
 |---|---|---|---|
-| Check-before-append on the sheet | P4-E, E2E-05 | 9.2 | P4.2 crash and replay test |
-| `dispatch_state` and `delivery_evidence` split | P4.4, E2E-16 | 7.2, 9.1 | P4.4 accepted-not-confirmed test |
+| Check-before-append on the sheet | P4-E, E2E-05 | 9.2 | `dispatch.test.ts` crash and late-append tests, on the double |
+| `dispatch_state` and `delivery_evidence` split | P4.4, E2E-16 | 7.2, 9.1 | `automation-operator.test.ts` accepted-not-confirmed test |
 | Cleanup role and retention log | ADR proof 3, 12.3 retention | 7.4 | P1.3, P7.2 |
 | Guests pick fixtures only | E2E-13, P5.1 | 5.3, 8.2 | P5.1 guest upload denial |
 | Shared template plus scenario pack | Section 16, P1.3 | 16.1 | P1.3 seed test |
@@ -111,4 +123,4 @@ See `ADR/000-stack-and-hosting.md` for the state of each item and `docs/reports/
 | Case reopen, exception Deferred, Accepted with Edits | P2.3, 8.5, 10.2 step 9 | 7.2 | P2.3, P3.4, P5.4 |
 | Google credential inventory | 12.1, 17 | 12.1, 17 | P4.3 |
 | First-visit target | GOAL-01, 13.2 | 13.2 | P1.5, P7.4 |
-| After-commit dispatch, 30-minute sweep | 6.2, ADR consequences | 6.2, 17 | P4.2 |
+| After-commit dispatch, 30-minute sweep | 6.2, ADR consequences | 6.2, 17 | `afterCommit.ts`, `index.ts`; after-commit proven on workerd in `automation.spec.ts`; cron not run on Cloudflare |

@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-06 (America/New_York), end of the local P3 phase session.
+Updated: 2026-11-09 (America/New_York), end of the local P4 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -10,7 +10,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P1 Hosted shell/identity | P1.1–P1.5 | 5 | Run locally | Local shell, sessions, identity boundary on `phase/p1-shell` | Local checks passed at `5c4c18c`; P1-E pending; identity against a test double only; see `docs/reports/P1.md` | | No | No |
 | P2 Records/audit | P2.1–P2.5 | 5 | Run locally | Case workflow, approvals, audit and outbox insert on `phase/p2-core` | Local checks passed; P2-A to P2-E met locally, hosted repeats pending; see `docs/reports/P2.md` | | No | No |
 | P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Run locally | Simulated ingestion, reconciliation, inventory slice and an owner-only Salesforce connector on `phase/p3-integration` | Local checks passed at `6e504aa`; P3-A to P3-C and P3-E to P3-H met locally on simulated sources; P3-D Pending Owner Credentials; see `docs/reports/P3.md` | | No | No |
-| P4 Automation/Zapier | P4.1–P4.5 | 5 | Planned | No | No | No | No | No |
+| P4 Automation/Zapier | P4.1–P4.5 | 5 | Run locally | Typed rules, durable dispatcher, Sheet bridge on a labeled double and operator controls on `phase/p4-automation` | Local checks passed at `89334a1`; P4-A, B, D and E met locally; P4-C Pending Owner Credentials; see `docs/reports/P4.md` | | No | No |
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Planned | No | No | No | No | No |
 | P6 Analytics/business insight | P6.1–P6.5 | 5 | Planned | No | No | No | No | No |
 | P7 Hardening/recovery | P7.1–P7.5 | 5 | Planned | No | No | No | No | No |
@@ -33,6 +33,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P3:** Local run on `phase/p3-integration` from `0e7e4aa`, waiting for coordinator review. P3-A to P3-C and P3-E to P3-H are met locally on simulated sources. **P3-D is Pending Owner Credentials:** the owner-only Salesforce code is built and tested against a labeled double, and no real org has been connected. The ERP Simulator follows documented SuiteTalk REST conventions and is not NetSuite. An independent AI review found two High defects, both fixed with tests. Moving to P4 needs Jose's recorded deferral naming P3-D, raised as DEC-008. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
 
 **P3:** Reviewed by the master on 2026-11-06 at `bf7a396`, with `npm run ci:local` rerun. P3-A, B, C, E, F, G and H are met locally on simulated sources. P3-D is Pending Owner Credentials. Coordinator accepted for limited scope under Jose's DEC-008 answer, “Defer all live gaps (Recommended)”, which is a standing deferral for later live-account criteria. Owner Accepted stays empty. Nothing from P3 is pushed, merged or deployed.
+
+**P4:** Local run on `phase/p4-automation` from `943eaf1`, waiting for coordinator review. P4-A, P4-B, P4-D and P4-E are met locally on Docker Postgres and workerd. **P4-C is Pending Owner Credentials** under the DEC-008 standing deferral: the Sheet bridge is built and tested against a labeled double, and no Google sheet, service account or Zap exists. JOB-TEST-06 is met locally. One unplanned request reached Google's token endpoint during testing with a throwaway key and was rejected (D-060). Owner Accepted stays empty. Nothing from P4 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -60,11 +62,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P3.4 | Local run | Done: findings queue, definition conflict, controlled resolution, dictionary, sweep, screens, migration 0005 | Exact-ID-first, 8 concurrent approvals, replay, supersede, stale evidence, Chromium, axe | Not reviewed | | No | No |
 | P3.5 | Local run | Done: read-only inventory, snapshots, findings, case and handoff references, migration 0006 | Unknown, stale, unit, invalid unit, replay, isolation, no quantity change | Not reviewed | | No | No |
 | P3.6 | Local run | Done: all PRD 8.4 faults, operator resume, runbook, reports, P4 brief | Clean-copy CI on Node 22 at 6e504aa; proof 18 of 18 on workerd; restore 50 checks; no hosted repeat | Not reviewed | | No | No |
-| P4.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P4.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P4.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P4.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P4.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P4.1 | Local run | Done: typed rules, reuse for a second team, preview, rules UI, `queue` in event data | Five triggers, JOB-TEST-06, 12 bypass shapes refused, other workspace 404, Chromium and axe | Not reviewed | | No | No |
+| P4.2 | Local run | Done: claim and finish with lease tokens, attempt history, effects ledger, backoff, dead letter, after-commit and cron dispatch, migration 0007 | Race, crash before ack, stale finisher, lease at cap, replay, template rows; restore 54 checks; Hyperdrive not in path | Not reviewed | | No | No |
+| P4.3 | Local run, code only | Built against a labeled double; P4-C Pending Owner Credentials | Check-before-append, late append, 401, 429, 403, 404, row cap, formula guard on the double only; no real sheet or Zap | Not reviewed | | No | No |
+| P4.4 | Local run | Done: five labels with uncertainty, attempts, owner retry, confirm and emergency stop, audited | Accepted never Confirmed, duplicate retry, pause and resume, guest denial, Chromium and axe | Not reviewed | | No | No |
+| P4.5 | Local run | Done: fault rehearsal on the full path, reports, P5 brief | Clean-copy CI on Node 22 at 89334a1; P4-A, B, D, E on the complete path | Not reviewed | | No | No |
 | P5.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P5.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P5.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
