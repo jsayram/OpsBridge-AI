@@ -310,3 +310,93 @@ describe("P4.3 the bridge stays off until configured", () => {
     expect(dbl.requests).toHaveLength(0);
   });
 });
+
+describe("independent review fixes (P4 review M1, L1)", () => {
+  // Called as the runtime role with no workspace context, as SQL misuse in the request path would.
+  async function asApp<T>(fn: (c: Awaited<ReturnType<typeof connect>>) => Promise<T>) {
+    const c = await connect("opsbridge_app");
+    try {
+      return await fn(c);
+    } finally {
+      await c.end();
+    }
+  }
+
+  it("the database refuses to finish a demo event as Accepted or through the Sheet bridge", async () => {
+    const g = await launch();
+    const id = await insertEvent(g.workspaceId, "approval.completed", approvedEvent());
+    const mig = await connect("opsbridge_migrator");
+    const rule = (
+      await mig.query(
+        "SELECT id, version FROM app.workflow_rules WHERE workspace_id = $1 AND action = 'sheet_append'",
+        [g.workspaceId],
+      )
+    ).rows[0];
+    await mig.end();
+    await asApp(async (c) => {
+      const [claim] = (await c.query("SELECT * FROM app.claim_due_outbox(1, $1)", [g.workspaceId]))
+        .rows;
+      const fin = (outcome: string, sink: string, effects: unknown[]) =>
+        c.query("SELECT app.finish_outbox($1, $2, $3, $4, $5, NULL, NULL, $6, $7) AS s", [
+          g.workspaceId,
+          id,
+          claim.lease_token,
+          outcome,
+          "Events!A2",
+          sink,
+          JSON.stringify(effects),
+        ]);
+      const sheetEffect = [
+        {
+          ruleId: rule.id,
+          ruleVersion: rule.version,
+          action: "sheet_append",
+          sink: "sheet_bridge",
+        },
+      ];
+      await expect(fin("accepted", "sheet_bridge", sheetEffect)).rejects.toThrow(/owner workspace/);
+      await expect(fin("simulated", "sheet_bridge", [])).rejects.toThrow(/owner workspace/);
+      await expect(fin("simulated", "simulated", sheetEffect)).rejects.toThrow(/sheet bridge/);
+      await expect(
+        fin("simulated", "simulated", [
+          { ruleId: rule.id, ruleVersion: 99, action: "sheet_append" },
+        ]),
+      ).rejects.toThrow(/does not match a rule/);
+      await expect(
+        fin("simulated", "simulated", [
+          { ruleId: crypto.randomUUID(), ruleVersion: 1, action: "simulated_notice" },
+        ]),
+      ).rejects.toThrow(/does not match a rule/);
+      await expect(fin("accepted", "simulated", [])).rejects.toThrow(/owner workspace/);
+    });
+    // Nothing stuck: the lease is still held, and the real dispatcher finishes it honestly.
+    await expireLease(g.workspaceId, id);
+    await drain(g.workspaceId);
+    const row = await outboxRow(g.workspaceId, id);
+    expect(row).toMatchObject({ dispatch_state: "simulated", delivery_evidence: "none" });
+    expect((await effectsOf(g.workspaceId, id)).every((e) => e.sink === "simulated")).toBe(true);
+  });
+
+  it("an owner event can't be marked Accepted without a live sink", async () => {
+    const id = await ownerEvent();
+    await asApp(async (c) => {
+      const [claim] = (
+        await c.query("SELECT * FROM app.claim_due_outbox(10, $1)", [OWNER])
+      ).rows.filter((r) => r.id === id);
+      await expect(
+        c.query(
+          "SELECT app.finish_outbox($1, $2, $3, 'accepted', 'x', NULL, NULL, 'simulated', '[]')",
+          [OWNER, id, claim.lease_token],
+        ),
+      ).rejects.toThrow(/live sink/);
+    });
+  });
+
+  it("a Retry-After beyond the 1-hour backoff cap is honored", async () => {
+    const id = await ownerEvent();
+    dbl.faults.push({ op: "read", fault: { status: 429, retryAfter: 7200 } });
+    await dispatch({ workspaceId: OWNER }, dbl);
+    const row = await outboxRow(OWNER, id);
+    expect((row.next_attempt_at.getTime() - Date.now()) / 1000).toBeGreaterThan(7190);
+  });
+});

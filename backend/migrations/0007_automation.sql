@@ -148,7 +148,7 @@ CREATE FUNCTION app.finish_outbox(ws uuid, event uuid, token uuid, outcome text,
   evidence text, code text, retry_after_seconds int, sink text, effects jsonb)
 RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = app, pg_temp AS $$
-DECLARE o record; next_state text; due timestamptz; e jsonb; wait numeric;
+DECLARE o record; next_state text; due timestamptz; e jsonb; wait numeric; ws_mode text;
 BEGIN
   IF outcome NOT IN ('accepted','simulated','retryable','permanent') THEN
     RAISE EXCEPTION 'unknown outcome' USING ERRCODE = 'P0002';
@@ -160,9 +160,33 @@ BEGIN
   IF NOT FOUND OR o.dispatch_state <> 'processing' OR o.lease_token IS DISTINCT FROM token THEN
     RETURN 'stale';
   END IF;
+  -- The database holds the sink rule too, not only the dispatcher (P4-D, D-061): a demo
+  -- workspace can finish only as Simulated, or schedule a retry, or fail. Never Accepted, never
+  -- the Sheet bridge, whatever the caller passes.
+  SELECT mode INTO ws_mode FROM app.workspaces WHERE id = ws;
+  IF finish_outbox.sink NOT IN ('simulated','sheet_bridge') THEN
+    RAISE EXCEPTION 'unknown sink' USING ERRCODE = 'P0002';
+  END IF;
+  IF ws_mode IS DISTINCT FROM 'owner' AND (outcome = 'accepted' OR finish_outbox.sink <> 'simulated') THEN
+    RAISE EXCEPTION 'only the owner workspace can reach a live sink' USING ERRCODE = 'P0002';
+  END IF;
+  IF outcome = 'accepted' AND finish_outbox.sink <> 'sheet_bridge' THEN
+    RAISE EXCEPTION 'accepted needs a live sink' USING ERRCODE = 'P0002';
+  END IF;
   IF outcome IN ('accepted','simulated') THEN
     -- Effects first, idempotently: a replayed event finds its rows and adds none.
     FOR e IN SELECT * FROM jsonb_array_elements(coalesce(effects, '[]'::jsonb)) LOOP
+      -- Each effect must name an enabled-or-not rule of this workspace with that action and a
+      -- version it has reached, and only the owner's sheet rule may claim the bridge.
+      IF NOT EXISTS (SELECT FROM app.workflow_rules r WHERE r.workspace_id = ws
+                       AND r.id = (e->>'ruleId')::uuid AND r.action = e->>'action'
+                       AND (e->>'ruleVersion')::int BETWEEN 1 AND r.version) THEN
+        RAISE EXCEPTION 'effect does not match a rule' USING ERRCODE = 'P0002';
+      END IF;
+      IF coalesce(e->>'sink', finish_outbox.sink) = 'sheet_bridge'
+         AND (ws_mode <> 'owner' OR e->>'action' <> 'sheet_append') THEN
+        RAISE EXCEPTION 'effect cannot claim the sheet bridge' USING ERRCODE = 'P0002';
+      END IF;
       INSERT INTO app.automation_effects (workspace_id, outbox_id, rule_id, rule_version, action,
                                           sink, evidence_ref)
       VALUES (ws, event, (e->>'ruleId')::uuid, (e->>'ruleVersion')::int, e->>'action',
@@ -178,9 +202,10 @@ BEGIN
     next_state := 'dead_letter';
   ELSE
     next_state := 'retry_scheduled';
+    -- Backoff is capped at 1 h; a provider's Retry-After is honored above that, up to a day.
     wait := least(3600, 120 * power(2, o.attempts - 1)) * (0.8 + random() * 0.4);
-    wait := greatest(120, wait, coalesce(retry_after_seconds, 0));
-    due := now() + make_interval(secs => least(wait, 3600));
+    wait := greatest(120, wait, least(coalesce(retry_after_seconds, 0), 86400));
+    due := now() + make_interval(secs => wait);
   END IF;
   UPDATE app.outbox x SET
     dispatch_state = next_state,

@@ -315,7 +315,9 @@ export function RunsTable({
               <td className="r">{r.effects.length}</td>
               <td>
                 {r.lastErrorCode && <div className="small">Last error: {r.lastErrorCode}</div>}
-                {r.nextAttemptAt && <div className="small">Next try: {when(r.nextAttemptAt)}</div>}
+                {r.nextAttemptAt && (
+                  <div className="small">Next try no earlier than {when(r.nextAttemptAt)}</div>
+                )}
                 {r.evidenceRef && <div className="small mono">{r.evidenceRef}</div>}
                 <button
                   type="button"

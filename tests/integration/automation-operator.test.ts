@@ -224,6 +224,18 @@ describe("P4.4 retry, dead letter and the emergency stop", () => {
       claim: "Pending Owner Credentials",
     });
     expect(res.json.zapier.claim).toBe("Pending Owner Configuration");
+    // The owner's preview says where a sheet rule would really go, and names the double as a double.
+    const preview = await ownerCall("/api/v1/automations/simulate", {
+      method: "POST",
+      dbl,
+      body: { type: "approval.completed", data: { decision: "approved" } },
+    });
+    expect(preview.json.outcome).toMatch(
+      /^Google Sheet bridge \(local test double, not Google\): dispatch would append/,
+    );
+    const rules = await ownerCall("/api/v1/automations/rules", { dbl });
+    expect(rules.json.transport).toBe("Google Sheet bridge (local test double, not Google)");
+    expect((await ownerCall("/api/v1/automations/rules")).json.transport).toBe("Simulated");
   });
 });
 

@@ -30,6 +30,15 @@ export const automations = new Hono<AppEnv>();
 
 automations.use("*", requireActor, requireCapability("automations:read"));
 
+// Where an owner rule would go. A demo workspace never reaches a live transport.
+const transportLabel = (kind: "owner" | "guest", env: AppEnv["Bindings"]) => {
+  const config = kind === "owner" ? sheetConfig(env) : null;
+  if (!config) return "Simulated";
+  return config.double
+    ? "Google Sheet bridge (local test double, not Google)"
+    : "Google Sheet bridge (owner test mode)";
+};
+
 const ruleInvalid = (e: unknown) => {
   if (e instanceof RuleError) {
     return invalidRequest(
@@ -47,11 +56,7 @@ automations.get("/rules", async (c) => {
   }));
   return c.json({
     ...out,
-    // Where an owner rule would go. A demo workspace never reaches a live transport.
-    transport:
-      actor.kind === "owner" && sheetConfig(c.env) && !sheetConfig(c.env)?.double
-        ? "Google Sheet bridge (owner test mode)"
-        : "Simulated",
+    transport: transportLabel(actor.kind, c.env),
     teams: QUEUES,
   });
 });
@@ -117,9 +122,13 @@ automations.post("/simulate", async (c) => {
     type,
     data,
     matched: matched.map((r) => ({ id: r.id, name: r.name, action: r.action, version: r.version })),
-    outcome: matched.length
-      ? "Simulated: the effect is recorded here and nothing leaves the system."
-      : "No enabled rule matches, so the event would be recorded with no effect.",
+    outcome: !matched.length
+      ? "No enabled rule matches, so the event would be recorded with no effect."
+      : actor.kind === "owner" &&
+          sheetConfig(c.env) &&
+          matched.some((r) => r.action === "sheet_append")
+        ? `${transportLabel(actor.kind, c.env)}: dispatch would append one row for this event.`
+        : "Simulated: the effect is recorded here and nothing leaves the system.",
   });
 });
 

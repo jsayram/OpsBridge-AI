@@ -78,6 +78,21 @@ export async function updateRule(
     input.condition === undefined
       ? before.condition
       : parseCondition(before.trigger_event, input.condition);
+  // A reused rule and its source each keep their team, or one-reuse-per-team stops meaning
+  // anything and two rules could serve the same team (JOB-TEST-06).
+  if (condition.queue !== before.condition.queue) {
+    const linked =
+      before.reused_from !== null ||
+      (
+        await ctx.db.query(
+          "SELECT 1 FROM app.workflow_rules WHERE workspace_id = $1 AND reused_from = $2 LIMIT 1",
+          [ctx.workspaceId, id],
+        )
+      ).rowCount !== 0;
+    if (linked) {
+      throw new ApiError(409, "team_locked", "A reused rule and its source keep their teams.");
+    }
+  }
   const enabled = input.enabled ?? before.enabled;
   const { rows } = await ctx.db.query(
     `UPDATE app.workflow_rules SET condition = $3, enabled = $4, version = version + 1,

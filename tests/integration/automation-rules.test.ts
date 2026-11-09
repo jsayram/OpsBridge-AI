@@ -199,6 +199,37 @@ describe("P4.1 JOB-TEST-06: one typed rule reused by a second fictional team", (
     expect(fsEffects[0].rule_id).toBe((await approvalRule(fs)).id);
   });
 
+  it("a reused rule and its source keep their teams, so two rules can't serve one team (review M2)", async () => {
+    const g = await manager();
+    const source = await approvalRule(g);
+    const copy = (await reuse(g, source.id, "Seasonal Staffing")).json;
+    const back = await patchRule(g, copy.id, {
+      version: copy.version,
+      condition: { queue: "Field Services", decision: "approved" },
+    });
+    expect(back.json.code).toBe("team_locked");
+    expect((await patchRule(g, copy.id, { version: copy.version, condition: {} })).json.code).toBe(
+      "team_locked",
+    );
+    expect(
+      (
+        await patchRule(g, source.id, {
+          version: source.version,
+          condition: { queue: "Seasonal Staffing" },
+        })
+      ).json.code,
+    ).toBe("team_locked");
+    // Narrowing without touching the team is still allowed.
+    const narrowed = await patchRule(g, copy.id, {
+      version: copy.version,
+      condition: { queue: "Seasonal Staffing" },
+    });
+    expect(narrowed.status).toBe(200);
+    expect((await approveCase(g, "Field Services")).status).toBe(200);
+    const [event] = await eventsOf(g.workspaceId, "approval.completed");
+    expect((await effectsOf(g.workspaceId, event.id)).map((e) => e.rule_id)).toEqual([source.id]);
+  });
+
   it("a disabled rule produces no effect, and the version it ran under is recorded", async () => {
     const g = await manager();
     const rule = await approvalRule(g);
