@@ -35,8 +35,10 @@ async function timed(route, fn) {
   try {
     const res = await fn();
     status = res.status;
+    // Time the whole body, and hand the caller an unread copy.
+    const copy = res.clone();
     await res.arrayBuffer();
-    return res;
+    return copy;
   } finally {
     const ms = performance.now() - t;
     if (!samples.has(route)) samples.set(route, []);

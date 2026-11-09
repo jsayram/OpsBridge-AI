@@ -1,0 +1,19 @@
+# Local load profile, 2026-11-09T23:46:02.157Z
+machine MacBookPro18,2, 10 cores (Apple M1 Max), 64 GB; node v22.23.1; wrangler 4.158.0; Postgres 17 in Docker on the same machine
+profile: 20 visitors at once for 60 s, each from its own address; each launches a demo, then loops list, detail, summary, analytics overview, report, findings and one case edit, pausing 4 to 5 s between loops (under the 120-a-minute limit per address)
+
+| Route | Requests | p50 ms | p95 ms | p99 ms | max ms |
+|---|---|---|---|---|---|
+| GET / (landing) | 20 | 38.9 | 39.2 | 39.9 | 39.9 |
+| GET /api/v1/analytics/overview | 259 | 52.9 | 186.6 | 208.9 | 226.4 |
+| GET /api/v1/cases | 259 | 35.8 | 107.4 | 151.3 | 161.6 |
+| GET /api/v1/cases/{id} | 259 | 47.1 | 171.2 | 195.7 | 209.3 |
+| GET /api/v1/reconciliation | 259 | 33.1 | 95.3 | 111.2 | 122.3 |
+| GET /api/v1/reports/operations | 259 | 40.5 | 125.5 | 150.0 | 154.4 |
+| GET /api/v1/workspace/summary | 259 | 31.9 | 108.1 | 144.5 | 148.7 |
+| PATCH /api/v1/cases/{id} | 259 | 44.4 | 107.0 | 159.2 | 181.4 |
+| POST /api/v1/demo/sessions | 20 | 269.6 | 475.2 | 507.1 | 507.1 |
+
+1853 requests in 64.1 s (28.9 a second)
+non-2xx answers: none
+PASS PRD 13.2 target, non-AI API p95 under 500 ms at this profile: worst route p95 475.2 ms
