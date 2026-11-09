@@ -1,0 +1,1 @@
+SAST passed: 7 rules, sources backend/src, frontend/src

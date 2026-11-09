@@ -314,6 +314,7 @@ paths:
     post:
       tags: [documents]
       operationId: initiateUpload
+      x-disabled: DEC-003 keeps owner uploads off, so this operation never succeeds
       summary: >-
         Owner only. DEC-003 (fixtures only): checks size (1 MiB), declared type, magic bytes,
         structure, active content and page count (20) without parsing, then always refuses with
@@ -419,6 +420,43 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/Accepted" }
         "409": { description: "not_failed or retry_limit" }
+  /api/v1/ai-reviews/{id}/preview:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: previewReviewEdits
+      summary: >-
+        Manager or owner. Read-only: the checklist changes an accept with these edits would apply
+        to the case now, and what the rules refuse. Nothing is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [edits]
+              properties:
+                edits:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    clientName: { type: [string, "null"] }
+                    caseNumber: { type: [string, "null"] }
+                    serviceStart: { type: [string, "null"] }
+                    serviceEnd: { type: [string, "null"] }
+                    billingContact: { type: [string, "null"] }
+                    scopeSigned: { enum: ["yes", "no", null] }
+      responses:
+        "200":
+          description: The changes an accept would apply
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/v1/ai-reviews/{id}/decision:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -1039,6 +1077,48 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SyncRun" }
         "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/runs/{runId}/continue:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [admin]
+      operationId: continueOwnerRun
+      summary: Owner connector. Carry on a healthy run that ran out of pages for one request
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/runs/{runId}/resume:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [admin]
+      operationId: resumeOwnerRun
+      summary: Owner connector. Operator recovery of a failed run from its saved cursor
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
   /api/v1/admin/integrations/{id}/disconnect:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -1050,6 +1130,7 @@ paths:
         - ownerSession: []
       responses:
         "200": { $ref: "#/components/responses/Accepted" }
+        "403": { $ref: "#/components/responses/Error" }
   /api/v1/admin/automations:
     get:
       tags: [admin]
@@ -1101,6 +1182,7 @@ paths:
           content:
             application/json:
               schema: { type: object }
+        "403": { $ref: "#/components/responses/Error" }
   /api/v1/admin/automations/runs/{id}/confirm:
     parameters:
       - { $ref: "#/components/parameters/Id" }

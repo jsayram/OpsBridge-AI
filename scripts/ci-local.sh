@@ -18,6 +18,7 @@ step() { echo; echo "=== $1"; shift; "$@"; }
 step "npm ci" npm ci --no-audit --no-fund
 step "format" npm run -s format:check
 step "lint" npm run -s lint
+step "static checks" npm run -s sast
 step "typecheck" npm run -s typecheck
 step "unit tests" npm test --silent
 step "database" npm run -s db:up

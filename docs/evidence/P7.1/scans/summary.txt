@@ -1,0 +1,15 @@
+Scan run 2026-11-09T22:56:31Z at ab923ff
+gitleaks 8.30.1 | trivy 0.76.1 | node v22.23.1
+trivy DB: 2026-11-02 19:15:11.074748541 +0000 UTC
+vulnerabilities in .: 0
+vulnerabilities in spikes/p0.2: 0
+licenses: MIT 120, Apache-2.0 25, MIT OR Apache-2.0 15, MPL-2.0 14, LGPL-3.0-or-later 10, ISC 4, Apache-2.0 AND LGPL-3.0-or-later 3, 0BSD 2, Apache-2.0 AND LGPL-3.0-or-later AND MIT 1, CC0-1.0 1, (MIT AND Zlib) 1, BSD-3-Clause 1
+restrictive or unknown: @img/sharp-libvips-darwin-arm64 (LGPL-3.0-or-later), @img/sharp-libvips-darwin-x64 (LGPL-3.0-or-later), @img/sharp-libvips-linux-arm (LGPL-3.0-or-later), @img/sharp-libvips-linux-arm64 (LGPL-3.0-or-later), @img/sharp-libvips-linux-ppc64 (LGPL-3.0-or-later), @img/sharp-libvips-linux-riscv64 (LGPL-3.0-or-later), @img/sharp-libvips-linux-s390x (LGPL-3.0-or-later), @img/sharp-libvips-linux-x64 (LGPL-3.0-or-later), @img/sharp-libvips-linuxmusl-arm64 (LGPL-3.0-or-later), @img/sharp-libvips-linuxmusl-x64 (LGPL-3.0-or-later), @img/sharp-wasm32 (Apache-2.0 AND LGPL-3.0-or-later AND MIT), @img/sharp-win32-arm64 (Apache-2.0 AND LGPL-3.0-or-later), @img/sharp-win32-ia32 (Apache-2.0 AND LGPL-3.0-or-later), @img/sharp-win32-x64 (Apache-2.0 AND LGPL-3.0-or-later)
+SBOM runtime: 20 components; with build tools: 198
+gitleaks working tree: clean
+gitleaks history (67 commits): clean
+SAST passed: 7 rules, sources backend/src, frontend/src
+canary gitleaks: tripped on a planted token
+canary trivy: tripped on lodash 4.17.15
+canary sast: tripped on eval
+SECURITY SCAN PASSED

@@ -10,6 +10,7 @@ export async function listInventory(
   q: { workspaceId: string; shared: boolean; limit: number; after?: string },
 ) {
   const owner = q.shared ? `coalesce(${TEMPLATE_ID}, $1::uuid)` : "$1::uuid";
+  // sast-ok: owner is one of two constant fragments
   const { rows: items } = await db.query(
     `SELECT id, canonical_item_code, description, canonical_unit, lifecycle_status
        FROM app.inventory_items
@@ -19,6 +20,7 @@ export async function listInventory(
   );
   const page = items.slice(0, q.limit);
   // Newest version first, then the item filter, so an older row can't pass for current.
+  // sast-ok: owner is one of two constant fragments
   const { rows: snapshots } = await db.query(
     `SELECT * FROM (
        SELECT DISTINCT ON (s.external_id) s.item_id, s.external_id, s.item_code,

@@ -82,6 +82,7 @@ export type FindingQuery = {
 
 export async function listFindings(db: Db, q: FindingQuery) {
   const owner = q.shared ? TEMPLATE_ID : "$1::uuid";
+  // sast-ok: owner is one of two constant fragments
   const { rows } = await db.query(
     `SELECT ${COLUMNS} ${FROM}
       WHERE f.workspace_id = ${owner} AND ($2::text IS NULL OR f.status = $2)

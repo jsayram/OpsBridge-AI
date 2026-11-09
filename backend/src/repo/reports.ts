@@ -101,6 +101,7 @@ const toRow = (r: Record<string, unknown>): ReportRow => ({
 
 export async function reportTotals(db: Db, f: ReportFilters) {
   const { where, values } = reportWhere(f);
+  // sast-ok: where holds only $n placeholders built by reportWhere
   const { rows } = await db.query(
     `SELECT c.status, count(*)::int AS n ${FROM} WHERE ${where} GROUP BY c.status`,
     values,
@@ -114,10 +115,13 @@ export async function reportTotals(db: Db, f: ReportFilters) {
 export async function reportPage(db: Db, f: ReportFilters, page: { page: number; limit: number }) {
   const { where, values } = reportWhere(f);
   const offset = (page.page - 1) * page.limit;
+  const n = values.length;
+  // P7.1: limit and offset are bound, not spliced, even though the route validates both.
+  // sast-ok: where holds only $n placeholders; ORDER is keyed by an enum-validated sort
   const { rows } = await db.query(
     `SELECT ${COLUMNS} ${FROM} WHERE ${where} ORDER BY ${ORDER[f.sort]}
-      LIMIT ${page.limit} OFFSET ${offset}`,
-    values,
+      LIMIT $${n + 1}::int OFFSET $${n + 2}::int`,
+    [...values, page.limit, offset],
   );
   return rows.map(toRow);
 }
@@ -146,6 +150,7 @@ export async function reportFreshness(
 
 export async function exportRows(db: Db, f: ReportFilters) {
   const { where, values } = reportWhere(f);
+  // sast-ok: where holds only $n placeholders; ORDER is keyed by an enum-validated sort
   const { rows } = await db.query(
     `SELECT ${COLUMNS} ${FROM} WHERE ${where} ORDER BY ${ORDER[f.sort]}
       LIMIT ${REPORT_LIMITS.exportRowCap + 1}`,
