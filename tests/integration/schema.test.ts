@@ -68,6 +68,9 @@ describe("P2.1 schema", () => {
       "automation_control",
       "demo_limits",
       "demo_quota",
+      // P5: the shared, read-only fixture library. Same 40 fictional documents for everyone.
+      "fixture_documents",
+      "fixture_review_outputs",
       "users",
       "workspaces",
     ]);
@@ -236,10 +239,17 @@ describe("P2.1 schema", () => {
       "DELETE FROM app.approvals",
       "DELETE FROM app.idempotency_keys",
       "UPDATE app.documents SET title = 'x'",
-      "UPDATE app.ai_reviews SET extraction = '{}'",
+      "DELETE FROM app.ai_reviews",
     ]) {
       await inWorkspace(A.workspaceId, (c) => fails(() => c.query(sql), /permission denied/));
     }
+    // P5 grants UPDATE on reviews for status and decisions; the stored suggestion stays fixed.
+    await inWorkspace(A.workspaceId, (c) =>
+      fails(
+        () => c.query("UPDATE app.ai_reviews SET extraction = '{}'"),
+        /ai_suggestion_immutable/,
+      ),
+    );
   });
 
   it("the pack holds every manifest table, and two launches match", async () => {

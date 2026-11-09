@@ -26,6 +26,8 @@ step "query profile" npm run -s test:profile
 step "build" npm run -s build
 step "client bundle" npm run -s check:bundle
 step "fixtures" npm run -s check:fixtures
+step "fixture documents" npm run -s check:documents
+step "AI evaluation (fixture mode)" npm run -s eval:ai
 step "browser tests" npm run -s test:e2e
 step "dependency audit" npm run -s audit
 step "secret scan" gitleaks dir --config .gitleaks.toml --redact --exit-code 1 --no-banner .

@@ -15,6 +15,7 @@ import { automations } from "./routes/automations";
 import { cases } from "./routes/cases";
 import { demo } from "./routes/demo";
 import { directory } from "./routes/directory";
+import { documents } from "./routes/documents";
 import { integrations } from "./routes/integrations";
 import { inventory } from "./routes/inventory";
 import { me } from "./routes/me";
@@ -61,14 +62,16 @@ app.get("/health/live", (c) => c.json({ status: "ok" }));
 app.get("/health/ready", (c) => c.json({ status: "ok" }));
 
 app.use("/api/*", noStore, rateLimit, originCheck);
-app.use(
-  "/api/*",
-  bodyLimit({
-    maxSize: MAX_BODY_BYTES,
-    onError: () => {
-      throw new ApiError(413, "payload_too_large", "Request body is too large");
-    },
-  }),
+const jsonLimit = bodyLimit({
+  maxSize: MAX_BODY_BYTES,
+  onError: () => {
+    throw new ApiError(413, "payload_too_large", "Request body is too large");
+  },
+});
+// The owner upload route reads its own body with a larger cap, after authorization (P5.1).
+const UPLOAD_PATH = /^\/api\/v1\/cases\/[^/]+\/documents$/;
+app.use("/api/*", (c, next) =>
+  c.req.method === "POST" && UPLOAD_PATH.test(c.req.path) ? next() : jsonLimit(c, next),
 );
 
 // P4.2: dispatch right after a command commits. The cron sweep catches anything this misses.
@@ -76,6 +79,7 @@ app.use("/api/v1/*", dispatchAfterCommit);
 app.use("/api/v1/admin/*", ownerGate);
 app.route("/api/v1/admin", admin);
 app.route("/api/v1/demo", demo);
+app.route("/api/v1", documents);
 app.route("/api/v1/cases", cases);
 app.route("/api/v1/approvals", approvals);
 app.route("/api/v1/reconciliation", reconciliation);

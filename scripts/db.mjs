@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 import {
   buildTemplate,
+  loadDocumentLibrary,
   OWNER_ASSIGNEE_ID,
   OWNER_RULE_ID,
   OWNER_CASE_ID,
@@ -130,6 +131,38 @@ export async function seed(url) {
        ON CONFLICT DO NOTHING`,
       [OWNER_WORKSPACE_ID],
     );
+    // P5.1: the shared fixture library comes first, since documents point at it. Rows are keyed
+    // by fixture ID and hash, so a re-seed with the same files changes nothing.
+    const library = loadDocumentLibrary();
+    if (!library) throw new Error("sample-data/documents/manifest.json is missing");
+    for (const d of library.documents) {
+      await c.query(
+        `INSERT INTO app.fixture_documents (fixture_id, title, category, kind, sha256, size, pages,
+                                            text_layer, segments)
+         VALUES ($1, $2, $3, $4, decode($5, 'hex'), $6, $7, $8, $9)
+         ON CONFLICT (fixture_id) DO UPDATE SET title = EXCLUDED.title, category = EXCLUDED.category,
+           kind = EXCLUDED.kind, sha256 = EXCLUDED.sha256, size = EXCLUDED.size,
+           pages = EXCLUDED.pages, text_layer = EXCLUDED.text_layer, segments = EXCLUDED.segments`,
+        [
+          d.fixtureId,
+          d.title,
+          d.category,
+          d.kind,
+          d.sha256,
+          d.size,
+          d.pages,
+          d.textLayer,
+          JSON.stringify(d.segments),
+        ],
+      );
+      await c.query(
+        `INSERT INTO app.fixture_review_outputs (input_sha256, prompt_version, model_version, raw_output)
+         VALUES (decode($1, 'hex'), $2, $3, $4)
+         ON CONFLICT (input_sha256, prompt_version) DO UPDATE
+           SET model_version = EXCLUDED.model_version, raw_output = EXCLUDED.raw_output`,
+        [d.sha256, library.promptVersion, library.fixtureModel, d.fixtureOutput],
+      );
+    }
     const tables = [
       ["customers", t.customers],
       ["assignees", t.assignees],
@@ -151,6 +184,16 @@ export async function seed(url) {
       ["outbox", t.outbox],
     ];
     for (const [table, rows] of tables) await insertRows(c, table, TEMPLATE_WORKSPACE_ID, rows);
+    // 0008 added this key NOT VALID, before the library existed. Every row now has its fixture.
+    await c.query("ALTER TABLE app.documents VALIDATE CONSTRAINT documents_fixture_fk");
+    // Template documents seeded before P5 get their file's hash, size and type.
+    await c.query(
+      `UPDATE app.documents d SET sha256 = f.sha256, size = f.size,
+              verified_type = 'application/pdf', status = 'Ready'
+         FROM app.fixture_documents f
+        WHERE d.workspace_id = $1 AND d.fixture_id = f.fixture_id AND d.sha256 IS NULL`,
+      [TEMPLATE_WORKSPACE_ID],
+    );
     // audit_events has no natural key, and its guard rightly refuses a rewrite.
     const seededAudit = await c.query(
       "SELECT 1 FROM app.audit_events WHERE workspace_id = $1 AND actor_id = 'seed' LIMIT 1",

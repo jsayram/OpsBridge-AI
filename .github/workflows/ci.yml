@@ -46,6 +46,8 @@ jobs:
       - run: npm run build
       - run: npm run check:bundle
       - run: npm run check:fixtures
+      - run: npm run check:documents
+      - run: npm run eval:ai
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run audit

@@ -112,7 +112,12 @@ describe("roles match PRD 7.4", () => {
     );
     await c.end();
     expect(rows.map((r) => `${r.grantee}:${r.table_name}:${r.privilege_type}`)).toEqual([
+      "opsbridge_app:ai_reviews:INSERT",
       "opsbridge_app:ai_reviews:SELECT",
+      "opsbridge_app:ai_reviews:UPDATE",
+      "opsbridge_app:ai_usage:INSERT",
+      "opsbridge_app:ai_usage:SELECT",
+      "opsbridge_app:ai_usage:UPDATE",
       "opsbridge_app:approvals:INSERT",
       "opsbridge_app:approvals:SELECT",
       "opsbridge_app:approvals:UPDATE",
@@ -138,6 +143,7 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:customers:INSERT",
       "opsbridge_app:customers:SELECT",
       "opsbridge_app:customers:UPDATE",
+      "opsbridge_app:documents:INSERT",
       "opsbridge_app:documents:SELECT",
       "opsbridge_app:external_connections:INSERT",
       "opsbridge_app:external_connections:SELECT",
@@ -145,6 +151,8 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:external_record_links:INSERT",
       "opsbridge_app:external_record_links:SELECT",
       "opsbridge_app:external_record_links:UPDATE",
+      "opsbridge_app:fixture_documents:SELECT",
+      "opsbridge_app:fixture_review_outputs:SELECT",
       "opsbridge_app:idempotency_keys:INSERT",
       "opsbridge_app:idempotency_keys:SELECT",
       "opsbridge_app:idempotency_keys:UPDATE",

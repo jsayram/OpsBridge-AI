@@ -13,6 +13,7 @@ import {
 import { ErrorCard, Skeleton, StatusChip } from "../components/ui";
 import { Link, navigate, useRouteFocus } from "../router";
 import { can, useSession } from "../session";
+import { DocumentsSection } from "./review";
 import { day, Head, STATUSES, useLoad } from "./shared";
 
 const QUEUES = ["Field Services", "Seasonal Staffing"];
@@ -717,6 +718,7 @@ export function CaseDetail({ id }: { id: string }) {
   const [actionFailure, setActionFailure] = useState<ApiFailure | null>(null);
   const [saved, setSaved] = useState("");
   const [busy, setBusy] = useState(false);
+  const [openDoc, setOpenDoc] = useState<string | null>(null);
 
   useEffect(() => {
     if (data) setTitle(data.title);
@@ -829,21 +831,15 @@ export function CaseDetail({ id }: { id: string }) {
         <ChecklistSection data={data} canEdit={canEdit} act={act} busy={busy} />
         <HandoffSection data={data} act={act} busy={busy} />
         <SourceReferencesSection refs={data.sourceReferences} />
-        <section className="card">
-          <h2>Documents</h2>
-          {data.documents.length === 0 ? (
-            <p className="muted">No documents yet.</p>
-          ) : (
-            <ul className="list">
-              {data.documents.map((d) => (
-                <li key={d.id}>
-                  {d.title} <span className="small muted">{d.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="small muted">Attaching and reviewing documents arrives in phase P5.</p>
-        </section>
+        <DocumentsSection
+          data={data}
+          open={openDoc}
+          setOpen={setOpenDoc}
+          onChanged={(message) => {
+            setSaved(message);
+            reload();
+          }}
+        />
         {!data.readOnly && <Activity id={data.id} version={data.version} />}
         <section className="card">
           <h2>Rename</h2>

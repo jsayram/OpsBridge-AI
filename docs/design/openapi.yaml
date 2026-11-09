@@ -301,25 +301,42 @@ paths:
       responses:
         "200": { $ref: "#/components/responses/Accepted" }
         "409": { $ref: "#/components/responses/Error" }
+  /api/v1/fixtures/documents:
+    get:
+      tags: [documents]
+      operationId: listFixtures
+      summary: The 40 allowlisted fictional documents a person can attach (P5.1)
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
   /api/v1/cases/{id}/documents:
     parameters:
       - { $ref: "#/components/parameters/Id" }
     post:
       tags: [documents]
       operationId: initiateUpload
-      summary: Owner workspace only. Guests receive 403.
+      summary: >-
+        Owner only. DEC-003 (fixtures only): checks size (1 MiB), declared type, magic bytes,
+        structure, active content and page count (20) without parsing, then always refuses with
+        owner_upload_disabled. Nothing is stored. Guests receive 403 before the body is read.
       security:
         - ownerSession: []
+      requestBody:
+        content:
+          application/pdf:
+            schema: { type: string, format: binary, maxLength: 1048576 }
       responses:
-        "201": { $ref: "#/components/responses/Accepted" }
         "403": { $ref: "#/components/responses/Error" }
+        "409": { description: "owner_upload_disabled, after every check passed" }
+        "413": { description: "file_too_large or too_many_pages" }
+        "415": { description: "unsupported_media_type, unsupported_type or type_mismatch" }
+        "422": { description: "malformed_pdf, active_content or unscannable_pdf" }
   /api/v1/cases/{id}/documents/from-fixture:
     parameters:
       - { $ref: "#/components/parameters/Id" }
     post:
       tags: [documents]
       operationId: attachFixture
-      summary: Attach an allowlisted fixture document
+      summary: Attach an allowlisted fixture document. Analyst, manager or owner; Idempotency-Key required
       requestBody:
         required: true
         content:
@@ -332,6 +349,19 @@ paths:
                 fixtureId: { type: string, pattern: "^fx-[a-z0-9-]{1,40}$" }
       responses:
         "201": { $ref: "#/components/responses/Accepted" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { description: "document_limit" }
+        "422": { description: "unknown_fixture" }
+  /api/v1/documents/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [documents]
+      operationId: getDocument
+      summary: Metadata, the build-time text segments with page numbers, and the latest reviews
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
         "404": { $ref: "#/components/responses/Error" }
   /api/v1/documents/{id}/review:
     parameters:
@@ -339,21 +369,66 @@ paths:
     post:
       tags: [documents]
       operationId: requestReview
-      summary: Request a bounded fixture or owner-only live review
+      summary: >-
+        Request a bounded review. Guests get the deterministic fixture. Live mode is owner-only and
+        off unless fully configured (P5.3, Pending Owner Credentials); when it can't run, or fails,
+        the response carries the labeled fixture and a degraded code.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                mode: { enum: [fixture, live], default: fixture }
       responses:
-        "202":
-          description: Queued
+        "201":
+          description: Review finished, failed, or fell back
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  review: { $ref: "#/components/schemas/AiReview" }
+                  fallback: { $ref: "#/components/schemas/AiReview" }
+                  degraded: { type: string }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { description: "document_not_ready or review_in_progress" }
+        "429": { description: "review_quota" }
+  /api/v1/ai-reviews/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [documents]
+      operationId: getReview
+      summary: One review with citations, validation codes and the policy result on the current case
+      responses:
+        "200":
+          description: Review
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AiReview" }
-        "429": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/ai-reviews/{id}/retry:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: retryReview
+      summary: Failed to Processing on the same row through the fixture path, within 5 attempts
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "409": { description: "not_failed or retry_limit" }
   /api/v1/ai-reviews/{id}/decision:
     parameters:
       - { $ref: "#/components/parameters/Id" }
     post:
       tags: [documents]
       operationId: decideReview
-      summary: Accept, accept with edits, or reject
+      summary: >-
+        Manager or owner. Accept, accept with edits, or reject. With caseVersion, an accept applies
+        the checklist changes the rules allow through the ordinary checklist command, in the same
+        transaction. A stale case or review version changes nothing. Idempotency-Key required.
       requestBody:
         required: true
         content:
@@ -361,10 +436,21 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [decision]
+              required: [decision, version]
               properties:
                 decision: { enum: [accept, accept_with_edits, reject] }
-                edits: { type: object, maxProperties: 20 }
+                version: { type: integer, minimum: 1 }
+                caseVersion: { type: integer, minimum: 1 }
+                edits:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    clientName: { type: [string, "null"] }
+                    caseNumber: { type: [string, "null"] }
+                    serviceStart: { type: [string, "null"] }
+                    serviceEnd: { type: [string, "null"] }
+                    billingContact: { type: [string, "null"] }
+                    scopeSigned: { enum: ["yes", "no", null] }
                 reason: { type: string, maxLength: 500 }
       responses:
         "200":
@@ -372,7 +458,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/AiReview" }
-        "409": { $ref: "#/components/responses/Error" }
+        "409": { description: "already_decided, not_ready, stale_review or stale_version" }
+        "422": { description: "invalid_edit" }
   /api/v1/approvals/{id}/decision:
     parameters:
       - { $ref: "#/components/parameters/Id" }
@@ -1174,12 +1261,35 @@ components:
         expectedCaseVersion: { type: integer }
     AiReview:
       type: object
-      required: [id, status, sourceLabel]
+      required: [id, status, mode, label, promptVersion]
       properties:
         id: { type: string, format: uuid }
         status: { enum: [Queued, Processing, Needs Human Review, Accepted, Accepted with Edits, Rejected, Failed] }
-        sourceLabel: { enum: [Deterministic demonstration fixture, Live model output] }
-        abstainReason: { enum: [no_extractable_text, ambiguous, adversarial_content, missing_required_fields] }
+        version: { type: integer }
+        mode: { enum: [fixture, live] }
+        label: { enum: [Deterministic demonstration fixture, Live model output] }
+        modelVersion: { type: string }
+        promptVersion: { const: doc-review-v1 }
+        inputSha256: { type: [string, "null"] }
+        suggestion: { type: [object, "null"], description: "The validated doc-review-v1 output; immutable once stored" }
+        citations:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              segmentId: { type: string }
+              page: { type: integer }
+              text: { type: string }
+        validation: { type: [object, "null"], description: "Codes only: checks passed, errors, fallback" }
+        policy: { type: [object, "null"], description: "Deterministic rule result on the current case: comparisons, apply, refused" }
+        abstainReason: { enum: [no_extractable_text, ambiguous, adversarial_content, missing_required_fields, null] }
+        errorCode: { type: [string, "null"] }
+        reviewerEdits: { type: [object, "null"] }
+        applied: { type: [array, "null"] }
+        tokensIn: { type: integer }
+        tokensOut: { type: integer }
+        costMicroUsd: { type: integer, description: "Estimated. Always 0 for a fixture" }
     Finding:
       type: object
       required: [id, kind, severity, status, version]

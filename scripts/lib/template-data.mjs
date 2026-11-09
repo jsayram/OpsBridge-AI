@@ -5,6 +5,49 @@ import { readFileSync } from "node:fs";
 import { detectFindings } from "../../backend/src/domain/reconcile.ts";
 import { mapCrmOrganization, mapErpCustomer } from "../../backend/src/integrations/mappers.ts";
 
+const DOCUMENT_LIBRARY = new URL("../../sample-data/documents/manifest.json", import.meta.url);
+
+// The fixture library written by scripts/fixtures/make-documents.mjs, or null before it exists.
+export function loadDocumentLibrary() {
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync(DOCUMENT_LIBRARY, "utf8"));
+  } catch {
+    return null;
+  }
+  return { ...raw, byId: new Map(raw.documents.map((d) => [d.fixture_id ?? d.fixtureId, d])) };
+}
+
+// Mirrors backend/src/ai/review.ts storeShape(): the validated output, its citations with page
+// and text, and the list of checks it passed. tests/integration/ai-review.test.ts holds them equal.
+function storedFixtureReview(reviewId, documentId, doc, library, requestedAt) {
+  const output = JSON.parse(doc.fixtureOutput);
+  const byId = new Map(doc.segments.map((s) => [s.id, s]));
+  const citations = Object.entries(output.perFieldSource).flatMap(([field, ids]) =>
+    ids.map((segmentId) => ({
+      field,
+      segmentId,
+      page: byId.get(segmentId).page,
+      text: byId.get(segmentId).text,
+    })),
+  );
+  return {
+    id: reviewId,
+    document_id: documentId,
+    model_version: library.fixtureModel,
+    prompt_version: library.promptVersion,
+    mode: "fixture",
+    input_sha256: Buffer.from(doc.sha256, "hex"),
+    extraction: JSON.stringify(output),
+    citations: JSON.stringify(citations),
+    validation: JSON.stringify({ valid: true, checks: VALIDATION_CHECKS, errors: [] }),
+    status: "Needs Human Review",
+    abstain_reason: output.abstainReason,
+    requested_at: requestedAt,
+  };
+}
+export const VALIDATION_CHECKS = ["size", "json", "schema", "values", "citations", "consistency"];
+
 export const TEMPLATE_WORKSPACE_ID = "00000000-0000-4000-8000-000000000001";
 export const OWNER_WORKSPACE_ID = "00000000-0000-4000-8000-000000000002";
 export const OWNER_CUSTOMER_ID = "00000000-0000-4000-8000-000000000003";
@@ -214,19 +257,27 @@ export function buildTemplate(manifest) {
       pack_key: packCase ? `document-${i + 1}` : null,
     };
   });
+  // P5.1: once the fixture PDFs exist, each row carries its file's hash, size and type.
+  const library = loadDocumentLibrary();
+  if (library) {
+    for (const d of documents) {
+      const f = library.byId.get(d.fixture_id);
+      if (!f) continue;
+      Object.assign(d, {
+        sha256: Buffer.from(f.sha256, "hex"),
+        size: f.size,
+        verified_type: "application/pdf",
+        status: "Ready",
+      });
+    }
+  }
 
-  const ai_reviews = [
-    {
-      id: id("ai-review:0"),
-      document_id: documents[0].id,
-      model_version: "fixture",
-      prompt_version: "fixture-1",
-      extraction: JSON.stringify({ missingFields: ["signed_scope", "billing_contact"] }),
-      citations: JSON.stringify([{ field: "signed_scope", page: 1 }]),
-      status: "Needs Human Review",
-      abstain_reason: null,
-    },
-  ];
+  // F4: the first pack document is missing two required fields. Its seeded review is the stored
+  // fixture result, in the same shape the Worker stores after validation.
+  const first = library?.byId.get(documents[0].fixture_id);
+  const ai_reviews = first
+    ? [storedFixtureReview(id("ai-review:0"), documents[0].id, first, library, at(-9))]
+    : [];
 
   // F1: the CRM holds both organizations. Cedar Point has one approved bill-to, spelled
   // differently. Harbor Ridge's two bill-tos stay unmapped until a reviewer decides.

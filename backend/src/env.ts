@@ -31,6 +31,21 @@ export type Bindings = {
   SHEET_ID?: string;
   GOOGLE_SA_KEY?: string;
   SHEETS_TEST_DOUBLE?: Transport;
+  // Owner-only live AI review (P5.3). Off unless every value is present and inside the caps in
+  // backend/src/ai/gateway.ts. Pending Owner Credentials: no provider account exists.
+  AI_LIVE_ENABLED?: string;
+  AI_PROVIDER?: string;
+  AI_MODEL?: string;
+  AI_API_KEY?: string;
+  AI_MAX_REQUESTS_PER_DAY?: string;
+  AI_MAX_INPUT_TOKENS?: string;
+  AI_MAX_OUTPUT_TOKENS?: string;
+  AI_MAX_CONCURRENCY?: string;
+  AI_TIMEOUT_MS?: string;
+  AI_PRICE_IN_MICRO_USD_PER_MTOK?: string;
+  AI_PRICE_OUT_MICRO_USD_PER_MTOK?: string;
+  // In-process double, used only when ENVIRONMENT is "local". A deployed Worker can't set one.
+  AI_TEST_DOUBLE?: Transport;
 };
 
 export type Variables = {

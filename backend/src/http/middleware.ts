@@ -51,7 +51,11 @@ export const originCheck: MiddlewareHandler<AppEnv> = async (c, next) => {
   const hasBody =
     (c.req.header("content-length") ?? "0") !== "0" ||
     c.req.header("transfer-encoding") !== undefined;
-  if ((type && type !== "application/json") || (hasBody && !type)) {
+  // The one exception: the owner upload route takes a raw PDF (P5.1). A cross-site form can't
+  // send that type, and the origin check above still applies.
+  const pdfUpload =
+    type === "application/pdf" && /^\/api\/v1\/cases\/[^/]+\/documents$/.test(c.req.path);
+  if ((type && type !== "application/json" && !pdfUpload) || (hasBody && !type)) {
     throw new ApiError(415, "unsupported_media_type", "Send JSON");
   }
   return next();
