@@ -1,0 +1,14 @@
+shuffle seed 7001:      × each guest reads its own case 37ms
+shuffle seed 7001:      × P2-E two clean seeds on separate databases hold identical records 29ms
+shuffle seed 7001:      × moves to a queue, clears the assignee, and refuses a no-op 39ms
+shuffle seed 7001: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+shuffle seed 7001:  FAIL  tests/integration/isolation-matrix.test.ts > cross-workspace matrix > each guest reads its own case
+shuffle seed 7001:  FAIL  tests/integration/migrations.test.ts > migrations on an empty database > P2-E two clean seeds on separate databases hold identical records
+shuffle seed 7001:  FAIL  tests/integration/workflow.test.ts > P2.3 handoffs, JOB-TEST-02 > moves to a queue, clears the assignee, and refuses a no-op
+shuffle seed 7001:  Test Files  3 failed | 23 passed (26)
+shuffle seed 7001:       Tests  3 failed | 405 passed (408)
+shuffle seed 7002:      × a stale handoff fails and leaves no history 26ms
+shuffle seed 7002:      × moves to a queue, clears the assignee, and refuses a no-op 30ms
+shuffle seed 7002:      × each guest reads its own case 30ms
+shuffle seed 7002:      × seed is idempotent 183ms
+shuffle seed 7002:      × P2-E two clean seeds on separate databases hold identical records 33ms

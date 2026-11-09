@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Controlled database steps. Nothing runs these on Worker boot (PRD 6.3).
 //   node scripts/db.mjs setup-local [dbname] [--recreate]   local only: db, roles, throwaway passwords
-//   node scripts/db.mjs migrate                apply pending migrations as the migrator
+//   node scripts/db.mjs migrate [--to 0010]    apply pending migrations as the migrator, optionally
+//                                              stopping after one (expand now, contract next release)
 //   node scripts/db.mjs seed                   idempotent template and owner workspace
 //   node scripts/db.mjs status                 list applied migrations
 // migrate, seed and status read DATABASE_MIGRATOR_URL.
@@ -63,7 +64,7 @@ export async function setupLocal(db, { recreate = false } = {}) {
   }
 }
 
-export async function migrate(url) {
+export async function migrate(url, { to } = {}) {
   const c = await connect(url);
   const applied = [];
   try {
@@ -80,6 +81,7 @@ export async function migrate(url) {
     const dir = join(root, "backend/migrations");
     for (const file of readdirSync(dir)
       .filter((f) => f.endsWith(".sql"))
+      .filter((f) => !to || f.slice(0, 4) <= to)
       .sort()) {
       const sql = readFileSync(join(dir, file), "utf8");
       const sha = createHash("sha256").update(sql).digest("hex");
@@ -270,6 +272,14 @@ export async function relaxLimits(url) {
   await c.end();
 }
 
+const toArg = () => {
+  const i = process.argv.indexOf("--to");
+  if (i < 0) return undefined;
+  const v = process.argv[i + 1] ?? "";
+  if (!/^\d{4}$/.test(v)) throw new Error("--to needs a four-digit migration number");
+  return v;
+};
+
 const main = async () => {
   const [cmd, arg] = process.argv.slice(2);
   const url = process.env.DATABASE_MIGRATOR_URL;
@@ -287,7 +297,7 @@ const main = async () => {
     process.exit(2);
   }
   if (cmd === "migrate")
-    console.log("applied:", (await migrate(url)).join(", ") || "nothing pending");
+    console.log("applied:", (await migrate(url, { to: toArg() })).join(", ") || "nothing pending");
   if (cmd === "seed") console.log("seeded:", JSON.stringify(await seed(url)));
   if (cmd === "status") {
     const c = await connect(url);

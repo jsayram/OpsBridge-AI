@@ -227,6 +227,16 @@ describe("P7-E: usable with each provider unavailable", () => {
   });
 
   it("Salesforce down: the owner's callback fails with a code and stores no token", async () => {
+    const secrets = async () => {
+      const mig = await connect("opsbridge_migrator");
+      const { rows } = await mig.query(
+        "SELECT count(*)::int AS n, max(created_at) AS latest FROM app.connection_secrets WHERE workspace_id = $1",
+        [OWNER],
+      );
+      await mig.end();
+      return rows[0];
+    };
+    const before = await secrets();
     const env = await salesforceDown();
     const started = await call("/api/v1/admin/integrations/salesforce/authorize", {
       env: { ...ownerEnv, ...env },
@@ -248,12 +258,6 @@ describe("P7-E: usable with each provider unavailable", () => {
     expect(res.status).toBe(502);
     expect(res.json.error?.code ?? res.json.code).toBe("provider_rejected");
     expect(res.text).not.toMatch(/fetch failed|TypeError/);
-    const mig = await connect("opsbridge_migrator");
-    const { rows } = await mig.query(
-      "SELECT count(*)::int AS n FROM app.connection_secrets WHERE workspace_id = $1",
-      [OWNER],
-    );
-    await mig.end();
-    expect(rows[0].n).toBe(0);
+    expect(await secrets()).toEqual(before);
   });
 });

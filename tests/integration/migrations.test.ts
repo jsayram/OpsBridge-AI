@@ -214,3 +214,71 @@ describe("roles match PRD 7.4", () => {
     for (const r of rows) expect(r.proconfig).toContain("search_path=app, pg_temp");
   });
 });
+
+// P7.3: an upgrade one migration at a time ends in the same schema as a fresh install, and the
+// dispatcher change follows expand-then-contract so the previous Worker survives a rollback.
+describe("upgrade path and rollback compatibility (P7.3)", () => {
+  const up = "opsbridge_upgrade_test";
+  const upUrl = `postgres://opsbridge_migrator:local_dev_only@127.0.0.1:54330/${up}`;
+  const runUp = (...args: string[]) =>
+    execFileSync("node", ["scripts/db.mjs", ...args], {
+      env: { ...process.env, DATABASE_MIGRATOR_URL: upUrl },
+      encoding: "utf8",
+    });
+  const versions = execFileSync("ls", ["backend/migrations"], { encoding: "utf8" })
+    .split("\n")
+    .filter((f) => f.endsWith(".sql"))
+    .map((f) => f.slice(0, 4));
+  const canDispatch = async (url: string, role: string) => {
+    const c = new pg.Client({ connectionString: url });
+    await c.connect();
+    const { rows } = await c.query(
+      "SELECT has_function_privilege($1, 'app.claim_due_outbox(int, uuid)', 'EXECUTE') AS ok",
+      [role],
+    );
+    await c.end();
+    return rows[0].ok as boolean;
+  };
+  const schema = async (url: string) => {
+    const c = new pg.Client({ connectionString: url });
+    await c.connect();
+    const out: Record<string, string> = {};
+    for (const [name, sql] of Object.entries({
+      columns: `SELECT string_agg(table_name||'.'||column_name||':'||data_type||':'||is_nullable||':'||coalesce(column_default,''), ',' ORDER BY table_name, column_name) AS v FROM information_schema.columns WHERE table_schema IN ('app','ops')`,
+      constraints: `SELECT string_agg(conrelid::regclass||'.'||conname||':'||pg_get_constraintdef(oid), ',' ORDER BY conrelid::regclass::text, conname) AS v FROM pg_constraint WHERE connamespace = 'app'::regnamespace`,
+      indexes: `SELECT string_agg(indexdef, ',' ORDER BY indexdef) AS v FROM pg_indexes WHERE schemaname = 'app'`,
+      policies: `SELECT string_agg(tablename||'.'||policyname||':'||array_to_string(roles, '+')||':'||coalesce(qual,'')||':'||coalesce(with_check,''), ',' ORDER BY tablename, policyname) AS v FROM pg_policies WHERE schemaname = 'app'`,
+      grants: `SELECT string_agg(grantee||':'||table_name||':'||privilege_type, ',' ORDER BY grantee, table_name, privilege_type) AS v FROM information_schema.role_table_grants WHERE table_schema = 'app' AND grantee LIKE 'opsbridge%'`,
+      functions: `SELECT string_agg(p.oid::regprocedure||':'||md5(p.prosrc)||':'||coalesce(array_to_string(p.proacl, '+'),''), ',' ORDER BY p.oid::regprocedure::text) AS v FROM pg_proc p WHERE p.pronamespace = 'app'::regnamespace`,
+      triggers: `SELECT string_agg(tgrelid::regclass||'.'||tgname, ',' ORDER BY tgrelid::regclass::text, tgname) AS v FROM pg_trigger WHERE NOT tgisinternal`,
+    })) {
+      out[name] = (await c.query(sql)).rows[0].v;
+    }
+    await c.end();
+    return out;
+  };
+
+  it("stepping through every migration matches a fresh install exactly", async () => {
+    runUp("setup-local", up, "--recreate");
+    for (const v of versions) expect(runUp("migrate", "--to", v)).toContain(`${v}_`);
+    expect(runUp("migrate")).toContain("nothing pending");
+    // A release always seeds after migrating, and the seed validates the fixture key added
+    // NOT VALID in 0008, so both sides are compared after their seed.
+    runUp("seed");
+    expect(await schema(upUrl)).toEqual(await schema(migratorUrl));
+  });
+
+  it("0010 alone keeps the request role able to dispatch, so the previous Worker still works", async () => {
+    runUp("setup-local", up, "--recreate");
+    runUp("migrate", "--to", "0010");
+    expect(await canDispatch(upUrl, "opsbridge_app")).toBe(true);
+    expect(await canDispatch(upUrl, "opsbridge_dispatcher")).toBe(true);
+    runUp("migrate");
+    expect(await canDispatch(upUrl, "opsbridge_app")).toBe(false);
+    expect(await canDispatch(upUrl, "opsbridge_dispatcher")).toBe(true);
+  });
+
+  it("--to refuses a value that isn't a migration number", () => {
+    expect(() => runUp("migrate", "--to", "latest")).toThrow();
+  });
+});
