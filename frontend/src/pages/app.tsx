@@ -3,6 +3,7 @@ import { ApiFailure, api, type Summary } from "../api";
 import { ErrorCard, SimBadge, Skeleton, StatusChip } from "../components/ui";
 import { Link, useRouteFocus } from "../router";
 import { useSession } from "../session";
+import { AutomationAdmin } from "./automations";
 import { SalesforceAdmin } from "./integration";
 import { Head, STATUSES, useLoad } from "./shared";
 
@@ -82,11 +83,6 @@ export function Overview() {
 }
 
 const LATER: Record<string, { title: string; phase: string; note: string }> = {
-  automations: {
-    title: "Automations",
-    phase: "P4",
-    note: "Rules, the durable outbox and honest delivery labels.",
-  },
   analytics: {
     title: "Analytics",
     phase: "P6",
@@ -155,6 +151,7 @@ export function Admin() {
         </section>
       )}
       {data && <SalesforceAdmin />}
+      {data && <AutomationAdmin />}
     </>
   );
 }

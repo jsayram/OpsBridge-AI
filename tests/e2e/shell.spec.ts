@@ -217,7 +217,7 @@ test.describe("states", () => {
 
   test("not-yet-built areas say so and offer no fake controls", async ({ page }) => {
     await openOverview(page);
-    for (const name of ["Automations", "Analytics"]) {
+    for (const name of ["Analytics"]) {
       await page.getByRole("link", { name }).first().click();
       await expect(page.getByRole("heading", { name: "Not built yet" })).toBeVisible();
       await expect(page.locator("main button")).toHaveCount(0);
@@ -416,8 +416,12 @@ test.describe("P1-C admin through the local test double", () => {
       },
     ]);
     await page.goto("/admin");
-    await expect(page.getByText("Pending Owner Configuration")).toBeVisible();
+    await expect(page.getByText("Pending Owner Configuration").first()).toBeVisible();
     await expect(page.getByText("Local test double")).toBeVisible();
+    // P4.4: the owner's automation controls state the live claims as pending.
+    await expect(page.getByRole("heading", { name: "Automation controls" })).toBeVisible();
+    await expect(page.getByText("Pending Owner Credentials").first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Emergency stop" })).toBeVisible();
     await expectNoAxeViolations(page);
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page.getByText("Signed out here.")).toBeVisible();

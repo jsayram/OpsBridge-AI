@@ -2,6 +2,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Shell } from "./components/Shell";
 import { ErrorCard, SessionNotice, Skeleton } from "./components/ui";
 import { Admin, Later, Overview } from "./pages/app";
+import { Automations } from "./pages/automations";
 import { CaseDetail, Cases } from "./pages/cases";
 import { FindingDetail, Integrations, Inventory, Reconciliation } from "./pages/integration";
 import { Demo, Engineering, Landing, NotFoundPage } from "./pages/public";
@@ -25,6 +26,7 @@ function AppArea({ path }: { path: string }) {
   else if (section === "reconciliation") body = <Reconciliation />;
   else if (section === "integrations") body = <Integrations />;
   else if (section === "inventory") body = <Inventory />;
+  else if (section === "automations") body = <Automations />;
   else body = <Later area={section ?? ""} />;
   return (
     <Shell path={path} me={me}>
