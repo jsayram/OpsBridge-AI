@@ -40,7 +40,7 @@ Updated: 2026-11-06 (America/New_York), P3 phase session. One item is open: DEC-
 - Actual owner answer: 2026-11-06, forwarded by the master thread: “Decide at P5 (Recommended)”.
 - Authorized scope, as the master stated it: stay on Free now. The stop point is closed for P1 through P4. Option B or C stays undecided until P5.1.
 - Resulting ADR/files: `ADR/000-stack-and-hosting.md` item 1b, `docs/reports/P0.2.md`.
-
+- Final owner answer, 2026-11-09, in the master thread: “Stay free, fixtures only”. P5 builds no hosted owner upload. AI review uses text extracted at build time from the fictional documents, and the app stays on Workers Free at $0. Closed.
 ### DEC-004 — Create the GitHub repository and push
 
 - State: answered 2026-11-06, carried out by the master for `main` and `phase/p0-foundation` only.
