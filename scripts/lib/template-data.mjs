@@ -10,6 +10,7 @@ export const OWNER_WORKSPACE_ID = "00000000-0000-4000-8000-000000000002";
 export const OWNER_CUSTOMER_ID = "00000000-0000-4000-8000-000000000003";
 export const OWNER_CASE_ID = "00000000-0000-4000-8000-000000000004";
 export const OWNER_ASSIGNEE_ID = "00000000-0000-4000-8000-000000000005";
+export const OWNER_RULE_ID = "00000000-0000-4000-8000-000000000006";
 
 const stableId = (seed, key) => {
   const h = createHash("sha256").update(`${seed}:${key}`).digest("hex");
@@ -439,16 +440,24 @@ export function buildTemplate(manifest) {
     rationale,
   }));
 
+  // JOB-TEST-06 starts from a team-scoped rule. Reusing it for Seasonal Staffing is a visitor
+  // action, so the pack holds only the original.
   const workflow_rules = [
-    ["Notify ops sheet when approved", "approval.completed", "sheet_append"],
-    ["Show notice when a case needs review", "case.needs_review", "simulated_notice"],
-  ].map(([name, trigger_event, action], i) => ({
+    [
+      "Notify ops sheet when approved for Field Services",
+      "approval.completed",
+      "sheet_append",
+      { queue: "Field Services", decision: "approved" },
+    ],
+    ["Show notice when a case needs review", "case.needs_review", "simulated_notice", {}],
+  ].map(([name, trigger_event, action, condition], i) => ({
     id: id(`rule:${i}`),
     name,
     trigger_event,
-    condition: "{}",
+    condition: JSON.stringify(condition),
     action,
     pack_key: `rule-${i + 1}`,
+    updated_at: at(-30),
   }));
 
   // Seeded history. These labels are examples, never evidence that a message went anywhere.
@@ -472,8 +481,8 @@ export function buildTemplate(manifest) {
           requestId: "seed",
           data:
             type === "case.created"
-              ? { caseRef: ref, caseType: c.case_type }
-              : { caseRef: ref, decision: "approved" },
+              ? { caseRef: ref, caseType: c.case_type, queue: c.queue }
+              : { caseRef: ref, decision: "approved", queue: c.queue },
         }),
         idempotency_key: `seed:${outbox.length}`,
         evidence_ref: label === "Confirmed" ? `seed-run-${outbox.length}` : null,

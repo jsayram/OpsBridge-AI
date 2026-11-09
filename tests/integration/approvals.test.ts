@@ -83,7 +83,7 @@ describe("P2.4 atomic approval", () => {
     expect(after.outbox).toBe((before.outbox ?? 0) + 1);
   });
 
-  it("the outbox row matches the published envelope schema and stays Pending for P4", async () => {
+  it("the outbox row matches the published envelope schema and is dispatched only as Simulated", async () => {
     const { g, approvalId } = await readyCase();
     const res = await decide(g, approvalId, { decision: "approve", caseVersion: 1 });
     const mig = await connect("opsbridge_migrator");
@@ -93,11 +93,12 @@ describe("P2.4 atomic approval", () => {
     );
     await mig.end();
     const row = rows[0];
+    // P4: dispatched right after commit. A demo workspace can only reach the simulated sink.
     expect(row).toMatchObject({
       event_type: "approval.completed",
-      dispatch_state: "pending",
+      dispatch_state: "simulated",
       delivery_evidence: "none",
-      attempts: 0,
+      attempts: 1,
     });
     const schema = JSON.parse(readFileSync("docs/design/event-envelope.schema.json", "utf8"));
     const p = row.payload;
@@ -108,11 +109,11 @@ describe("P2.4 atomic approval", () => {
       version: 1,
       workspaceMode: "demo",
       requestId: res.headers.get("x-request-id"),
-      data: { decision: "approved" },
+      data: { decision: "approved", queue: expect.any(String) },
     });
     expect(p.data.caseRef).toMatch(/^CASE-[0-9A-F]{8}$/);
     expect(row.payload_ref).toBe(p.data.caseRef);
-    expect(Object.keys(p.data).sort()).toEqual(["caseRef", "decision"]);
+    expect(Object.keys(p.data).sort()).toEqual(["caseRef", "decision", "queue"]);
     expect(JSON.stringify(p)).not.toContain(res.json.case.id);
   });
 

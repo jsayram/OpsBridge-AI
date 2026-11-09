@@ -6,7 +6,10 @@ import type { Client } from "../db";
 import { inWorkspaceTx, withClient, withWorkspace } from "../db";
 import type { AppEnv } from "../env";
 import { ApiError, invalidRequest, notFound } from "../http/errors";
-import { canonicalId } from "../http/validate";
+import { canonicalId, optionalText, readStrictJson, requireText } from "../http/validate";
+import { dispatchDue } from "../jobs/dispatch";
+import { sheetConfig } from "../integrations/sinks";
+import { automationStatus, confirmRun, retryRun, setPause } from "../repo/automations";
 import {
   beginAuthorize,
   completeAuthorize,
@@ -156,4 +159,65 @@ admin.post("/integrations/:id/disconnect", async (c) => {
     return disconnect(db, ctx, config, row);
   });
   return c.json(out);
+});
+
+// P4.3 and P4.4: the owner's automation controls. The Sheet bridge claim stays Pending Owner
+// Credentials until a real sheet and Zap have run (DEC-008); the double never counts.
+admin.get("/automations", async (c) => {
+  const actor = c.get("actor") as OwnerActor;
+  const config = sheetConfig(c.env);
+  const status = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    automationStatus(db),
+  );
+  return c.json({
+    ...status,
+    sheetBridge: {
+      configured: config !== null,
+      testDouble: config?.double ?? false,
+      claim: "Pending Owner Credentials",
+    },
+    zapier: { claim: "Pending Owner Configuration", webhook: "Disabled, needs separate approval" },
+  });
+});
+
+admin.post("/automations/pause", async (c) => {
+  const actor = c.get("actor") as OwnerActor;
+  const body = await readStrictJson(c, ["paused", "reason"]);
+  if (typeof body.paused !== "boolean") throw invalidRequest("Bad paused");
+  const paused = body.paused;
+  const reason = paused
+    ? requireText(body.reason, "Reason", 300)
+    : optionalText(body.reason, "Reason", 300);
+  const out = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    setPause(commandContext(db, actor, c.get("requestId")), paused, reason ?? null),
+  );
+  return c.json(out);
+});
+
+admin.post("/automations/runs/:id/retry", async (c) => {
+  const actor = c.get("actor") as OwnerActor;
+  const id = canonicalId(c.req.param("id"));
+  const out = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    retryRun(commandContext(db, actor, c.get("requestId")), id),
+  );
+  return c.json(out);
+});
+
+admin.post("/automations/runs/:id/confirm", async (c) => {
+  const actor = c.get("actor") as OwnerActor;
+  const id = canonicalId(c.req.param("id"));
+  const body = await readStrictJson(c, ["evidenceRef"]);
+  const evidenceRef = requireText(body.evidenceRef, "Evidence reference", 200);
+  if (/[\s<>"'`]/.test(evidenceRef)) throw invalidRequest("Evidence reference must be one token");
+  const out = await withWorkspace(c.env.HYPERDRIVE, actor.workspaceId, (db) =>
+    confirmRun(commandContext(db, actor, c.get("requestId")), id, evidenceRef),
+  );
+  return c.json(out);
+});
+
+// Run one bounded dispatch pass for the owner's workspace now, instead of waiting for the sweep.
+admin.post("/automations/dispatch", async (c) => {
+  const actor = c.get("actor") as OwnerActor;
+  const out = await dispatchDue(c.env, { workspaceId: actor.workspaceId });
+  return c.json({ dispatched: out.length, items: out });
 });

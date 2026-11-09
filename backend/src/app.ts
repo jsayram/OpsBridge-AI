@@ -9,7 +9,9 @@ import { ApiError, databaseError, errorBody, notFound } from "./http/errors";
 import { log } from "./http/log";
 import { noStore, originCheck, rateLimit, requestContext } from "./http/middleware";
 import { admin } from "./routes/admin";
+import { dispatchAfterCommit } from "./jobs/afterCommit";
 import { approvals } from "./routes/approvals";
+import { automations } from "./routes/automations";
 import { cases } from "./routes/cases";
 import { demo } from "./routes/demo";
 import { directory } from "./routes/directory";
@@ -69,6 +71,8 @@ app.use(
   }),
 );
 
+// P4.2: dispatch right after a command commits. The cron sweep catches anything this misses.
+app.use("/api/v1/*", dispatchAfterCommit);
 app.use("/api/v1/admin/*", ownerGate);
 app.route("/api/v1/admin", admin);
 app.route("/api/v1/demo", demo);
@@ -77,6 +81,7 @@ app.route("/api/v1/approvals", approvals);
 app.route("/api/v1/reconciliation", reconciliation);
 app.route("/api/v1/integrations", integrations);
 app.route("/api/v1/inventory", inventory);
+app.route("/api/v1/automations", automations);
 app.route("/api/v1", directory);
 app.route("/api/v1", me);
 

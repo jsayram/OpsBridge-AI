@@ -94,6 +94,7 @@ async function afterTransition(
   caseType: string,
   newVersion: number,
   title: string,
+  queue: string,
 ) {
   const ref = await caseRef(id);
   if (to === "Ready") {
@@ -111,13 +112,18 @@ async function afterTransition(
     );
   }
   if (from === "Draft" && to === "Intake") {
-    await emitEvent(ctx, "case.created", `case:${id}:created`, ref, { caseRef: ref, caseType });
+    await emitEvent(ctx, "case.created", `case:${id}:created`, ref, {
+      caseRef: ref,
+      caseType,
+      queue,
+    });
   }
   if (to === "Needs Review") {
     const reason = from === "Closed" ? "reopened" : from === "Ready" ? "returned" : "intake";
     await emitEvent(ctx, "case.needs_review", `case:${id}:review:${newVersion}`, ref, {
       caseRef: ref,
       reason,
+      queue,
     });
   }
 }
@@ -165,7 +171,7 @@ export async function createCase(ctx: CommandContext, input: NewCase) {
   const created = (await findCase(ctx.db, ctx.workspaceId, false, id)) as Row;
   await writeAudit(ctx, "case.created", id, { after: caseDto(created), summary: `${status}` });
   if (!input.draft) {
-    await afterTransition(ctx, id, "Draft", "Intake", input.caseType, 1, input.title);
+    await afterTransition(ctx, id, "Draft", "Intake", input.caseType, 1, input.title, input.queue);
   }
   return caseDto(created);
 }
@@ -220,6 +226,7 @@ export async function updateCase(
       before.case_type as string,
       updated.rows[0].version,
       title,
+      before.queue as string,
     );
   }
   const after = (await findCase(ctx.db, ctx.workspaceId, false, id)) as Row;
@@ -256,6 +263,7 @@ export async function reopenCase(
     before.case_type as string,
     updated.rows[0].version,
     before.title as string,
+    before.queue as string,
   );
   const after = (await findCase(ctx.db, ctx.workspaceId, false, id)) as Row;
   await writeAudit(ctx, "case.reopened", id, {
@@ -457,6 +465,7 @@ export async function decideApproval(
   await emitEvent(ctx, "approval.completed", `approval:${approvalId}`, ref, {
     caseRef: ref,
     decision: status,
+    queue: before.queue as string,
   });
   if (to === "Needs Review") {
     await emitEvent(
@@ -464,7 +473,7 @@ export async function decideApproval(
       "case.needs_review",
       `case:${caseId}:review:${updated.rows[0].version}`,
       ref,
-      { caseRef: ref, reason: "returned" },
+      { caseRef: ref, reason: "returned", queue: before.queue as string },
     );
   }
   return { approvalId, status, case: caseDto(after) };

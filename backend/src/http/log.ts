@@ -13,6 +13,11 @@ type LogFields = {
   errorName?: string;
   dbCode?: string;
   purged?: number;
+  // Outbox dispatch. Codes and states only, never payloads or provider text.
+  outcome?: string;
+  sink?: string;
+  attempt?: number;
+  dispatched?: number;
 };
 
 export function log(fields: LogFields): void {

@@ -18,6 +18,8 @@ export type Capability =
   | "integrations:recover"
   | "integrations:live"
   | "inventory:read"
+  | "automations:read"
+  | "automations:manage"
   | "demo:reset"
   | "demo:switch_role"
   | "admin:access";
@@ -27,6 +29,7 @@ const GUEST_BASE: readonly Capability[] = [
   "reconciliation:read",
   "integrations:read",
   "inventory:read",
+  "automations:read",
   "demo:reset",
   "demo:switch_role",
 ];
@@ -51,6 +54,7 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "reconciliation:resolve",
     "integrations:sync_simulated",
     "integrations:recover",
+    "automations:manage",
   ],
 };
 
@@ -69,6 +73,8 @@ const OWNER: readonly Capability[] = [
   "integrations:recover",
   "integrations:live",
   "inventory:read",
+  "automations:read",
+  "automations:manage",
   "admin:access",
 ];
 

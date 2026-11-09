@@ -6,10 +6,16 @@ export type EventType =
   | "reconciliation.resolved"
   | "integration.degraded";
 
+// `queue` is the fictional team that owns the case. Rules use it to scope one typed workflow to a
+// team (JOB-TEST-06); it names no person.
 export type EventData = {
-  "case.created": { caseRef: string; caseType: string };
-  "case.needs_review": { caseRef: string; reason: "intake" | "returned" | "reopened" };
-  "approval.completed": { caseRef: string; decision: "approved" | "rejected" };
+  "case.created": { caseRef: string; caseType: string; queue: string };
+  "case.needs_review": {
+    caseRef: string;
+    reason: "intake" | "returned" | "reopened";
+    queue: string;
+  };
+  "approval.completed": { caseRef: string; decision: "approved" | "rejected"; queue: string };
   "reconciliation.resolved": { findingRef: string; kind: string };
   "integration.degraded": { provider: string; status: "degraded" };
 };

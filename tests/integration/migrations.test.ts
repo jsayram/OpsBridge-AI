@@ -119,6 +119,8 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:assignees:SELECT",
       "opsbridge_app:audit_events:INSERT",
       "opsbridge_app:audit_events:SELECT",
+      "opsbridge_app:automation_control:SELECT",
+      "opsbridge_app:automation_effects:SELECT",
       "opsbridge_app:case_checklist_items:INSERT",
       "opsbridge_app:case_checklist_items:SELECT",
       "opsbridge_app:case_checklist_items:UPDATE",
@@ -157,6 +159,7 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:oauth_states:UPDATE",
       "opsbridge_app:outbox:INSERT",
       "opsbridge_app:outbox:SELECT",
+      "opsbridge_app:outbox_attempts:SELECT",
       "opsbridge_app:reconciliation_findings:INSERT",
       "opsbridge_app:reconciliation_findings:SELECT",
       "opsbridge_app:reconciliation_findings:UPDATE",
@@ -168,7 +171,9 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:sync_runs:INSERT",
       "opsbridge_app:sync_runs:SELECT",
       "opsbridge_app:sync_runs:UPDATE",
+      "opsbridge_app:workflow_rules:INSERT",
       "opsbridge_app:workflow_rules:SELECT",
+      "opsbridge_app:workflow_rules:UPDATE",
       "opsbridge_app:workspaces:SELECT",
     ]);
   });

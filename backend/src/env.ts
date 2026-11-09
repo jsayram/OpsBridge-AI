@@ -26,6 +26,11 @@ export type Bindings = {
   TOKEN_ENCRYPTION_KEY?: string;
   // In-process test double. Worker variables are strings, so a deployed Worker can't set one.
   SALESFORCE_TEST_DOUBLE?: Transport;
+  // Owner-only Google Sheet bridge (PRD 9.2 Mode A). Off unless every value is present.
+  SHEETS_ENABLED?: string;
+  SHEET_ID?: string;
+  GOOGLE_SA_KEY?: string;
+  SHEETS_TEST_DOUBLE?: Transport;
 };
 
 export type Variables = {

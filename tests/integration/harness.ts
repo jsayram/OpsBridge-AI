@@ -104,6 +104,9 @@ export async function call(path: string, options: CallOptions = {}) {
   }
   const hasBody = options.body !== undefined || options.rawBody !== undefined;
   if (hasBody && !headers.has("content-type")) headers.set("content-type", "application/json");
+  // Work handed to waitUntil (after-commit dispatch) finishes before the call returns, so a test
+  // sees a settled state. A deployed Worker runs it after the response instead.
+  const background: Promise<unknown>[] = [];
   const res = await app.fetch(
     new Request(`${options.base ?? ORIGIN}${path}`, {
       method,
@@ -111,9 +114,15 @@ export async function call(path: string, options: CallOptions = {}) {
       ...(hasBody ? { body: options.rawBody ?? JSON.stringify(options.body) } : {}),
     }),
     { ...baseEnv(), ...options.env },
-    { waitUntil() {}, passThroughOnException() {} } as never,
+    {
+      waitUntil(p: Promise<unknown>) {
+        background.push(p);
+      },
+      passThroughOnException() {},
+    } as never,
   );
   const text = await res.text();
+  await Promise.allSettled(background);
   let json: Record<string, never> = {} as never;
   try {
     json = JSON.parse(text);

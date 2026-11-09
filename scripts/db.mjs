@@ -13,6 +13,7 @@ import pg from "pg";
 import {
   buildTemplate,
   OWNER_ASSIGNEE_ID,
+  OWNER_RULE_ID,
   OWNER_CASE_ID,
   OWNER_CUSTOMER_ID,
   OWNER_WORKSPACE_ID,
@@ -180,6 +181,18 @@ export async function seed(url) {
       },
     ]);
     await insertRows(c, "case_checklist_items", OWNER_WORKSPACE_ID, t.ownerChecklist);
+    // The owner's one live-capable rule. It reaches the Sheet bridge only when that is configured;
+    // until then its events finish as Simulated (P4-C Pending Owner Credentials).
+    await insertRows(c, "workflow_rules", OWNER_WORKSPACE_ID, [
+      {
+        id: OWNER_RULE_ID,
+        name: "Append approved owner cases to the test sheet",
+        trigger_event: "approval.completed",
+        condition: JSON.stringify({ decision: "approved" }),
+        action: "sheet_append",
+        updated_at: manifest.clock,
+      },
+    ]);
     // Simulators stay available to the owner beside any live connection. Their clock starts now.
     for (const provider of ["crm_simulator", "erp_simulator", "inventory_simulator"]) {
       await c.query(
