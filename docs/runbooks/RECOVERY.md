@@ -1,6 +1,6 @@
 # Recovery
 
-Local only. Hosted backup and restore (Neon point-in-time, R2) is unproven and stays with P7.3. Everything here runs against Docker Postgres with synthetic data.
+Local only. Hosted backup and restore (Neon point-in-time, R2) is unproven: it needs the DEC-002 accounts and is on the release-readiness list in `docs/reports/P7.md`. Everything here runs against Docker Postgres with synthetic data.
 
 ## From a backup
 
@@ -10,6 +10,10 @@ Local only. Hosted backup and restore (Neon point-in-time, R2) is unproven and s
 4. Run `scripts/restore-proof.sh <source-db>`. It does steps 1 and 2 into `<source-db>_restore`, then compares every table's rows and checks RLS flags, policies, grants, triggers and the audit guard on the restored copy, and drops it. It stops with a non-zero exit on any mismatch.
 
 Migrations are recorded in `ops.schema_migrations` and travel with the dump, so `node scripts/db.mjs migrate` afterward finds nothing pending or applies only what's newer.
+
+## Restore drill
+
+`node scripts/restore-drill.mjs [db]` is the full local drill (P7.3, E2E-23 local half): back up a disposable `*_test` database, damage it as a bad release would, restore the backup into a new database, prove every table equals the backup point and differs from the damaged source, then start the real Worker on the restored copy and run the smoke test. On 2026-11-09, on a database at `0011` with 1,984 rows: backup 235 ms, restore 377 ms, Worker ready and smoke passed in about 1.9 s. `docs/evidence/P7.3/restore-drill.txt`. Local timings say nothing about Neon.
 
 ## From the seed
 
