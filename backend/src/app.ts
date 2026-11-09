@@ -9,6 +9,7 @@ import { ApiError, databaseError, errorBody, notFound } from "./http/errors";
 import { log } from "./http/log";
 import { noStore, originCheck, rateLimit, requestContext } from "./http/middleware";
 import { admin } from "./routes/admin";
+import { analytics, reports } from "./routes/analytics";
 import { dispatchAfterCommit } from "./jobs/afterCommit";
 import { approvals } from "./routes/approvals";
 import { automations } from "./routes/automations";
@@ -86,6 +87,8 @@ app.route("/api/v1/reconciliation", reconciliation);
 app.route("/api/v1/integrations", integrations);
 app.route("/api/v1/inventory", inventory);
 app.route("/api/v1/automations", automations);
+app.route("/api/v1/analytics", analytics);
+app.route("/api/v1/reports", reports);
 app.route("/api/v1", directory);
 app.route("/api/v1", me);
 

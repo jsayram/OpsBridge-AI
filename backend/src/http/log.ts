@@ -18,6 +18,8 @@ type LogFields = {
   sink?: string;
   attempt?: number;
   dispatched?: number;
+  // P6.3 export: a row count only, never the filters or the rows.
+  rows?: number;
 };
 
 export function log(fields: LogFields): void {

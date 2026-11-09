@@ -27,7 +27,10 @@ export type Capability =
   | "documents:upload"
   | "ai:request"
   | "ai:live"
-  | "ai:decide";
+  | "ai:decide"
+  | "analytics:read"
+  | "analytics:snapshot"
+  | "reports:export";
 
 const GUEST_BASE: readonly Capability[] = [
   "cases:read",
@@ -35,6 +38,7 @@ const GUEST_BASE: readonly Capability[] = [
   "integrations:read",
   "inventory:read",
   "automations:read",
+  "analytics:read",
   "demo:reset",
   "demo:switch_role",
 ];
@@ -49,6 +53,7 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "integrations:sync_simulated",
     "documents:attach",
     "ai:request",
+    "reports:export",
   ],
   manager: [
     ...GUEST_BASE,
@@ -65,6 +70,8 @@ const GUEST: Readonly<Record<DemoRole, readonly Capability[]>> = {
     "documents:attach",
     "ai:request",
     "ai:decide",
+    "analytics:snapshot",
+    "reports:export",
   ],
 };
 
@@ -91,6 +98,9 @@ const OWNER: readonly Capability[] = [
   "ai:request",
   "ai:live",
   "ai:decide",
+  "analytics:read",
+  "analytics:snapshot",
+  "reports:export",
 ];
 
 export const guestCapabilities = (role: DemoRole) => GUEST[role];

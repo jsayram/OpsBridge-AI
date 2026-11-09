@@ -555,6 +555,40 @@ export function buildTemplate(manifest) {
     occurred_at: at(-i),
   }));
 
+  // P6.1: a fixed 90-day synthetic trend per metric, labeled SYNTHETIC. The last day equals what
+  // the template's own rows count today, so the history ends where the live metric starts.
+  const isOpenFinding = (f) => !["Resolved", "Dismissed"].includes(f.status);
+  const ends = {
+    open_cases: cases.filter((c) => ["Intake", "Needs Review", "Ready"].includes(c.status)).length,
+    completed_cases: cases.filter((c) => ["Approved", "Closed"].includes(c.status)).length,
+    review_queue: cases.filter((c) => c.status === "Needs Review").length,
+    open_findings: findings.filter(isOpenFinding).length,
+    automation_failed: manifest.template.automationEvents.byLabel.Failed ?? 0,
+  };
+  // Per day before the last: how much higher the value was. Negative means it grew over time.
+  const SLOPES = {
+    open_cases: 0.12,
+    completed_cases: -0.35,
+    review_queue: 0.05,
+    open_findings: 0.04,
+    automation_failed: -0.02,
+  };
+  const days = manifest.template.snapshotDays;
+  const metric_snapshots = Object.entries(ends).flatMap(([metric_key, end]) =>
+    Array.from({ length: days }, (_, i) => {
+      const back = days - 1 - i;
+      const wobble = back === 0 ? 0 : ((i * 7) % 5) - 2;
+      return {
+        period: at(-back).slice(0, 10),
+        metric_key,
+        numerator: Math.max(0, end + Math.round(back * SLOPES[metric_key]) + wobble),
+        provenance: "SYNTHETIC",
+        definition_version: "metrics-1",
+        captured_at: at(-back),
+      };
+    }),
+  );
+
   // Every case carries a checklist, so none reaches Ready on an empty list.
   const ownerChecklist = [
     ["client_contact_confirmed", "Client contact confirmed"],
@@ -588,6 +622,7 @@ export function buildTemplate(manifest) {
     source_definition_mappings,
     outbox,
     activity,
+    metric_snapshots,
   };
 }
 

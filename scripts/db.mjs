@@ -182,6 +182,7 @@ export async function seed(url) {
       ["contacts", t.contacts],
       ["source_definition_mappings", t.source_definition_mappings],
       ["outbox", t.outbox],
+      ["metric_snapshots", t.metric_snapshots],
     ];
     for (const [table, rows] of tables) await insertRows(c, table, TEMPLATE_WORKSPACE_ID, rows);
     // 0008 added this key NOT VALID, before the library existed. Every row now has its fixture.
