@@ -44,6 +44,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P6:** Local run on `phase/p6-analytics` from `57d0166`, waiting for coordinator review. P6-A to P6-G are met locally on Docker Postgres and workerd. P6-E is met for keyboard, axe and the accessibility tree; no VoiceOver or Safari run happened, and both carry to P7.4. P6 has no live-account criterion of its own; P5.3, P4-C, P3-D and P1-E stay pending under DEC-008. Every ROI figure is labeled illustrative. An independent AI review found no High, four Medium and eight Low; all fixed with tests or labels. Owner Accepted stays empty. Nothing from P6 is pushed, merged or deployed.
 
+**P6:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `41c6668`, after the master reran `npm run ci:local`. P6-A, B, C, D, F and G are met locally. P6-E is met for keyboard, axe and the accessibility tree only; Safari and screen-reader runs carry to P7.4. Every ROI figure is labeled illustrative. P6 paused once at the usage limit and resumed from `fabb5f4`. Owner Accepted stays empty. Nothing from P6 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
