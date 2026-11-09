@@ -40,6 +40,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P5:** Local run on `phase/p5-ai-review` from `18f63e4`, waiting for coordinator review. DEC-003 closed as "Stay free, fixtures only", so P5.1 is a fixture document lifecycle with no hosted upload. P5-A to P5-F are met locally in fixture mode on Docker Postgres and workerd. **P5.3 is Pending Owner Credentials** under the DEC-008 standing deferral: the live gateway is built and tested against a labeled in-process double, and no provider was contacted. The 40-document evaluation reports fixture results, not live-model accuracy. Owner Accepted stays empty. Nothing from P5 is pushed, merged or deployed.
 
+**P5:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `e2defce`, after the master reran `npm run ci:local`. P5-A to P5-F are met locally in fixture mode, and the evaluation results are fixture results, not live-model accuracy. Live AI (P5.3) is Pending Owner Credentials under DEC-008. DEC-003 is applied, so there is no hosted upload. The OpenAPI lint was not run, and one P3 purge-list test failed once and did not repeat; both carry to P7. Owner Accepted stays empty. Nothing from P5 is pushed, merged or deployed.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
