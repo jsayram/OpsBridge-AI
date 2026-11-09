@@ -23,7 +23,8 @@
   },
   "hyperdrive": [
     { "binding": "HYPERDRIVE", "id": "REPLACE_APP_HYPERDRIVE_ID" },
-    { "binding": "HYPERDRIVE_CLEANUP", "id": "REPLACE_CLEANUP_HYPERDRIVE_ID" }
+    { "binding": "HYPERDRIVE_CLEANUP", "id": "REPLACE_CLEANUP_HYPERDRIVE_ID" },
+    { "binding": "HYPERDRIVE_DISPATCH", "id": "REPLACE_DISPATCH_HYPERDRIVE_ID" }
   ],
   "ratelimits": [
     {

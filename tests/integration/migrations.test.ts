@@ -74,10 +74,11 @@ describe("roles match PRD 7.4", () => {
     const c = await connect("opsbridge_migrator");
     const { rows } = await c.query(
       `SELECT rolname, rolsuper, rolcreaterole, rolcreatedb, rolbypassrls FROM pg_roles
-        WHERE rolname IN ('opsbridge_migrator','opsbridge_app','opsbridge_cleanup') ORDER BY 1`,
+        WHERE rolname IN ('opsbridge_migrator','opsbridge_app','opsbridge_cleanup',
+          'opsbridge_dispatcher') ORDER BY 1`,
     );
     await c.end();
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(4);
     for (const r of rows) {
       expect([r.rolsuper, r.rolcreaterole, r.rolcreatedb, r.rolbypassrls]).toEqual([
         false,
@@ -107,7 +108,8 @@ describe("roles match PRD 7.4", () => {
     const c = await connect("opsbridge_migrator");
     const { rows } = await c.query(
       `SELECT grantee, table_name, privilege_type FROM information_schema.role_table_grants
-        WHERE table_schema = 'app' AND grantee IN ('opsbridge_app','opsbridge_cleanup', 'PUBLIC')
+        WHERE table_schema = 'app' AND grantee IN ('opsbridge_app','opsbridge_cleanup',
+          'opsbridge_dispatcher', 'PUBLIC')
         ORDER BY 1, 2, 3`,
     );
     await c.end();
@@ -186,17 +188,19 @@ describe("roles match PRD 7.4", () => {
       "opsbridge_app:workflow_rules:SELECT",
       "opsbridge_app:workflow_rules:UPDATE",
       "opsbridge_app:workspaces:SELECT",
+      "opsbridge_dispatcher:workflow_rules:SELECT",
     ]);
   });
 
   it("runtime roles carry statement timeouts", async () => {
     const c = await connect("opsbridge_migrator");
     const { rows } = await c.query(
-      "SELECT rolname, rolconfig FROM pg_roles WHERE rolname IN ('opsbridge_app','opsbridge_cleanup') ORDER BY 1",
+      "SELECT rolname, rolconfig FROM pg_roles WHERE rolname IN ('opsbridge_app','opsbridge_cleanup','opsbridge_dispatcher') ORDER BY 1",
     );
     await c.end();
     expect(rows[0].rolconfig).toContain("statement_timeout=5s");
     expect(rows[1].rolconfig).toContain("statement_timeout=30s");
+    expect(rows[2].rolconfig).toContain("statement_timeout=5s");
   });
 
   it("every definer function pins search_path", async () => {

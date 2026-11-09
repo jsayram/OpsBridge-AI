@@ -50,7 +50,12 @@ export async function setupLocal(db, { recreate = false } = {}) {
   const dbAdmin = await connect(localUrl("opsbridge_admin", db));
   try {
     await dbAdmin.query(readFileSync(join(root, "infra/db/bootstrap-roles.sql"), "utf8"));
-    for (const role of ["opsbridge_migrator", "opsbridge_app", "opsbridge_cleanup"]) {
+    for (const role of [
+      "opsbridge_migrator",
+      "opsbridge_app",
+      "opsbridge_cleanup",
+      "opsbridge_dispatcher",
+    ]) {
       await dbAdmin.query(`ALTER ROLE ${role} LOGIN PASSWORD '${LOCAL.password}'`);
     }
   } finally {

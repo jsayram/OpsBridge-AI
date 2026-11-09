@@ -41,12 +41,16 @@ for (const path of ["/api/*", "/health/*", "/admin", "/admin/*"]) {
 need(config.triggers?.crons?.includes("*/30 * * * *"), "the purge cron is missing");
 const hd = config.hyperdrive ?? [];
 const id = (name) => hd.find((h) => h.binding === name)?.id;
-need(id("HYPERDRIVE") && id("HYPERDRIVE_CLEANUP"), "both Hyperdrive bindings are required");
+const roles = ["HYPERDRIVE", "HYPERDRIVE_CLEANUP", "HYPERDRIVE_DISPATCH"];
 need(
-  id("HYPERDRIVE") !== id("HYPERDRIVE_CLEANUP"),
-  "app and cleanup need separate Hyperdrive configs",
+  roles.every((r) => id(r)),
+  "all three Hyperdrive bindings are required",
 );
-need(!hd.some((h) => /^0+[12]$/.test(h.id ?? "")), "placeholder Hyperdrive ID");
+need(
+  new Set(roles.map(id)).size === roles.length,
+  "app, cleanup and dispatcher need separate Hyperdrive configs",
+);
+need(!hd.some((h) => /^0+[123]$/.test(h.id ?? "")), "placeholder Hyperdrive ID");
 need(
   config.ratelimits?.some((r) => r.name === "API_RATE_LIMITER"),
   "rate limiter binding is missing",

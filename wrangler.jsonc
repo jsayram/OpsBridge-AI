@@ -24,6 +24,11 @@
       "binding": "HYPERDRIVE_CLEANUP",
       "id": "00000000000000000000000000000002",
       "localConnectionString": "postgres://opsbridge_cleanup:local_dev_only@127.0.0.1:54330/opsbridge_dev?sslmode=disable"
+    },
+    {
+      "binding": "HYPERDRIVE_DISPATCH",
+      "id": "00000000000000000000000000000003",
+      "localConnectionString": "postgres://opsbridge_dispatcher:local_dev_only@127.0.0.1:54330/opsbridge_dev?sslmode=disable"
     }
   ],
   "ratelimits": [

@@ -143,7 +143,7 @@ export async function dispatchDue(
   options: { workspaceId?: string; max?: number } = {},
 ): Promise<Outcome[]> {
   try {
-    return await withClient(env.HYPERDRIVE, async (db) => {
+    return await withClient(env.HYPERDRIVE_DISPATCH, async (db) => {
       const out: Outcome[] = [];
       for (const claim of await claimDue(db, options.max ?? MAX_PER_TICK, options.workspaceId)) {
         try {

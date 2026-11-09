@@ -16,6 +16,7 @@ const good = () => ({
   hyperdrive: [
     { binding: "HYPERDRIVE", id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
     { binding: "HYPERDRIVE_CLEANUP", id: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+    { binding: "HYPERDRIVE_DISPATCH", id: "cccccccccccccccccccccccccccccccc" },
   ],
   ratelimits: [{ name: "API_RATE_LIMITER" }],
   triggers: { crons: ["*/30 * * * *"] },
@@ -74,6 +75,18 @@ describe("release config gate", () => {
       "shared Hyperdrive",
       (c) => {
         c.hyperdrive[1].id = c.hyperdrive[0].id;
+      },
+    ],
+    [
+      "dispatcher shares the request role's Hyperdrive",
+      (c) => {
+        c.hyperdrive[2].id = c.hyperdrive[0].id;
+      },
+    ],
+    [
+      "no dispatcher binding",
+      (c) => {
+        c.hyperdrive.pop();
       },
     ],
     [

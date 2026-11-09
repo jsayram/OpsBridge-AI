@@ -80,6 +80,7 @@ export const baseEnv = (): Bindings => ({
   ASSETS: { fetch: async () => new Response("<!doctype html>spa", { status: 200 }) } as never,
   HYPERDRIVE: { connectionString: url("opsbridge_app") } as never,
   HYPERDRIVE_CLEANUP: { connectionString: url("opsbridge_cleanup") } as never,
+  HYPERDRIVE_DISPATCH: { connectionString: url("opsbridge_dispatcher") } as never,
   ENVIRONMENT: "local",
   IP_HASH_KEY: "integration-test-key",
 });

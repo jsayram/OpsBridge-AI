@@ -73,7 +73,7 @@ describe("P4.2 claims and leases", () => {
   it("a crash between delivery and acknowledgement is repaired by the next claim, with one row (check-before-append)", async () => {
     const id = await ownerEvent();
     const env = envWith(dbl.env);
-    await withClient(env.HYPERDRIVE, async (db) => {
+    await withClient(env.HYPERDRIVE_DISPATCH, async (db) => {
       const claim = (await claimDue(db, 10, OWNER)).find((c) => c.id === id);
       expect(claim).toBeDefined();
       if (!claim) return;
@@ -115,7 +115,7 @@ describe("P4.2 claims and leases", () => {
       queue: "Field Services",
     });
     const env = envWith();
-    await withClient(env.HYPERDRIVE, async (db) => {
+    await withClient(env.HYPERDRIVE_DISPATCH, async (db) => {
       const [first] = await claimDue(db, 1, g.workspaceId);
       if (!first) throw new Error("no claim");
       await expireLease(g.workspaceId, id);
@@ -312,9 +312,10 @@ describe("P4.3 the bridge stays off until configured", () => {
 });
 
 describe("independent review fixes (P4 review M1, L1)", () => {
-  // Called as the runtime role with no workspace context, as SQL misuse in the request path would.
-  async function asApp<T>(fn: (c: Awaited<ReturnType<typeof connect>>) => Promise<T>) {
-    const c = await connect("opsbridge_app");
+  // Called as the dispatcher role with no workspace context, as SQL misuse would. Since P7.1 the
+  // request role can't call these functions at all (D-076, tested below).
+  async function asDispatcher<T>(fn: (c: Awaited<ReturnType<typeof connect>>) => Promise<T>) {
+    const c = await connect("opsbridge_dispatcher");
     try {
       return await fn(c);
     } finally {
@@ -333,7 +334,7 @@ describe("independent review fixes (P4 review M1, L1)", () => {
       )
     ).rows[0];
     await mig.end();
-    await asApp(async (c) => {
+    await asDispatcher(async (c) => {
       const [claim] = (await c.query("SELECT * FROM app.claim_due_outbox(1, $1)", [g.workspaceId]))
         .rows;
       const fin = (outcome: string, sink: string, effects: unknown[]) =>
@@ -379,7 +380,7 @@ describe("independent review fixes (P4 review M1, L1)", () => {
 
   it("an owner event can't be marked Accepted without a live sink", async () => {
     const id = await ownerEvent();
-    await asApp(async (c) => {
+    await asDispatcher(async (c) => {
       const [claim] = (
         await c.query("SELECT * FROM app.claim_due_outbox(10, $1)", [OWNER])
       ).rows.filter((r) => r.id === id);
@@ -390,6 +391,50 @@ describe("independent review fixes (P4 review M1, L1)", () => {
         ),
       ).rejects.toThrow(/live sink/);
     });
+  });
+
+  it("the request role can no longer claim or finish an event (P7.1, D-076)", async () => {
+    const id = await ownerEvent();
+    const app = await connect("opsbridge_app");
+    try {
+      await expect(
+        app.query("SELECT * FROM app.claim_due_outbox(10, $1)", [OWNER]),
+      ).rejects.toThrow(/permission denied/);
+      await expect(
+        app.query(
+          "SELECT app.finish_outbox($1, $2, gen_random_uuid(), 'simulated', NULL, NULL, NULL, 'simulated', '[]')",
+          [OWNER, id],
+        ),
+      ).rejects.toThrow(/permission denied/);
+    } finally {
+      await app.end();
+    }
+    expect((await outboxRow(OWNER, id)).dispatch_state).toBe("pending");
+  });
+
+  it("the dispatcher reads only the rules of the workspace it set, and nothing else", async () => {
+    const g = await launch();
+    const d = await connect("opsbridge_dispatcher");
+    try {
+      const count = async () =>
+        (await d.query("SELECT count(*)::int AS n FROM app.workflow_rules")).rows[0].n;
+      expect(await count()).toBe(0);
+      await d.query("BEGIN");
+      await d.query("SELECT set_config('app.workspace_id', $1, true)", [g.workspaceId]);
+      const own = await d.query("SELECT DISTINCT workspace_id FROM app.workflow_rules");
+      expect(own.rows.map((r) => r.workspace_id)).toEqual([g.workspaceId]);
+      await d.query("COMMIT");
+      for (const sql of [
+        "SELECT 1 FROM app.cases",
+        "SELECT 1 FROM app.outbox",
+        "SELECT 1 FROM app.audit_events",
+        "UPDATE app.workflow_rules SET enabled = false",
+      ]) {
+        await expect(d.query(sql)).rejects.toThrow(/permission denied/);
+      }
+    } finally {
+      await d.end();
+    }
   });
 
   it("a Retry-After beyond the 1-hour backoff cap is honored", async () => {

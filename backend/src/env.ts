@@ -5,6 +5,8 @@ export type Bindings = {
   ASSETS: Fetcher;
   HYPERDRIVE: Hyperdrive;
   HYPERDRIVE_CLEANUP: Hyperdrive;
+  // The outbox dispatcher's own role (P7.1, D-076). The request role can't claim or finish events.
+  HYPERDRIVE_DISPATCH: Hyperdrive;
   API_RATE_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
   // "local", "staging" or "production". Anything missing is treated as production.
   ENVIRONMENT?: string;
