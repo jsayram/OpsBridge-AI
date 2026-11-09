@@ -64,6 +64,7 @@ Local uses a throwaway value in `.dev.vars`, copied from `.dev.vars.example`.
 |---|---|---|
 | `HYPERDRIVE` | Request path, role `opsbridge_app`, 5 s statement timeout | **Query caching must be off.** Session and owner lookups are `SELECT` calls, so a cached answer could keep a dead cookie alive |
 | `HYPERDRIVE_CLEANUP` | Cron path, role `opsbridge_cleanup`, 30 s statement timeout | Second config, caching off. Free allows 10 |
+| `HYPERDRIVE_DISPATCH` | Outbox dispatcher, role `opsbridge_dispatcher`, 5 s statement timeout (P7.1, D-076) | Third config, caching off. The only role that can claim or finish an outbox event |
 | `ASSETS` | React build | `/admin` runs the Worker first |
 | `API_RATE_LIMITER` | 120 requests a minute per hashed address, an approximate outer layer | Worked under local workerd. Availability on Workers Free is not confirmed. The app runs without it |
 | Cron `*/30 * * * *` | Purges at most 5 expired workspaces a run | Wakes Neon. No keep-warm is allowed |
@@ -78,7 +79,7 @@ Local uses a throwaway value in `.dev.vars`, copied from `.dev.vars.example`.
 
 ## Database roles
 
-`infra/db/bootstrap-roles.sql` creates the three roles from PRD 7.4 without passwords, and an administrative connection runs it once. Hosted passwords are long generated values that the owner sets at the provider. `opsbridge_app` and `opsbridge_cleanup` go into their Hyperdrive configs. `opsbridge_migrator` goes only into the release secret.
+`infra/db/bootstrap-roles.sql` creates the three roles from PRD 7.4 and the dispatcher role (D-076) without passwords, and an administrative connection runs it once, before migration `0010`. Hosted passwords are long generated values that the owner sets at the provider. `opsbridge_app`, `opsbridge_cleanup` and `opsbridge_dispatcher` go into their Hyperdrive configs. `opsbridge_migrator` goes only into the release secret.
 
 ## Before hosted work
 

@@ -9,7 +9,7 @@ Enforced server-side, deny by default. Every call authorizes actor, workspace, o
 | anonymous | None | Public pages, health, demo launch |
 | guest:viewer, guest:analyst, guest:manager | Opaque demo session | One demo workspace, plus read-only template rows. The role is stored server-side and switching it is a simulation of RBAC inside the same workspace. It can never reach owner capabilities. |
 | owner | Verified OIDC subject on the allowlist | Owner workspace and `/admin` |
-| service:dispatcher | Worker, `opsbridge_app` role, claim functions | Outbox rows only |
+| service:dispatcher | Worker, `opsbridge_dispatcher` role through its own Hyperdrive binding (P7.1, D-076) | Claims and finishes outbox events; reads the rules of the one workspace it sets; nothing else |
 | service:cleanup | Cron, `opsbridge_cleanup` role | Expired demo workspaces only |
 
 **Mapping to workflow roles:** analyst edits and proposes. Reviewer means guest:manager in a demo, or owner. Author and reviewer separation is by role in the demo, since one visitor plays both. In the owner workspace there is one human, so separation cannot be claimed there.
@@ -63,7 +63,7 @@ A = allowed, S = allowed in own workspace only, R = read-only on template rows t
 | RLS | Read: own workspace or template. Write: own workspace only, and never the template even if a bug sets it as current (`app.writable_workspace()`). Every `app` table has RLS on. |
 | Composite FKs | Child rows reference `(workspace_id, id)`, so a row can't point across workspaces. |
 | Guard trigger | `audit_events` update and delete rules. |
-| Functions | Narrow `SECURITY DEFINER` with a fixed `search_path`. Runtime: `launch_demo_session`, `resolve_demo_session`, `reset_demo_session`, `set_demo_role`, `resolve_owner`, `revoke_owner_sessions`. Cleanup: `expired_demo_workspaces`, `purge_demo_workspace`, `purge_stale_demo_quota`, `purge_expired_idempotency_keys`. Internal, granted to nobody: `create_demo_workspace`, `seed_demo_workspace`, `take_workspace_quota`. `release_deferred_findings` is cleanup-only. P4 adds, for the runtime role: `claim_due_outbox`, `finish_outbox`, and the owner-workspace-only `retry_dead_letter`, `confirm_outbox`, `set_automation_pause`, which check `current_mode()` themselves. |
+| Functions | Narrow `SECURITY DEFINER` with a fixed `search_path`. Runtime: `launch_demo_session`, `resolve_demo_session`, `reset_demo_session`, `set_demo_role`, `resolve_owner`, `revoke_owner_sessions`. Cleanup: `expired_demo_workspaces`, `purge_demo_workspace`, `purge_stale_demo_quota`, `purge_expired_idempotency_keys`. Internal, granted to nobody: `create_demo_workspace`, `seed_demo_workspace`, `take_workspace_quota`. `release_deferred_findings` is cleanup-only. P4 added `claim_due_outbox` and `finish_outbox` for the runtime role; since P7.1 (D-076) only `opsbridge_dispatcher` may call them. The runtime role keeps the owner-workspace-only `retry_dead_letter`, `confirm_outbox`, `set_automation_pause`, which check `current_mode()` themselves. |
 | Connection guards | `connection_mode_guard` refuses a live connection outside the owner workspace, and `owner_only_row` does the same for `connection_secrets` and `oauth_states`, whatever the application does. |
 
 ## Status at P3

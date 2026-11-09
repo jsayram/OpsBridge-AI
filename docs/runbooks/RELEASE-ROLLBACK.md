@@ -9,7 +9,7 @@ Run by hand from the GitHub Actions tab, from protected `main` only, against an 
 1. `ci.yml` is green on the commit.
 2. Types and unit tests run again. `scripts/check-release-config.mjs` parses the filled-in config. It refuses the test double, local connections and placeholders, and requires `/admin` to run the Worker first, the purge cron, two separate Hyperdrive configs and the rate limiter.
 3. Build, then `check:bundle`.
-4. Confirm by hand that query caching is off on both Hyperdrive configs. The smoke step's dead-cookie check would catch a miss, but only after the deploy.
+4. Confirm by hand that query caching is off on all three Hyperdrive configs. The smoke step's dead-cookie check would catch a miss, but only after the deploy.
 5. `node scripts/db.mjs migrate`, then `seed`. Both are idempotent. Migrations never run on Worker boot.
 6. `wrangler deploy` with the staging config. Migrations go first on purpose: under the rules below, the old Worker tolerates the new schema.
 7. `node scripts/smoke.mjs <origin> --allow-remote`.

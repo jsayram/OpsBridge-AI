@@ -28,6 +28,12 @@ npx wrangler hyperdrive create opsbridge-staging-app --caching-disabled --connec
 npx wrangler hyperdrive create opsbridge-staging-cleanup --caching-disabled --connection-string "<opsbridge_cleanup string>"
 ```
 
+```bash
+npx wrangler hyperdrive create opsbridge-staging-dispatch --caching-disabled --connection-string "<opsbridge_dispatcher string>"
+```
+
+The third config is the outbox dispatcher's own role (P7.1, D-076). The release config gate refuses a deploy without it or with two bindings sharing one config.
+
 Each prints an ID. IDs are not secret, so send them to the master.
 
 ## 4. Worker config and secrets
