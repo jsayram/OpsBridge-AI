@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-09 (America/New_York), end of the local P5 phase session.
+Updated: 2026-11-09 (America/New_York), end of the local P6 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -12,7 +12,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P3 Integrations/reconciliation | P3.1–P3.6 | 6 | Run locally | Simulated ingestion, reconciliation, inventory slice and an owner-only Salesforce connector on `phase/p3-integration` | Local checks passed at `6e504aa`; P3-A to P3-C and P3-E to P3-H met locally on simulated sources; P3-D Pending Owner Credentials; see `docs/reports/P3.md` | | No | No |
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Run locally | Typed rules, durable dispatcher, Sheet bridge on a labeled double and operator controls on `phase/p4-automation` | Local checks passed at `89334a1`; P4-A, B, D and E met locally; P4-C Pending Owner Credentials; see `docs/reports/P4.md` | | No | No |
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Run locally | Fixture document lifecycle, validated fixture review, owner-only live gateway on a labeled double, reviewer decisions through the checklist command, 40-document evaluation on `phase/p5-ai-review` | Local checks passed; P5-A to P5-F met locally in fixture mode; P5.3 live provider Pending Owner Credentials; see `docs/reports/P5.md` | | No | No |
-| P6 Analytics/business insight | P6.1–P6.5 | 5 | Planned | No | No | No | No | No |
+| P6 Analytics/business insight | P6.1–P6.5 | 5 | Run locally | Metric glossary and live overview, snapshots, six dashboards, bounded reports and safe CSV export, ROI calculator, executive business case on `phase/p6-analytics` | Local checks passed; P6-A to P6-G met locally, P6-E without a screen-reader run; see `docs/reports/P6.md` | | No | No |
 | P7 Hardening/recovery | P7.1–P7.5 | 5 | Planned | No | No | No | No | No |
 | P8 Demo/launch/handoff | P8.1–P8.5 | 5 | Planned | No | No | No | No | No |
 
@@ -41,6 +41,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P5:** Local run on `phase/p5-ai-review` from `18f63e4`, waiting for coordinator review. DEC-003 closed as "Stay free, fixtures only", so P5.1 is a fixture document lifecycle with no hosted upload. P5-A to P5-F are met locally in fixture mode on Docker Postgres and workerd. **P5.3 is Pending Owner Credentials** under the DEC-008 standing deferral: the live gateway is built and tested against a labeled in-process double, and no provider was contacted. The 40-document evaluation reports fixture results, not live-model accuracy. Owner Accepted stays empty. Nothing from P5 is pushed, merged or deployed.
 
 **P5:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `e2defce`, after the master reran `npm run ci:local`. P5-A to P5-F are met locally in fixture mode, and the evaluation results are fixture results, not live-model accuracy. Live AI (P5.3) is Pending Owner Credentials under DEC-008. DEC-003 is applied, so there is no hosted upload. The OpenAPI lint was not run, and one P3 purge-list test failed once and did not repeat; both carry to P7. Owner Accepted stays empty. Nothing from P5 is pushed, merged or deployed.
+
+**P6:** Local run on `phase/p6-analytics` from `57d0166`, waiting for coordinator review. P6-A to P6-G are met locally on Docker Postgres and workerd. P6-E is met for keyboard, axe and the accessibility tree; no VoiceOver or Safari run happened, and both carry to P7.4. P6 has no live-account criterion of its own; P5.3, P4-C, P3-D and P1-E stay pending under DEC-008. Every ROI figure is labeled illustrative. An independent AI review found no High, four Medium and eight Low; all fixed with tests or labels. Owner Accepted stays empty. Nothing from P6 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -78,11 +80,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P5.3 | Local run, code only | Built against a labeled double; Pending Owner Credentials | Off-unless-configured, caps, one call, 9 failure mappings, budgets in the database, fallback, no key leak, network guard; no real provider | Not reviewed | | No | No |
 | P5.4 | Local run | Done: accept, edit, reject; apply through the checklist command; review UI | Reject changes nothing, stale and invalid refused, 10 injected documents change nothing unauthorized, E2E-11 to E2E-14 in Chromium with axe | Not reviewed | | No | No |
 | P5.5 | Local run, fixture mode | Done: eval manifest, runner, report, P5 report, P6 brief | All PRD 10.4 thresholds met in fixture mode; one messy failure reported; not live-model accuracy | Not reviewed | | No | No |
-| P6.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P6.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P6.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P6.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P6.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P6.1 | Local run | Done: metric glossary, overview over the case-list scope, `metric_snapshots` (migration 0009), 90-day template history, trends, audited snapshot | Independent recount before and after case, approval and finding changes; isolation; plans at 1,001 cases, no index (D-070) | Not reviewed | | No | No |
+| P6.2 | Local run | Done: six dashboard sections, provenance badges, a table beside every chart, freshness and source labels | Each value against the API, Simulated labels, axe, aria snapshot, keyboard, E2E-20, desktop and phone; no screen-reader or Safari run | Not reviewed | | No | No |
+| P6.3 | Local run | Done: bounded report and export routes, one WHERE for table, chart and CSV, formula-safe CSV, reports page | Nine filter sets agree, F8, limits, 413 over cap, cross-workspace refusal, UTC bounds, browser download | Not reviewed | | No | No |
+| P6.4 | Local run | Done: PRD 11.2 calculator, three scenarios, sensitivity, break-even, zero-denominator handling, ROI page | Known cases and boundaries; E2E-19 desktop and phone with axe | Not reviewed | | No | No |
+| P6.5 | Local run | Done: executive business case, stakeholder walkthrough, reports, P7 brief | Business-case figures held to the calculator by test; clean-copy CI; independent review | Not reviewed | | No | No |
 | P7.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P7.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P7.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |

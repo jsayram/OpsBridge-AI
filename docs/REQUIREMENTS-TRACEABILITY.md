@@ -18,25 +18,25 @@ Classification of every posting clause, from the four-page posting re-read on 20
 | JOB-01 | Shipping production apps or integrations | Product + Real-experience | Local app with persistent workflow, `docs/reports/P2.md`; nothing shipped | Local only | P1, P2, P7, P8 |
 | JOB-02 | One modern language | Product | `backend/`, `frontend/` TypeScript scaffold | Scaffold verified locally | P0-P8 |
 | JOB-03 | REST APIs, CRM/ERP, NetSuite a plus | Product; live NetSuite stays an experience gap | `docs/design/INTEGRATION-CONTRACTS.md`, `backend/src/integrations/`, `tests/unit/erp-simulator.test.ts` | Local, simulated. ERP Simulator follows documented SuiteTalk conventions; Salesforce only against a double; no live claim | P0, P3, P7 |
-| JOB-04 | Strong SQL and data modeling | Product | `backend/migrations/`, `tests/integration/schema.test.ts`, `tests/integration/approvals.test.ts`, `docs/evidence/P2.5/query-profile.txt` | Verified locally on real Postgres, not Neon | P0, P2, P3, P6 |
+| JOB-04 | Strong SQL and data modeling | Product | `backend/migrations/`, `tests/integration/schema.test.ts`, `tests/integration/approvals.test.ts`, `docs/evidence/P2.5/query-profile.txt`, `docs/evidence/P6.1/query-plans.txt`, `tests/integration/analytics.test.ts` | Verified locally on real Postgres, not Neon | P0, P2, P3, P6 |
 | JOB-05 | Git, code review, agile | Artifact + Real-experience | Branch history, `docs/BACKLOG.md`, package reports | In use | P0-P8 |
 | JOB-06 | Leading or mentoring developers | Real-experience | Engineering standards only; no people-leadership claim | Planned | P0, P7, P8 + interview |
 | JOB-07 | AI tools in the dev workflow | Artifact | Package reports name AI work, review and checks | In use | Every package |
-| JOB-08 | Communication for non-technical people | Artifact | `docs/BUSINESS-BRIEF.md`, teach-backs in package reports | Drafted | P0, P6, P8 |
+| JOB-08 | Communication for non-technical people | Artifact | `docs/BUSINESS-BRIEF.md`, `docs/EXECUTIVE-BUSINESS-CASE.md`, `docs/STAKEHOLDER-WALKTHROUGH-P6.md`, teach-backs in package reports | Drafted; no timed demonstration or real reviewer feedback yet | P0, P6, P8 |
 | JOB-09 | Ambiguity, iterating quickly | Artifact | `DECISIONS.md`, P0.2 proofs that changed the design | In use | P0-P8 |
 | JOB-10 | Internal tools for consultant workflows | Product | Case queue, checklist, handoff and history: `frontend/src/pages/cases.tsx`, `tests/integration/workflow.test.ts`, `tests/e2e/core.spec.ts` | Verified locally; fictional workflow only | P0, P2, P3 |
 | JOB-11 | Connect an inventory platform | Product (synthetic, read-only) | `backend/src/repo/inventory.ts`, `tests/integration/inventory.test.ts` | Local, simulated, read-only | P0, P3, P6 |
-| JOB-12 | Eliminate manual workflow and reporting | Product + Artifact | `docs/BUSINESS-BRIEF.md` before/after map (assumed baseline) | Designed | P0, P3, P4, P6 |
+| JOB-12 | Eliminate manual workflow and reporting | Product + Artifact | `docs/BUSINESS-BRIEF.md` before/after map (assumed baseline), `/app/reports` self-serve report and export | Local; manual baseline still assumed, not measured | P0, P3, P4, P6 |
 | JOB-13 | Pilot generative AI | Product (small synthetic pilot) | P5: 40-document fixture set, validated fixture review with citations, human decision through the checklist command, live gateway on a labeled double, `docs/evidence/P5.5/eval-report.md` (fixture results, not live-model accuracy) | Met locally in fixture mode; live provider Pending Owner Credentials | P5, P7 |
 | JOB-14 | Documentation that outlives the author | Artifact | This repo's docs plus vault read-back | In use | Every package, P8 |
 | JOB-15 | Priorities, sprints, coaching | Artifact + Real-experience | `docs/BACKLOG.md`; coaching stays real-experience | Started | P0-P8 |
 | JOB-16 | Hiring and onboarding | Real-experience; illustrative artifacts only | None yet | Planned | P0, P8 + interview |
-| JOB-17 | Partner with ops, finance, sales, consulting | Artifact (fictional stakeholders) | `STAKEHOLDER-BRIEF.md` | Drafted, labeled hypothetical | P0, P3, P6, P8 |
+| JOB-17 | Partner with ops, finance, sales, consulting | Artifact (fictional stakeholders) | `STAKEHOLDER-BRIEF.md`, affected functions and options in `docs/EXECUTIVE-BUSINESS-CASE.md` | Drafted, labeled hypothetical | P0, P3, P6, P8 |
 | JOB-18 | Test-and-learn, reuse across teams | Product + Artifact | Second-team rule planned in fixture plan | Designed | P0, P4, P7, P8 |
 | JOB-19 | Pipelines into one trusted source | Product | `backend/src/repo/sync.ts`, `tests/integration/sync.test.ts`, `faults.test.ts` | Local, simulated | P2, P3, P7 |
 | JOB-20 | Definition mismatches ("customer") | Product | `DATA-DICTIONARY.md`, `backend/src/domain/reconcile.ts`, `tests/integration/reconciliation.test.ts` | Local, simulated. JOB-TEST-01 passes | P0, P3, P6 |
-| JOB-21 | Dashboards and self-serve reporting | Product | Overview prototype | Designed | P6, P7 |
-| JOB-22 | ROI and business cases | Product + Artifact | `docs/BUSINESS-BRIEF.md` | Planned | P6, P8 |
+| JOB-21 | Dashboards and self-serve reporting | Product | `frontend/src/pages/analytics.tsx`, `backend/src/repo/analytics.ts`, `backend/src/repo/reports.ts`, `tests/integration/analytics.test.ts`, `tests/e2e/analytics.spec.ts` | Verified locally (P6); custom React charts, not Power BI, Tableau or Looker | P6, P7 |
+| JOB-22 | ROI and business cases | Product + Artifact | `frontend/src/lib/roi.ts`, `tests/unit/roi.test.ts`, `docs/EXECUTIVE-BUSINESS-CASE.md`, `tests/unit/business-case.test.ts` | Verified locally (P6); every figure an illustrative projection | P6, P8 |
 | JOB-23 | Cloud and CI/CD | Product | `.github/workflows/`, `docs/evidence/P1.5/`, `docs/ENVIRONMENTS.md`, `docs/runbooks/` | P0 CI passed on GitHub on draft PR 1 per its check; P1 checks local only, no deploy | P0, P1, P7, P8 |
 | JOB-24 | Workflow/RPA tools | Product (Zapier) | Outbox and Mode A design | Designed | P4, P7 |
 | JOB-25 | Startup or consulting background | Real-experience | Fictional context only | Planned | P0, P8 + interview |
