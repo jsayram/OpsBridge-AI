@@ -36,6 +36,8 @@ test("E2E-11 a manager rejects a suggestion and the case doesn't change", async 
   await openOverview(page);
   await role(page, "manager");
   await openIntakeCase(page);
+  // Read only once the checklist has rendered (a WebKit run caught the race, P7.4).
+  await expect(page.locator(".check-row select").first()).toBeVisible();
   const checklistBefore = await page
     .locator(".check-row select")
     .evaluateAll((s) => s.map((e) => (e as unknown as HTMLSelectElement).value));
@@ -46,10 +48,14 @@ test("E2E-11 a manager rejects a suggestion and the case doesn't change", async 
   await page.getByLabel("Reason (optional)").fill("Wrong client on the form");
   await page.getByRole("button", { name: "Reject" }).click();
   await expect(page.getByText("Rejected. Nothing on the case changed.")).toBeVisible();
-  const checklistAfter = await page
-    .locator(".check-row select")
-    .evaluateAll((s) => s.map((e) => (e as unknown as HTMLSelectElement).value));
-  expect(checklistAfter).toEqual(checklistBefore);
+  // The case reloads after the decision, so poll until the checklist has rendered again.
+  await expect
+    .poll(() =>
+      page
+        .locator(".check-row select")
+        .evaluateAll((s) => s.map((e) => (e as unknown as HTMLSelectElement).value)),
+    )
+    .toEqual(checklistBefore);
   await expect(page.getByText(/Decided: Rejected/)).toBeVisible();
 });
 

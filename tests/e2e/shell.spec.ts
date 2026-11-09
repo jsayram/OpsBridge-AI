@@ -146,6 +146,9 @@ test.describe("states", () => {
     await openOverview(page);
     await page.goto("/app/cases");
     await page.locator("tbody tr", { hasText: "Yours" }).first().getByRole("link").click();
+    // Wait for the case to load, or the load can overwrite the typed title (P7.4, WebKit).
+    await expect(page.getByRole("heading", { name: "Next step" })).toBeVisible();
+    await expect(page.getByLabel("Title")).not.toHaveValue("");
     await page.getByLabel("Title").fill("Late edit");
     await context.clearCookies();
     await page.getByRole("button", { name: "Save title" }).click();
@@ -154,21 +157,28 @@ test.describe("states", () => {
 
   test("server error shows a request ID and Retry", async ({ page }) => {
     await openOverview(page);
-    await page.route("**/api/v1/cases?*", (route) =>
-      route.fulfill({
+    // Only the first list request fails. Unrouting raced the Retry click in WebKit (P7.4).
+    let failed = false;
+    await page.route("**/api/v1/cases?*", (route) => {
+      if (failed) return route.continue();
+      failed = true;
+      return route.fulfill({
         status: 500,
         contentType: "application/json",
+        headers: { "cache-control": "no-store" },
         body: JSON.stringify({
           code: "internal_error",
           message: "Something went wrong",
           requestId: "req-123",
         }),
-      }),
-    );
+      });
+    });
     await page.getByRole("link", { name: "Cases" }).first().click();
     await expect(page.getByText("req-123")).toBeVisible();
-    await page.unroute("**/api/v1/cases?*");
-    await page.getByRole("button", { name: "Retry" }).click();
+    await Promise.all([
+      page.waitForResponse((r) => r.url().includes("/api/v1/cases?") && r.status() === 200),
+      page.getByRole("button", { name: "Retry" }).click(),
+    ]);
     await expect(page.locator("tbody tr").first()).toBeVisible();
   });
 

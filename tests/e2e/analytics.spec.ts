@@ -112,7 +112,10 @@ test("E2E-20: after an approval the dashboard agrees with the records again", as
   await expect(page.getByText(/Recorded your values for/)).toBeVisible();
 });
 
-test("P6.3 / JOB-TEST-04: report filter, chart table and CSV agree", async ({ page }) => {
+test("P6.3 / JOB-TEST-04: report filter, chart table and CSV agree", async ({
+  page,
+  browserName,
+}) => {
   await openOverview(page);
   await page.goto("/app/reports");
   await expect(page.getByRole("heading", { name: "Reports", level: 1 })).toBeVisible();
@@ -123,11 +126,17 @@ test("P6.3 / JOB-TEST-04: report filter, chart table and CSV agree", async ({ pa
   expect(total).toBeGreaterThan(0);
   await expect(page.locator('[data-status-count="Closed"]')).toHaveText(String(total));
   await expect(page.locator('[data-status-count="Intake"]')).toHaveText("0");
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("link", { name: "Export CSV" }).click(),
-  ]);
-  const text = readFileSync((await download.path()) as string, "utf8");
+  const link = page.getByRole("link", { name: "Export CSV" });
+  let text: string;
+  if (browserName === "webkit") {
+    // WebKit fetches a download in another process that ignores ignoreHTTPSErrors, so with the
+    // local self-signed certificate the download never lands (P7.4). The same link, fetched in
+    // the page with the same session, checks the same file; the save prompt itself is unchecked.
+    text = await link.evaluate((a) => fetch((a as HTMLAnchorElement).href).then((r) => r.text()));
+  } else {
+    const [download] = await Promise.all([page.waitForEvent("download"), link.click()]);
+    text = readFileSync((await download.path()) as string, "utf8");
+  }
   const lines = text.trimEnd().split("\r\n");
   expect(lines).toHaveLength(total + 1);
   expect(lines.slice(1).every((l) => l.includes('"Closed"') && l.endsWith('"SYNTHETIC"'))).toBe(
