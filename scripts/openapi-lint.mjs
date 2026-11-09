@@ -46,8 +46,9 @@ export function lintSpec(spec) {
 
   // Every $ref resolves.
   const walk = (node, at) => {
-    if (Array.isArray(node)) node.forEach((n, i) => walk(n, `${at}/${i}`));
-    else if (node && typeof node === "object") {
+    if (Array.isArray(node)) {
+      for (const [i, n] of node.entries()) walk(n, `${at}/${i}`);
+    } else if (node && typeof node === "object") {
       if (typeof node.$ref === "string" && resolve(spec, node.$ref) === undefined) {
         bad(at, `unresolved $ref ${node.$ref}`);
       }
