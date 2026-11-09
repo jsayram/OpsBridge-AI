@@ -921,3 +921,44 @@ button.link {
   padding-left: var(--s-4);
   overflow-wrap: anywhere;
 }
+
+/* ---------- P6 analytics: provenance badges and simple charts ---------- */
+.badge.prov.synthetic {
+  color: var(--info);
+  border-color: var(--info);
+}
+.badge.prov.measured_demo {
+  color: var(--ok);
+  border-color: var(--ok);
+}
+.badge.prov.estimated {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+.badge.prov.unknown {
+  color: var(--neutral);
+  border-color: var(--neutral);
+}
+.bars {
+  max-width: 100%;
+}
+.bars .bar {
+  fill: var(--accent-fill);
+}
+.bars .bar-label,
+.bars .bar-value {
+  fill: var(--text);
+  font-size: 12px;
+}
+.trend-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.kpi h3.label {
+  margin: 0;
+  font-weight: 500;
+}
+.kpi p.value,
+.kpi p.note {
+  margin-top: 0;
+}

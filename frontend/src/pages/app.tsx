@@ -82,13 +82,7 @@ export function Overview() {
   );
 }
 
-const LATER: Record<string, { title: string; phase: string; note: string }> = {
-  analytics: {
-    title: "Analytics",
-    phase: "P6",
-    note: "Trends, source freshness and ROI with clear provenance.",
-  },
-};
+const LATER: Record<string, { title: string; phase: string; note: string }> = {};
 
 export function Later({ area }: { area: string }) {
   const page = LATER[area] ?? { title: "Not built", phase: "a later phase", note: "" };
