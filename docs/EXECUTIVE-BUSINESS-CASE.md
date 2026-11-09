@@ -65,7 +65,7 @@ Platform, automation-tool and AI costs barely move it at this size (under $15 ea
 1. Week 0: time the manual task and the review task on ten real cases each; replace the assumptions.
 2. Weeks 1 and 2: pilot with one team (Field Services) in the owner workspace; weekly review of the exception queue.
 3. Week 3: compare measured minutes against the base scenario; decide go, adjust or stop.
-4. Then: reuse the same notification rule for the second team, as already shown with Seasonal Staffing (JOB-TEST-06).
+4. Then: reuse the same notification rule for the second team, as already shown with Seasonal Staffing (JOB-TEST-06, `tests/integration/automation-rules.test.ts`, `docs/reports/P4.1.md`).
 
 No adoption, feedback or approval from real people is claimed. The stakeholders in this project are fictional personas.
 

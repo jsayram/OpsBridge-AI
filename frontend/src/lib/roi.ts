@@ -222,6 +222,7 @@ export function sensitivity(inputs: RoiInputs, change = 0.2): Sensitivity[] {
 // Shown to two significant figures: the assumptions don't support more precision than that.
 export function rough(value: number): number {
   if (value === 0) return 0;
+  if (Math.abs(value) < 10) return Number(value.toPrecision(2));
   const digits = Math.floor(Math.log10(Math.abs(value)));
   const scale = 10 ** Math.max(0, digits - 1);
   return Math.round(value / scale) * scale;

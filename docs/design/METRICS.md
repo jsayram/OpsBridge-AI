@@ -30,14 +30,14 @@ Unknown is never shown as zero.
 | completed_cases | Cases with status Approved or Closed | SYNTHETIC |
 | draft_cases | Cases with status Draft (outside the funnel denominator) | SYNTHETIC |
 | review_queue | Cases with status Needs Review | SYNTHETIC |
-| review_age_max | Whole days since creation of the oldest Needs Review case. Cases keep no time of entry to a status, so this is age since creation | SYNTHETIC |
+| review_age_max | Whole days since creation of the oldest Needs Review case. Cases keep no time of entry to a status, so this is age since creation. UNKNOWN when none is in review | SYNTHETIC or UNKNOWN |
 | overdue_open | Open cases with due date before now | SYNTHETIC |
 | open_findings (exception queue) | Findings not Resolved and not Dismissed | SYNTHETIC |
 | findings_resolved, findings_dismissed | Findings with that status | SYNTHETIC |
-| oldest_unresolved | Whole days since `detected_at` of the oldest unresolved finding | SYNTHETIC |
+| oldest_unresolved | Whole days since `detected_at` of the oldest unresolved finding; UNKNOWN when none is open | SYNTHETIC or UNKNOWN |
 | last_sync_age | Hours since the newest `last_success_at` across the scope's connections; empty if none | SYNTHETIC or UNKNOWN |
 | completion_rate | (Approved + Closed) / all non-Draft cases; empty when the denominator is 0 | SYNTHETIC |
-| funnel `reached` | Cases in a stage plus every later stage | SYNTHETIC |
+| funnel `reached` | Cases in a stage plus every later stage, Intake to Closed (Drafts are in the pulse, not the funnel) | SYNTHETIC |
 | documents, ai_reviews, ai_abstained | Document rows; review rows; reviews with an abstain reason | SYNTHETIC |
 | ai_decision_minutes | Median minutes from `requested_at` to `decided_at`, own workspace only | MEASURED_DEMO, or UNKNOWN before any decision |
 | ai_live_cost | Sum of `ai_usage.cost_micro_usd`, shown only once a configured live provider has been called | UNKNOWN today |
@@ -62,7 +62,7 @@ Live dashboard numbers never come from snapshots. Snapshots only draw the trend.
 
 | Limit | Value |
 |---|---|
-| Date range | UTC days, inclusive, at most 366; defaults to the last 366 days |
+| Date range | UTC days, inclusive, at most 366, compared as UTC whatever the database session's time zone; defaults to the last 366 days ending today (UTC). The dashboard has no date filter, so its totals can be higher than a default report |
 | Page size | 1 to 100 |
 | Deepest page | (page - 1) x limit at most 5,000 |
 | Export | At most 1,000 rows; a larger result is refused with 413 `export_too_large`, never truncated |

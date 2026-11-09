@@ -101,5 +101,9 @@ describe("P6.4 ROI arithmetic (PRD 11.2)", () => {
     expect(rough(12345)).toBe(12000);
     expect(usd(1803.67)).toBe("$1,800");
     expect(usd(-1803.67)).toBe("-$1,800");
+    // Review L11: small values keep two figures instead of rounding to $0.
+    expect(rough(0.4)).toBe(0.4);
+    expect(usd(-0.4)).toBe("-$0.4");
+    expect(rough(8.04)).toBe(8);
   });
 });

@@ -177,8 +177,12 @@ test("E2E-19: changing ROI assumptions recalculates exactly and keeps the Estima
   // A bad input stops the projection instead of showing a wrong one.
   await page.getByLabel(/Exception rate/).fill("150");
   await expect(
-    page.getByText("Fix the highlighted assumptions to see a projection."),
+    page.locator("p:not(.sr-only)", { hasText: "Fix the highlighted assumptions" }),
   ).toBeVisible();
+  // The screen-reader live line says it once, instead of re-reading every figure.
+  await expect(page.locator(".sr-only[aria-live]", { hasText: "Fix the highlighted" })).toHaveCount(
+    1,
+  );
   await page.getByRole("button", { name: "Load conservative" }).click();
   await expect(net).toHaveText(usd(calculate(SCENARIOS.conservative).netValue));
   await expectNoAxeViolations(page);

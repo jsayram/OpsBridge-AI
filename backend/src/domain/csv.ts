@@ -4,7 +4,8 @@
 const FORMULA_START = /^[=+\-@\t\r＝＋－＠]/;
 
 export function neutralize(value: string): string {
-  return FORMULA_START.test(value) ? `'${value}` : value;
+  // Leading spaces don't stop every spreadsheet from reading a formula, so look past them too.
+  return FORMULA_START.test(value) || FORMULA_START.test(value.trimStart()) ? `'${value}` : value;
 }
 
 export function csvCell(value: string | number | boolean | null): string {

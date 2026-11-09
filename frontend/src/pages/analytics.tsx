@@ -114,6 +114,15 @@ export function formatMetric(m: Metric): string {
   }
 }
 
+// Built from the rows, so the caption can't contradict them.
+function sourceSummary(sources: Source[]) {
+  const sim = sources.filter((s) => s.sourceLabel === "Simulated").length;
+  const test = sources.filter((s) => s.sourceLabel === "Connected test").length;
+  const parts = [`${sim} simulated`];
+  if (test) parts.push(`${test} connected test (a sandbox org, not production data)`);
+  return `${parts.join(", ")}. No production system is connected.`;
+}
+
 export const ProvenanceBadge = ({ p }: { p: Provenance }) => (
   <span className={`badge prov ${p.toLowerCase()}`}>{PROVENANCE_NAME[p]}</span>
 );
@@ -225,7 +234,7 @@ function Trend({ metric }: { metric: string }) {
           </svg>
           <details>
             <summary>Show the {pts.length} daily values as a table</summary>
-            <Scroll label="Open cases by day">
+            <Scroll label={`${data.label} by day`}>
               <table>
                 <caption>{data.label} by day (UTC)</caption>
                 <thead>
@@ -290,8 +299,9 @@ export function Analytics() {
             {data.scope === "workspace_and_shared_samples"
               ? "It counts your cases plus the read-only shared samples, the same rows the case list shows. "
               : "It counts the owner workspace only. "}
-            Calculated {when(data.computedAt)}, definitions {data.definitionVersion}.{" "}
-            <Link to="/app/reports">Filter and export the rows</Link> or{" "}
+            Counts cover every date; the report page filters by a date range of up to 366 days, so
+            its default total can be lower. Calculated {when(data.computedAt)}, definitions{" "}
+            {data.definitionVersion}. <Link to="/app/reports">Filter and export the rows</Link> or{" "}
             <Link to="/app/roi">model the ROI</Link>.
           </p>
           <Section title="Operations pulse">
@@ -339,8 +349,8 @@ export function Analytics() {
                 </table>
               </Scroll>
             </div>
-            <h3>Open cases over 90 days</h3>
-            <Trend metric="open_cases" />
+            <h3>Open cases: 90 days of shared synthetic history, plus your recorded days</h3>
+            <Trend key={recorded ?? "none"} metric="open_cases" />
           </Section>
 
           <Section title="Integration health">
@@ -350,7 +360,7 @@ export function Analytics() {
               <Scroll label="Source connections">
                 <table>
                   <caption>
-                    Every source here is simulated. None is a live system. Last successful sync:{" "}
+                    {sourceSummary(data.integration.sources)} Last successful sync:{" "}
                     {when(data.integration.lastSuccessAt)}.
                   </caption>
                   <thead>
@@ -671,11 +681,17 @@ export function Reports() {
             <option value="status">By status</option>
           </select>
         </label>
-        {caps.includes("reports:export") && (
-          <a className="button" href={`/api/v1/reports/operations/export?${qs}`} download>
-            Export CSV
-          </a>
-        )}
+        {caps.includes("reports:export") &&
+          (data && data.total > data.limits.exportRowCap ? (
+            <p className="small" role="note">
+              Export is off: {data.total.toLocaleString("en-US")} rows is over the{" "}
+              {data.limits.exportRowCap.toLocaleString("en-US")}-row limit. Narrow the filters.
+            </p>
+          ) : (
+            <a className="button" href={`/api/v1/reports/operations/export?${qs}`} download>
+              Export CSV
+            </a>
+          ))}
       </form>
       <p className="sr-only" role="status">
         {data ? `${data.total} cases match.` : ""}
@@ -869,9 +885,14 @@ export function Roi() {
           </div>
         </Section>
         <Section title="Projection per month" badge={<ProvenanceBadge p="ESTIMATED" />}>
-          <div aria-live="polite">
+          <p className="sr-only" aria-live="polite">
+            {result
+              ? `Net value ${usd(result.netValue)} a month, estimated.`
+              : "Fix the highlighted assumptions to see a projection."}
+          </p>
+          <div>
             {!result ? (
-              <p role="alert">Fix the highlighted assumptions to see a projection.</p>
+              <p>Fix the highlighted assumptions to see a projection.</p>
             ) : (
               <dl className="facts" data-roi="result">
                 <div>
@@ -978,7 +999,10 @@ export function Roi() {
             </Scroll>
           </Section>
         )}
-        <Section title="Measured in this demo" badge={<ProvenanceBadge p="MEASURED_DEMO" />}>
+        <Section
+          title="Measured in this demo"
+          badge={<ProvenanceBadge p={measured?.provenance ?? "UNKNOWN"} />}
+        >
           <p>
             Median time from requesting an AI review to deciding it, in your own workspace:{" "}
             <strong>{measured ? formatMetric(measured) : "loading"}</strong>

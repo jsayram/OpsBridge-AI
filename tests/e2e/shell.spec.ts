@@ -215,13 +215,12 @@ test.describe("states", () => {
     await expect(page.getByText("Reference:")).toBeVisible();
   });
 
-  test("not-yet-built areas say so and offer no fake controls", async ({ page }) => {
+  // Every nav area is built since P6, so the fallback is checked on an area that doesn't exist.
+  test("an app area that isn't built says so and offers no fake controls", async ({ page }) => {
     await openOverview(page);
-    for (const name of ["Analytics"]) {
-      await page.getByRole("link", { name }).first().click();
-      await expect(page.getByRole("heading", { name: "Not built yet" })).toBeVisible();
-      await expect(page.locator("main button")).toHaveCount(0);
-    }
+    await page.goto("/app/forecasting");
+    await expect(page.getByRole("heading", { name: "Not built yet" })).toBeVisible();
+    await expect(page.locator("main button")).toHaveCount(0);
   });
 
   test("unknown page", async ({ page }) => {

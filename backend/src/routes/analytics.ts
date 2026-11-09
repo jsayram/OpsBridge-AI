@@ -97,7 +97,8 @@ const FILTER_PARAMS = ["from", "to", "status", "assignee", "source", "sort"] as 
 
 export function reportFilters(c: Context<AppEnv>): ReportFilters {
   const q = c.req.query();
-  const today = Date.now();
+  // Today as a UTC day, so an omitted "to" counts as a whole day like a given one.
+  const today = Math.floor(Date.now() / DAY_MS) * DAY_MS;
   const toT = q.to === undefined ? today : realDate(q.to, "to");
   const fromT =
     q.from === undefined

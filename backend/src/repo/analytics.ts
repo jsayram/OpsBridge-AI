@@ -48,12 +48,14 @@ export async function pulseAndFunnel(db: Db, s: AnalyticsScope) {
     (a, st) => a + ((by[st]?.overdue as number | undefined) ?? 0),
     0,
   );
+  // PRD 11.1: the funnel runs Intake to Closed; Drafts are counted in the pulse instead.
   // "Reached" counts a case in its stage and every later one: the funnel is one-directional
   // apart from reopen, which moves a case back and so out of the later count.
-  const stages = FUNNEL.map((status, i) => ({
+  const STAGES = FUNNEL.slice(1);
+  const stages = STAGES.map((status, i) => ({
     status,
     count: n(status),
-    reached: i === 0 ? n(status) : FUNNEL.slice(i).reduce((a, st) => a + n(st), 0),
+    reached: STAGES.slice(i).reduce((a, st) => a + n(st), 0),
   }));
   return {
     pulse: [
@@ -61,7 +63,11 @@ export async function pulseAndFunnel(db: Db, s: AnalyticsScope) {
       metric("completed_cases", done),
       metric("draft_cases", n("Draft")),
       metric("review_queue", n("Needs Review")),
-      metric("review_age_max", num(by["Needs Review"]?.oldest_days) ?? null),
+      metric(
+        "review_age_max",
+        num(by["Needs Review"]?.oldest_days),
+        by["Needs Review"] ? "SYNTHETIC" : "UNKNOWN",
+      ),
       metric("overdue_open", overdueOpen),
     ],
     funnel: {
@@ -96,9 +102,10 @@ export async function integrationHealth(db: Db, s: AnalyticsScope) {
   const sources = rows.map((r) => ({
     provider: r.provider as string,
     shared: r.shared as boolean,
-    // PRD 11.1 and P6-D: say plainly whether the source is simulated. Nothing here is live.
+    // PRD 11.1 and P6-D: say plainly whether the source is simulated. A connected test is a real
+    // sandbox org reached over the network, not production data.
     sourceLabel: SOURCE_LABEL[r.mode as string] ?? "Unknown",
-    live: false,
+    live: r.mode === "connected_test",
     status: r.status as string,
     lastSuccessAt: iso(r.last_success_at),
     lastErrorCode: (r.last_error_code as string | null) ?? null,
@@ -160,7 +167,9 @@ export async function dataQuality(db: Db, s: AnalyticsScope) {
       metric("open_findings", total("unresolved")),
       metric("findings_resolved", total("resolved")),
       metric("findings_dismissed", total("dismissed")),
-      metric("oldest_unresolved", oldest.length ? Math.max(...oldest) : null),
+      oldest.length
+        ? metric("oldest_unresolved", Math.max(...oldest))
+        : metric("oldest_unresolved", null, "UNKNOWN"),
     ],
     byKind,
     mismatchedFields: fields.rows.map((r) => ({ field: r.field as string, count: r.n as number })),

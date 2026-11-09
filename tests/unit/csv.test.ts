@@ -11,6 +11,8 @@ describe("P6.3 CSV safety", () => {
     ["\rlead", "'\rlead"],
     ["＝1+1", "'＝1+1"],
     ["plain", "plain"],
+    [" =1+1", "' =1+1"],
+    ["  @x", "'  @x"],
     ["a=b", "a=b"],
     ["", ""],
   ])("neutralize(%j) is %j", (input, out) => {

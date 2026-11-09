@@ -46,8 +46,9 @@ export function reportWhere(f: ReportFilters) {
   };
   const where = [
     `(c.workspace_id = $1 OR ($2::boolean AND c.workspace_id = (SELECT id FROM app.workspaces WHERE mode = 'template')))`,
-    "c.created_at >= $3::date",
-    "c.created_at < $4::date + 1",
+    // UTC days whatever the session time zone: a bare date would be read in the server's zone.
+    "c.created_at >= ($3::date)::timestamp AT TIME ZONE 'UTC'",
+    "c.created_at < ($4::date + 1)::timestamp AT TIME ZONE 'UTC'",
   ];
   if (f.status) where.push(`c.status = ${bind(f.status)}`);
   if (f.assigneeId) where.push(`c.assignee_id = ${bind(f.assigneeId)}::uuid`);

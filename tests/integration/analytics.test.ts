@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { FIXTURE_EVALUATION } from "../../backend/src/domain/metrics";
+import { reportTotals } from "../../backend/src/repo/reports";
 import {
   call,
   connect,
@@ -141,8 +142,10 @@ async function reconciles(scope: string[], cookie?: string, headers?: Record<str
     expect(v[key], key).toBe(e[key]);
   }
   expect(v.completion_rate).toBeCloseTo(e.completion_rate as number, 10);
+  // The funnel runs Intake to Closed; Drafts are in the pulse.
+  const { Draft: _draft, ...funnelExpected } = e.statuses;
   expect(Object.fromEntries(raw.funnel.stages.map((s: any) => [s.status, s.count]))).toEqual(
-    e.statuses,
+    funnelExpected,
   );
   expect(raw.automation.byLabel).toEqual(e.labels);
   return { raw, e, v };
@@ -513,6 +516,36 @@ describe("P6.3 reports and export", () => {
       .filter((i: any) => i.scope === "yours")
       .map((i: any) => i.title);
     for (const t of F8) expect(bTitles).not.toContain(t);
+  });
+
+  it("review M1: date bounds are UTC days even when the session time zone isn't UTC", async () => {
+    const mig = await connect("opsbridge_migrator");
+    const { rows } = await mig.query(
+      "SELECT id FROM app.customers WHERE workspace_id = $1 LIMIT 1",
+      [A.workspaceId],
+    );
+    await mig.query(
+      `INSERT INTO app.cases (workspace_id, customer_id, title, case_type, status, created_at)
+       VALUES ($1, $2, 'UTC boundary probe', 'Billing', 'Intake', '2026-03-10T02:00:00Z')`,
+      [A.workspaceId, rows[0].id],
+    );
+    await mig.end();
+    const app = await connect("opsbridge_app");
+    await app.query("BEGIN");
+    await app.query("SELECT set_config('app.workspace_id', $1, true)", [A.workspaceId]);
+    await app.query("SET LOCAL TIME ZONE 'America/New_York'");
+    const f = { workspaceId: A.workspaceId, seesTemplate: false, sort: "created_desc" as const };
+    const on = await reportTotals(app, { ...f, from: "2026-03-10", to: "2026-03-10" });
+    const before = await reportTotals(app, { ...f, from: "2026-03-09", to: "2026-03-09" });
+    await app.query("ROLLBACK");
+    await app.end();
+    expect(on.total).toBe(1);
+    expect(before.total).toBe(0);
+  });
+
+  it("review L5: 366 inclusive days with no 'to' is allowed", async () => {
+    const from = new Date(Date.now() - 365 * 86_400_000).toISOString().slice(0, 10);
+    expect((await report(A.cookie, `from=${from}`)).status).toBe(200);
   });
 
   it("a viewer can read and export, as the permissions matrix allows", async () => {
