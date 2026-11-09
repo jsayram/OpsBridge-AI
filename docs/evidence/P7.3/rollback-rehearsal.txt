@@ -1,0 +1,17 @@
+# Local release and rollback rehearsal, 2026-11-09T23:14:21.436Z
+previous release 48eac5d, this release efa621a, database opsbridge_rollback_test, node v22.23.1
+schema at previous release: applied 0001_foundation.sql, 0002_expiry_lock_order.sql, 0003_core_records.sql, 0004_integrations.sql, 0005_reconciliation.sql, 0006_inventory.sql, 0007_automation.sql, 0008_ai_review.sql, 0009_analytics.sql
+1 previous release on 0009: start 1468 ms, smoke PASS (19 passed, 0 failed), dispatch works (simulated), step 2093 ms
+release, expand: applied 0010_dispatcher.sql
+2 this release on 0010: start 1567 ms, smoke PASS (19 passed, 0 failed), dispatch works (simulated), step 2134 ms
+3 ROLLBACK: previous release on 0010: start 1349 ms, smoke PASS (19 passed, 0 failed), dispatch works (simulated), step 2010 ms
+4a roll forward: this release on 0010: start 1475 ms, smoke PASS (19 passed, 0 failed), dispatch works (simulated), step 2066 ms
+next release, contract: applied 0011_dispatcher_contract.sql
+4b this release on 0011: start 1455 ms, smoke PASS (19 passed, 0 failed), dispatch works (simulated), step 2049 ms
+5 previous release on 0011 (rollback past the contract): start 1356 ms, smoke PASS (19 passed, 0 failed), dispatch STALLED (pending), step 13690 ms
+PASS previous release works on its own schema
+PASS this release works after the expand migration
+PASS rollback to the previous release works on the expanded schema (E2E-24)
+PASS this release works after the contract migration
+PASS after the contract, the previous release still serves visitors but can't dispatch (why 0011 ships a release later)
+REHEARSAL PASSED
