@@ -29,7 +29,7 @@ A visitor presses **Launch Guided Demo** and gets a private workspace with no si
 4. approve a ready case, which writes audit history and records a Simulated automation run [E5];
 5. read a recap, built from the workspace's own records, that separates what happened from what was simulated and what was measured, then reset [E6].
 
-Behind those steps sit dashboards computed live from the records with every number labeled synthetic, measured, estimated or unknown, bounded reports with a formula-safe CSV export, and an ROI calculator whose figures are labeled as illustrative projections [E7].
+Behind those steps sit dashboards computed on request from the records with every number labeled synthetic, measured, estimated or unknown, bounded reports with a formula-safe CSV export, and an ROI calculator whose figures are labeled as illustrative projections [E7].
 
 ## Architecture
 

@@ -14,16 +14,15 @@ OpsBridge AI is an independent portfolio app: an operations command center for N
 
 ## The guided demo
 
-A visitor opens the app and clicks **Launch Guided Demo**. No sign-up is needed. The planned five-minute flow:
+A visitor opens the app and clicks **Launch Guided Demo**. No sign-up is needed. The **Guided demo** page then shows a five-step checklist that marks each step done from the workspace's own records:
 
 1. The server creates a private, isolated workspace from a fixed synthetic scenario.
 2. The visitor creates a sample case and sees a durable activity event.
-3. **Detect Mismatch** finds a conflict between a customer record and a simulated finance record, with both values shown.
-4. The visitor reviews a fixture document. A labeled, deterministic review flags two missing fields and points to where it looked. The visitor accepts, edits or rejects the suggestion.
-5. **Approve Resolution** updates the case, writes audit history, queues a simulated notification and updates analytics.
-6. A recap lists what happened, what was simulated and what was measured. **Reset Demo** starts over.
+3. A simulated ERP sync finds a customer renamed in the ERP, shown with both values. Nothing changes until a person decides.
+4. The visitor reviews a fixture document. A labeled, deterministic review cites the page and text behind every field, and the visitor accepts, edits or rejects it.
+5. Approving a ready case updates it, writes audit history, records a Simulated automation run and updates analytics.
 
-Each step works today on its own screen. The single guided checklist with the recap is scheduled for P8.1.
+A recap then lists what happened, what was simulated and what was measured, and **Reset Demo** starts over. `docs/DEMO-SCRIPT.md` is the five-minute script. A machine-run of the whole path is in the browser tests; a timed run by a first-time person hasn't happened yet.
 
 ## Architecture
 
@@ -74,9 +73,9 @@ The build runs in phases P0 to P8. `docs/PHASE-LEDGER.md` is the record of what 
 | P5 | AI document review and evaluation | Accepted for limited scope, locally |
 | P6 | Analytics, reports and ROI | Accepted for limited scope, locally |
 | P7 | Security, recovery and release gate | Accepted for limited scope, locally |
-| P8 | Guided demo polish, case study, public launch | Not started |
+| P8 | Guided demo, case study, handoff, launch preparation | Run locally, waiting for review. Public launch not started |
 
-"Accepted for limited scope" means the coordinator reviewed the evidence and reran the local checks, with live-account items deferred. No phase has owner acceptance yet.
+"Accepted for limited scope" means the coordinator reviewed the evidence and reran the local checks, with live-account items deferred. No phase has owner acceptance yet. `docs/EVIDENCE-MATRIX.md` lists every capability as shipped, built on a test double, or pending.
 
 What that means in practice:
 
@@ -86,6 +85,10 @@ What that means in practice:
 - **AI results come from fixtures.** Every review a visitor sees is a labeled deterministic fixture. No language model has been called, and the 40-document evaluation reports fixture results, not live-model accuracy.
 - **ROI figures are illustrative.** They are projections from stated assumptions over synthetic workload, not measured savings.
 - **Browser coverage** is Chromium and Playwright WebKit, desktop and phone sizes. Real Safari, a physical iPhone and a VoiceOver pass have not been done.
+
+## Getting started
+
+`START-HERE.md` points each reader to the right document: running it, changing it (`docs/ONBOARDING.md`), operating it (`docs/OPERATOR-GUIDE.md`), owning it (`docs/OWNERSHIP.md`) and launching it (`docs/LAUNCH-CHECKLIST.md`).
 
 ## Running it locally
 
@@ -143,6 +146,9 @@ Run one test suite at a time. Each suite's setup drops and recreates its own dat
 | `docs/ROADMAP.md` | Phases and work packages |
 | `docs/PHASE-LEDGER.md` | What is planned, built, verified, accepted and deployed |
 | `docs/reports/` | Phase and package reports with the evidence behind each result |
+| `docs/EVIDENCE-MATRIX.md` | Shipped, built on a double, or pending, with the evidence for each |
+| `docs/CASE-STUDY.md` | Case study draft, every claim traced to evidence; not yet approved for publication |
+| `docs/runbooks/` | Release, rollback, recovery, incident, connector, automation, identity and handoff runbooks |
 
 ## Disclaimer
 

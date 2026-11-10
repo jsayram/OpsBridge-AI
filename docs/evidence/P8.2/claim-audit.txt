@@ -1,0 +1,37 @@
+# P8.2 claim audit, 2026-11-10T00:45:55Z, on the P8 working tree
+## Employer name (case-insensitive) in new or changed public files
+Checked: docs/CASE-STUDY.md, frontend/src/pages/public.tsx, START-HERE.md, docs/DEMO-SCRIPT.md, docs/ONBOARDING.md, docs/OPERATOR-GUIDE.md, docs/OWNERSHIP.md, docs/REVIEW-RUBRIC.md, docs/SPRINT-HISTORY.md, docs/LAUNCH-CHECKLIST.md, docs/EVIDENCE-MATRIX.md, docs/runbooks/HANDOFF.md, README.md
+Hits: none
+
+## Risky words in docs/CASE-STUDY.md and the evidence page, with each line for review
+docs/CASE-STUDY.md:7:A services company runs its work across a CRM, an ERP, an inventory system and spreadsheets. The same customer exists under different names in each. Cases move between consultants by email. Documents arrive as PDFs that someone retypes into a checklist. Reports get rebuilt by hand every month, and nobody can say which number is right.
+docs/CASE-STUDY.md:19:| Finance partner | Billing entities that match the CRM's idea of a customer, without silent merges |
+docs/CASE-STUDY.md:27:2. run a simulated sync that finds a customer renamed in the ERP, shown with both source values and no automatic fix [E3];
+docs/CASE-STUDY.md:30:5. read a recap, built from the workspace's own records, that separates what happened from what was simulated and what was measured, then reset [E6].
+docs/CASE-STUDY.md:32:(reworded after this audit to "computed on request") Behind those steps sit dashboards computed live from the records with every number labeled synthetic, measured, estimated or unknown, bounded reports with a formula-safe CSV export, and an ROI calculator whose figures are labeled as illustrative projections [E7].
+docs/CASE-STUDY.md:46:   AI gateway (fixture mode; owner-only live path)
+docs/CASE-STUDY.md:74:| CRM, ERP and inventory | Simulators. The ERP follows NetSuite REST conventions and is not NetSuite [E3] |
+docs/CASE-STUDY.md:94:- Nothing is deployed. Every result above comes from a local machine [E15].
+docs/CASE-STUDY.md:95:- No live CRM, ERP, Zapier, Google or AI provider has been connected [E13].
+docs/CASE-STUDY.md:98:- ROI figures are projections from stated assumptions, not savings [E7].
+docs/CASE-STUDY.md:104:What would come next, in order: a staging deploy with the hosted rehearsals (restore, rollback, CPU per request, first-visit timing), a real-device and screen-reader pass, then optional live connections to a Salesforce Developer Edition org, a Google Sheet with a Zap, and an AI provider under a hard budget. Each one needs an owner account first [E19].
+docs/CASE-STUDY.md:122:| E13 | Owner sign-in and live connectors on labeled doubles only | `tests/integration/owner-identity.test.ts`, `salesforce.test.ts`, `ai-gateway.test.ts`, `docs/reports/P3.md`, `P4.md`, `P5.md` |
+docs/CASE-STUDY.md:124:| E15 | Nothing deployed | `docs/PHASE-LEDGER.md` (Deployed column) |
+docs/CASE-STUDY.md:132:Jose reads and approves the text (P7 list item 14). Then check three things against the final evidence: the test numbers in the table match the latest run, nothing says "live", "deployed" or "in production" unless P8.4 has actually happened, and the limits section is still true.
+frontend/src/pages/public.tsx:132:      <div role="status" aria-live="polite">
+frontend/src/pages/public.tsx:217:    how: "On the ERP Simulator card pick the scenario Customer renamed and press Run simulated sync. Reconciliation then lists a Name mismatch with both values side by side.",
+frontend/src/pages/public.tsx:316:          No customer record was changed by it.
+frontend/src/pages/public.tsx:330:        <li>Sources: {r.sources}. The CRM and ERP are simulators, not live systems.</li>
+frontend/src/pages/public.tsx:334:      <h3>What was measured</h3>
+frontend/src/pages/public.tsx:338:        measured.
+frontend/src/pages/public.tsx:404:      <p className="muted small" role="status" aria-live="polite">
+frontend/src/pages/public.tsx:460:      <p className="small muted" role="status" aria-live="polite">
+frontend/src/pages/public.tsx:584:            The CRM and ERP are simulators. The ERP follows NetSuite REST conventions and is not
+frontend/src/pages/public.tsx:585:            NetSuite.
+frontend/src/pages/public.tsx:588:            Salesforce, the Google Sheet and Zapier bridge, the live AI provider and owner sign-in
+frontend/src/pages/public.tsx:592:          <li>ROI figures are illustrative projections from stated assumptions, not savings.</li>
+frontend/src/pages/public.tsx:604:          percentile was 475 ms. That was measured on a laptop, not on the hosted service.
+frontend/src/pages/public.tsx:619:          A recap then lists what happened, what was simulated and what was measured, and Reset Demo
+
+## Review
+Every hit above is a negation, a label, a limitation or an ARIA attribute (aria-live), except line 32, where "computed live" was ambiguous and was reworded to "computed on request". No claim of deployment, live connection, adoption, savings, certification or team management remains.

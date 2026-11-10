@@ -1,0 +1,124 @@
+# Chromium run 2026-11-10T00:4xZ at 149d4bd plus the evidence-table fix (uncommitted at the time, committed in 49be17d), desktop and Pixel 7
+Running 120 tests using 2 workers
+[1/120] [desktop] › tests/e2e/ai-review.spec.ts:35:1 › E2E-11 a manager rejects a suggestion and the case doesn't change
+[2/120] [desktop] › tests/e2e/analytics.spec.ts:28:1 › P6.2: every dashboard value matches its query, with labels, tables and no axe violations
+[3/120] [desktop] › tests/e2e/analytics.spec.ts:71:1 › P6-E: key metrics are reachable as headings and the trend table opens from the keyboard
+[4/120] [desktop] › tests/e2e/analytics.spec.ts:96:1 › E2E-20: after an approval the dashboard agrees with the records again
+[5/120] [desktop] › tests/e2e/ai-review.spec.ts:62:1 › E2E-12 an injected document is flagged, and accepting it only applies what the fields support
+[6/120] [desktop] › tests/e2e/analytics.spec.ts:115:1 › P6.3 / JOB-TEST-04: report filter, chart table and CSV agree
+[7/120] [desktop] › tests/e2e/ai-review.spec.ts:81:1 › E2E-14 a guest gets labeled fixture output, no live option, and an analyst can't decide
+[8/120] [desktop] › tests/e2e/analytics.spec.ts:152:1 › P6.3: a viewer gets the report and the export, and no snapshot button
+[9/120] [desktop] › tests/e2e/ai-review.spec.ts:94:1 › E2E-13 a guest can't upload a file, whatever it is
+[10/120] [desktop] › tests/e2e/automation.spec.ts:13:1 › P4: an approval becomes a Simulated run, and a rule is reused for the second team
+[11/120] [desktop] › tests/e2e/analytics.spec.ts:163:1 › E2E-19: changing ROI assumptions recalculates exactly and keeps the Estimated label
+[12/120] [desktop] › tests/e2e/core.spec.ts:36:1 › P2-A and P2-C a case runs its whole life and survives a refresh
+[13/120] [desktop] › tests/e2e/automation.spec.ts:50:1 › P4: viewers see rules and runs but no change controls
+[14/120] [desktop] › tests/e2e/evidence.spec.ts:7:1 › screens
+[15/120] [desktop] › tests/e2e/guided-demo.spec.ts:23:1 › P8.1 a first visitor finishes the five steps, sees the recap and resets
+[16/120] [desktop] › tests/e2e/core.spec.ts:81:1 › P2-B a stale edit is refused and explained, and Reload recovers
+[17/120] [desktop] › tests/e2e/guided-demo.spec.ts:105:1 › P8.1 the checklist and reset work from the keyboard alone
+[18/120] [desktop] › tests/e2e/core.spec.ts:107:1 › P2-B a role that can't act sees why, and nothing to press
+[19/120] [desktop] › tests/e2e/guided-demo.spec.ts:123:1 › P8.1 if progress can't load, the steps and links still work, and Retry recovers
+[20/120] [desktop] › tests/e2e/guided-demo.spec.ts:138:1 › E2E-28 a visitor reads the engineering evidence with no session and no admin data
+[21/120] [desktop] › tests/e2e/core.spec.ts:126:1 › JOB-TEST-02 handoff with a flagged item persists, and an observer is refused
+[22/120] [desktop] › tests/e2e/guided-demo.spec.ts:160:1 › P8.1 New case stays put while the assignee filter fills (WebKit intermittent)
+[23/120] [desktop] › tests/e2e/integration.spec.ts:21:1 › the showcase: a reviewer maps one CRM organization to two ERP bill-tos
+[24/120] [desktop] › tests/e2e/core.spec.ts:148:1 › list search, filters, empty state and a shared read-only case
+[25/120] [desktop] › tests/e2e/integration.spec.ts:39:1 › a sync runs, a replay adds nothing, and a fault recovers from its saved cursor
+[26/120] [desktop] › tests/e2e/core.spec.ts:174:1 › a lost response retries with the same key, so one case is made
+[27/120] [desktop] › tests/e2e/core.spec.ts:198:1 › the new-case form and keyboard path pass axe
+[28/120] [desktop] › tests/e2e/security.spec.ts:16:1 › stored XSS in a case title renders as text and runs nothing
+[29/120] [desktop] › tests/e2e/integration.spec.ts:62:1 › a renamed ERP customer opens a finding with both values and changes no customer
+[30/120] [desktop] › tests/e2e/security.spec.ts:42:1 › the page CSP allows no inline or remote script
+[31/120] [desktop] › tests/e2e/integration.spec.ts:78:1 › inventory is read-only and labeled, and unknown items stay unknown
+[32/120] [desktop] › tests/e2e/shell.spec.ts:20:3 › landing › is static: a first visit makes no API call
+[33/120] [desktop] › tests/e2e/shell.spec.ts:34:3 › landing › assets carry the security headers
+[34/120] [desktop] › tests/e2e/integration.spec.ts:92:1 › a viewer can read every integration page and can't act
+[35/120] [desktop] › tests/e2e/shell.spec.ts:43:3 › landing › no CSP violation or console error on the main path
+[36/120] [desktop] › tests/e2e/shell.spec.ts:56:3 › P1-A launch and reset › launch gives a hardened cookie and a working shell
+[37/120] [desktop] › tests/e2e/integration.spec.ts:102:1 › a case shows its source references, and a handoff can carry an item
+[38/120] [desktop] › tests/e2e/shell.spec.ts:68:3 › P1-A launch and reset › a second click on Launch reuses the live session
+[39/120] [desktop] › tests/e2e/shell.spec.ts:80:3 › P1-A launch and reset › reset restores the pack and drops edits
+[40/120] [desktop] › tests/e2e/integration.spec.ts:116:1 › the new pages pass axe, light and on a phone
+[41/120] [desktop] › tests/e2e/shell.spec.ts:103:1 › E2E-02 two browsers stay apart, including by guessed URL
+[42/120] [desktop] › tests/e2e/shell.spec.ts:121:1 › role switch is server-side and shows up in the UI
+[43/120] [mobile] › tests/e2e/ai-review.spec.ts:35:1 › E2E-11 a manager rejects a suggestion and the case doesn't change
+[44/120] [desktop] › tests/e2e/shell.spec.ts:134:3 › states › no session on an app route: clear next step, not a blank page
+[45/120] [desktop] › tests/e2e/shell.spec.ts:142:3 › states › E2E-21 session ends mid-edit: recovery, no unauthorized write
+[46/120] [desktop] › tests/e2e/shell.spec.ts:158:3 › states › server error shows a request ID and Retry
+[47/120] [mobile] › tests/e2e/ai-review.spec.ts:62:1 › E2E-12 an injected document is flagged, and accepting it only applies what the fields support
+[48/120] [desktop] › tests/e2e/shell.spec.ts:185:3 › states › 403 shows Access denied
+[49/120] [desktop] › tests/e2e/shell.spec.ts:202:3 › states › empty filter result offers Clear
+[50/120] [desktop] › tests/e2e/shell.spec.ts:221:3 › states › error boundary catches a render failure
+[51/120] [desktop] › tests/e2e/shell.spec.ts:233:3 › states › an app area that isn't built says so and offers no fake controls
+[52/120] [mobile] › tests/e2e/ai-review.spec.ts:81:1 › E2E-14 a guest gets labeled fixture output, no live option, and an analyst can't decide
+[53/120] [desktop] › tests/e2e/shell.spec.ts:240:3 › states › unknown page
+[54/120] [desktop] › tests/e2e/shell.spec.ts:247:3 › waking state, PRD 13.2 › message at 1 s, Retry at 8 s, walkthrough at 15 s
+[55/120] [mobile] › tests/e2e/ai-review.spec.ts:94:1 › E2E-13 a guest can't upload a file, whatever it is
+[56/120] [mobile] › tests/e2e/analytics.spec.ts:28:1 › P6.2: every dashboard value matches its query, with labels, tables and no axe violations
+[57/120] [desktop] › tests/e2e/shell.spec.ts:273:3 › waking state, PRD 13.2 › launch failure offers Retry; quota offers the walkthrough instead
+[58/120] [desktop] › tests/e2e/shell.spec.ts:293:3 › P1-F keyboard, motion, mobile › keyboard alone reaches launch, navigation and a case
+[59/120] [desktop] › tests/e2e/shell.spec.ts:333:3 › P1-F keyboard, motion, mobile › reset can be cancelled and confirmed by keyboard, keeping focus
+[60/120] [desktop] › tests/e2e/shell.spec.ts:354:3 › P1-F keyboard, motion, mobile › reduced motion removes animation
+[61/120] [mobile] › tests/e2e/analytics.spec.ts:71:1 › P6-E: key metrics are reachable as headings and the trend table opens from the keyboard
+[62/120] [mobile] › tests/e2e/analytics.spec.ts:96:1 › E2E-20: after an approval the dashboard agrees with the records again
+[63/120] [desktop] › tests/e2e/shell.spec.ts:372:3 › P1-F keyboard, motion, mobile › no horizontal page scroll on any main route
+[64/120] [mobile] › tests/e2e/analytics.spec.ts:115:1 › P6.3 / JOB-TEST-04: report filter, chart table and CSV agree
+[65/120] [mobile] › tests/e2e/analytics.spec.ts:152:1 › P6.3: a viewer gets the report and the export, and no snapshot button
+[66/120] [mobile] › tests/e2e/analytics.spec.ts:163:1 › E2E-19: changing ROI assumptions recalculates exactly and keeps the Estimated label
+[67/120] [mobile] › tests/e2e/automation.spec.ts:13:1 › P4: an approval becomes a Simulated run, and a rule is reused for the second team
+[68/120] [desktop] › tests/e2e/shell.spec.ts:391:3 › P1-F keyboard, motion, mobile › navigation stays reachable and touch sized on a phone
+[69/120] [desktop] › tests/e2e/shell.spec.ts:406:3 › P1-F keyboard, motion, mobile › light theme passes the same accessibility checks
+[70/120] [desktop] › tests/e2e/shell.spec.ts:416:3 › P1-C admin through the local test double › a guest gets 401 at /admin, with no page
+[71/120] [mobile] › tests/e2e/automation.spec.ts:50:1 › P4: viewers see rules and runs but no change controls
+[72/120] [desktop] › tests/e2e/shell.spec.ts:423:3 › P1-C admin through the local test double › the double owner sees the honest label and can sign out
+[73/120] [mobile] › tests/e2e/core.spec.ts:36:1 › P2-A and P2-C a case runs its whole life and survives a refresh
+[74/120] [mobile] › tests/e2e/evidence.spec.ts:7:1 › screens
+[75/120] [mobile] › tests/e2e/guided-demo.spec.ts:23:1 › P8.1 a first visitor finishes the five steps, sees the recap and resets
+[76/120] [mobile] › tests/e2e/core.spec.ts:81:1 › P2-B a stale edit is refused and explained, and Reload recovers
+[77/120] [mobile] › tests/e2e/guided-demo.spec.ts:105:1 › P8.1 the checklist and reset work from the keyboard alone
+[78/120] [mobile] › tests/e2e/guided-demo.spec.ts:123:1 › P8.1 if progress can't load, the steps and links still work, and Retry recovers
+[79/120] [mobile] › tests/e2e/guided-demo.spec.ts:138:1 › E2E-28 a visitor reads the engineering evidence with no session and no admin data
+[80/120] [mobile] › tests/e2e/core.spec.ts:107:1 › P2-B a role that can't act sees why, and nothing to press
+[81/120] [mobile] › tests/e2e/guided-demo.spec.ts:160:1 › P8.1 New case stays put while the assignee filter fills (WebKit intermittent)
+[82/120] [mobile] › tests/e2e/integration.spec.ts:21:1 › the showcase: a reviewer maps one CRM organization to two ERP bill-tos
+[83/120] [mobile] › tests/e2e/core.spec.ts:126:1 › JOB-TEST-02 handoff with a flagged item persists, and an observer is refused
+[84/120] [mobile] › tests/e2e/integration.spec.ts:39:1 › a sync runs, a replay adds nothing, and a fault recovers from its saved cursor
+[85/120] [mobile] › tests/e2e/core.spec.ts:148:1 › list search, filters, empty state and a shared read-only case
+[86/120] [mobile] › tests/e2e/core.spec.ts:174:1 › a lost response retries with the same key, so one case is made
+[87/120] [mobile] › tests/e2e/core.spec.ts:198:1 › the new-case form and keyboard path pass axe
+[88/120] [mobile] › tests/e2e/integration.spec.ts:62:1 › a renamed ERP customer opens a finding with both values and changes no customer
+[89/120] [mobile] › tests/e2e/security.spec.ts:16:1 › stored XSS in a case title renders as text and runs nothing
+[90/120] [mobile] › tests/e2e/integration.spec.ts:78:1 › inventory is read-only and labeled, and unknown items stay unknown
+[91/120] [mobile] › tests/e2e/security.spec.ts:42:1 › the page CSP allows no inline or remote script
+[92/120] [mobile] › tests/e2e/integration.spec.ts:92:1 › a viewer can read every integration page and can't act
+[93/120] [mobile] › tests/e2e/shell.spec.ts:20:3 › landing › is static: a first visit makes no API call
+[94/120] [mobile] › tests/e2e/integration.spec.ts:102:1 › a case shows its source references, and a handoff can carry an item
+[95/120] [mobile] › tests/e2e/shell.spec.ts:34:3 › landing › assets carry the security headers
+[96/120] [mobile] › tests/e2e/shell.spec.ts:43:3 › landing › no CSP violation or console error on the main path
+[97/120] [mobile] › tests/e2e/shell.spec.ts:56:3 › P1-A launch and reset › launch gives a hardened cookie and a working shell
+[98/120] [mobile] › tests/e2e/integration.spec.ts:116:1 › the new pages pass axe, light and on a phone
+[99/120] [mobile] › tests/e2e/shell.spec.ts:68:3 › P1-A launch and reset › a second click on Launch reuses the live session
+[100/120] [mobile] › tests/e2e/shell.spec.ts:80:3 › P1-A launch and reset › reset restores the pack and drops edits
+[101/120] [mobile] › tests/e2e/shell.spec.ts:103:1 › E2E-02 two browsers stay apart, including by guessed URL
+[102/120] [mobile] › tests/e2e/shell.spec.ts:121:1 › role switch is server-side and shows up in the UI
+[103/120] [mobile] › tests/e2e/shell.spec.ts:134:3 › states › no session on an app route: clear next step, not a blank page
+[104/120] [mobile] › tests/e2e/shell.spec.ts:142:3 › states › E2E-21 session ends mid-edit: recovery, no unauthorized write
+[105/120] [mobile] › tests/e2e/shell.spec.ts:158:3 › states › server error shows a request ID and Retry
+[106/120] [mobile] › tests/e2e/shell.spec.ts:185:3 › states › 403 shows Access denied
+[107/120] [mobile] › tests/e2e/shell.spec.ts:202:3 › states › empty filter result offers Clear
+[108/120] [mobile] › tests/e2e/shell.spec.ts:221:3 › states › error boundary catches a render failure
+[109/120] [mobile] › tests/e2e/shell.spec.ts:233:3 › states › an app area that isn't built says so and offers no fake controls
+[110/120] [mobile] › tests/e2e/shell.spec.ts:240:3 › states › unknown page
+[111/120] [mobile] › tests/e2e/shell.spec.ts:247:3 › waking state, PRD 13.2 › message at 1 s, Retry at 8 s, walkthrough at 15 s
+[112/120] [mobile] › tests/e2e/shell.spec.ts:273:3 › waking state, PRD 13.2 › launch failure offers Retry; quota offers the walkthrough instead
+[113/120] [mobile] › tests/e2e/shell.spec.ts:293:3 › P1-F keyboard, motion, mobile › keyboard alone reaches launch, navigation and a case
+[114/120] [mobile] › tests/e2e/shell.spec.ts:333:3 › P1-F keyboard, motion, mobile › reset can be cancelled and confirmed by keyboard, keeping focus
+[115/120] [mobile] › tests/e2e/shell.spec.ts:354:3 › P1-F keyboard, motion, mobile › reduced motion removes animation
+[116/120] [mobile] › tests/e2e/shell.spec.ts:372:3 › P1-F keyboard, motion, mobile › no horizontal page scroll on any main route
+[117/120] [mobile] › tests/e2e/shell.spec.ts:391:3 › P1-F keyboard, motion, mobile › navigation stays reachable and touch sized on a phone
+[118/120] [mobile] › tests/e2e/shell.spec.ts:406:3 › P1-F keyboard, motion, mobile › light theme passes the same accessibility checks
+[119/120] [mobile] › tests/e2e/shell.spec.ts:416:3 › P1-C admin through the local test double › a guest gets 401 at /admin, with no page
+[120/120] [mobile] › tests/e2e/shell.spec.ts:423:3 › P1-C admin through the local test double › the double owner sees the honest label and can sign out
+  7 skipped
+  113 passed (1.3m)

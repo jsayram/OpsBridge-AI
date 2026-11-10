@@ -1,0 +1,124 @@
+# WebKit run 2026-11-10T00:45:04Z at 49be17d, Playwright 1.65.0, webkit-desktop 1440x900 and webkit-iphone (iPhone 15), https, --retries=1 so a retry would show as flaky
+Running 120 tests using 2 workers
+[1/120] [webkit-desktop] › tests/e2e/ai-review.spec.ts:35:1 › E2E-11 a manager rejects a suggestion and the case doesn't change
+[2/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:28:1 › P6.2: every dashboard value matches its query, with labels, tables and no axe violations
+[3/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:71:1 › P6-E: key metrics are reachable as headings and the trend table opens from the keyboard
+[4/120] [webkit-desktop] › tests/e2e/ai-review.spec.ts:62:1 › E2E-12 an injected document is flagged, and accepting it only applies what the fields support
+[5/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:96:1 › E2E-20: after an approval the dashboard agrees with the records again
+[6/120] [webkit-desktop] › tests/e2e/ai-review.spec.ts:81:1 › E2E-14 a guest gets labeled fixture output, no live option, and an analyst can't decide
+[7/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:115:1 › P6.3 / JOB-TEST-04: report filter, chart table and CSV agree
+[8/120] [webkit-desktop] › tests/e2e/ai-review.spec.ts:94:1 › E2E-13 a guest can't upload a file, whatever it is
+[9/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:152:1 › P6.3: a viewer gets the report and the export, and no snapshot button
+[10/120] [webkit-desktop] › tests/e2e/automation.spec.ts:13:1 › P4: an approval becomes a Simulated run, and a rule is reused for the second team
+[11/120] [webkit-desktop] › tests/e2e/analytics.spec.ts:163:1 › E2E-19: changing ROI assumptions recalculates exactly and keeps the Estimated label
+[12/120] [webkit-desktop] › tests/e2e/core.spec.ts:36:1 › P2-A and P2-C a case runs its whole life and survives a refresh
+[13/120] [webkit-desktop] › tests/e2e/automation.spec.ts:50:1 › P4: viewers see rules and runs but no change controls
+[14/120] [webkit-desktop] › tests/e2e/evidence.spec.ts:7:1 › screens
+[15/120] [webkit-desktop] › tests/e2e/guided-demo.spec.ts:23:1 › P8.1 a first visitor finishes the five steps, sees the recap and resets
+[16/120] [webkit-desktop] › tests/e2e/core.spec.ts:81:1 › P2-B a stale edit is refused and explained, and Reload recovers
+[17/120] [webkit-desktop] › tests/e2e/guided-demo.spec.ts:105:1 › P8.1 the checklist and reset work from the keyboard alone
+[18/120] [webkit-desktop] › tests/e2e/core.spec.ts:107:1 › P2-B a role that can't act sees why, and nothing to press
+[19/120] [webkit-desktop] › tests/e2e/guided-demo.spec.ts:123:1 › P8.1 if progress can't load, the steps and links still work, and Retry recovers
+[20/120] [webkit-desktop] › tests/e2e/guided-demo.spec.ts:138:1 › E2E-28 a visitor reads the engineering evidence with no session and no admin data
+[21/120] [webkit-desktop] › tests/e2e/core.spec.ts:126:1 › JOB-TEST-02 handoff with a flagged item persists, and an observer is refused
+[22/120] [webkit-desktop] › tests/e2e/guided-demo.spec.ts:160:1 › P8.1 New case stays put while the assignee filter fills (WebKit intermittent)
+[23/120] [webkit-desktop] › tests/e2e/integration.spec.ts:21:1 › the showcase: a reviewer maps one CRM organization to two ERP bill-tos
+[24/120] [webkit-desktop] › tests/e2e/core.spec.ts:148:1 › list search, filters, empty state and a shared read-only case
+[25/120] [webkit-desktop] › tests/e2e/integration.spec.ts:39:1 › a sync runs, a replay adds nothing, and a fault recovers from its saved cursor
+[26/120] [webkit-desktop] › tests/e2e/core.spec.ts:174:1 › a lost response retries with the same key, so one case is made
+[27/120] [webkit-desktop] › tests/e2e/core.spec.ts:198:1 › the new-case form and keyboard path pass axe
+[28/120] [webkit-desktop] › tests/e2e/integration.spec.ts:62:1 › a renamed ERP customer opens a finding with both values and changes no customer
+[29/120] [webkit-desktop] › tests/e2e/security.spec.ts:16:1 › stored XSS in a case title renders as text and runs nothing
+[30/120] [webkit-desktop] › tests/e2e/integration.spec.ts:78:1 › inventory is read-only and labeled, and unknown items stay unknown
+[31/120] [webkit-desktop] › tests/e2e/security.spec.ts:42:1 › the page CSP allows no inline or remote script
+[32/120] [webkit-desktop] › tests/e2e/shell.spec.ts:20:3 › landing › is static: a first visit makes no API call
+[33/120] [webkit-desktop] › tests/e2e/integration.spec.ts:92:1 › a viewer can read every integration page and can't act
+[34/120] [webkit-desktop] › tests/e2e/shell.spec.ts:34:3 › landing › assets carry the security headers
+[35/120] [webkit-desktop] › tests/e2e/integration.spec.ts:102:1 › a case shows its source references, and a handoff can carry an item
+[36/120] [webkit-desktop] › tests/e2e/shell.spec.ts:43:3 › landing › no CSP violation or console error on the main path
+[37/120] [webkit-desktop] › tests/e2e/shell.spec.ts:56:3 › P1-A launch and reset › launch gives a hardened cookie and a working shell
+[38/120] [webkit-desktop] › tests/e2e/integration.spec.ts:116:1 › the new pages pass axe, light and on a phone
+[39/120] [webkit-desktop] › tests/e2e/shell.spec.ts:68:3 › P1-A launch and reset › a second click on Launch reuses the live session
+[40/120] [webkit-desktop] › tests/e2e/shell.spec.ts:80:3 › P1-A launch and reset › reset restores the pack and drops edits
+[41/120] [webkit-desktop] › tests/e2e/shell.spec.ts:103:1 › E2E-02 two browsers stay apart, including by guessed URL
+[42/120] [webkit-iphone] › tests/e2e/ai-review.spec.ts:35:1 › E2E-11 a manager rejects a suggestion and the case doesn't change
+[43/120] [webkit-desktop] › tests/e2e/shell.spec.ts:121:1 › role switch is server-side and shows up in the UI
+[44/120] [webkit-desktop] › tests/e2e/shell.spec.ts:134:3 › states › no session on an app route: clear next step, not a blank page
+[45/120] [webkit-iphone] › tests/e2e/ai-review.spec.ts:62:1 › E2E-12 an injected document is flagged, and accepting it only applies what the fields support
+[46/120] [webkit-desktop] › tests/e2e/shell.spec.ts:142:3 › states › E2E-21 session ends mid-edit: recovery, no unauthorized write
+[47/120] [webkit-desktop] › tests/e2e/shell.spec.ts:158:3 › states › server error shows a request ID and Retry
+[48/120] [webkit-iphone] › tests/e2e/ai-review.spec.ts:81:1 › E2E-14 a guest gets labeled fixture output, no live option, and an analyst can't decide
+[49/120] [webkit-desktop] › tests/e2e/shell.spec.ts:185:3 › states › 403 shows Access denied
+[50/120] [webkit-desktop] › tests/e2e/shell.spec.ts:202:3 › states › empty filter result offers Clear
+[51/120] [webkit-iphone] › tests/e2e/ai-review.spec.ts:94:1 › E2E-13 a guest can't upload a file, whatever it is
+[52/120] [webkit-desktop] › tests/e2e/shell.spec.ts:221:3 › states › error boundary catches a render failure
+[53/120] [webkit-desktop] › tests/e2e/shell.spec.ts:233:3 › states › an app area that isn't built says so and offers no fake controls
+[54/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:28:1 › P6.2: every dashboard value matches its query, with labels, tables and no axe violations
+[55/120] [webkit-desktop] › tests/e2e/shell.spec.ts:240:3 › states › unknown page
+[56/120] [webkit-desktop] › tests/e2e/shell.spec.ts:247:3 › waking state, PRD 13.2 › message at 1 s, Retry at 8 s, walkthrough at 15 s
+[57/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:71:1 › P6-E: key metrics are reachable as headings and the trend table opens from the keyboard
+[58/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:96:1 › E2E-20: after an approval the dashboard agrees with the records again
+[59/120] [webkit-desktop] › tests/e2e/shell.spec.ts:273:3 › waking state, PRD 13.2 › launch failure offers Retry; quota offers the walkthrough instead
+[60/120] [webkit-desktop] › tests/e2e/shell.spec.ts:293:3 › P1-F keyboard, motion, mobile › keyboard alone reaches launch, navigation and a case
+[61/120] [webkit-desktop] › tests/e2e/shell.spec.ts:333:3 › P1-F keyboard, motion, mobile › reset can be cancelled and confirmed by keyboard, keeping focus
+[62/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:115:1 › P6.3 / JOB-TEST-04: report filter, chart table and CSV agree
+[63/120] [webkit-desktop] › tests/e2e/shell.spec.ts:354:3 › P1-F keyboard, motion, mobile › reduced motion removes animation
+[64/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:152:1 › P6.3: a viewer gets the report and the export, and no snapshot button
+[65/120] [webkit-desktop] › tests/e2e/shell.spec.ts:372:3 › P1-F keyboard, motion, mobile › no horizontal page scroll on any main route
+[66/120] [webkit-iphone] › tests/e2e/analytics.spec.ts:163:1 › E2E-19: changing ROI assumptions recalculates exactly and keeps the Estimated label
+[67/120] [webkit-iphone] › tests/e2e/automation.spec.ts:13:1 › P4: an approval becomes a Simulated run, and a rule is reused for the second team
+[68/120] [webkit-iphone] › tests/e2e/automation.spec.ts:50:1 › P4: viewers see rules and runs but no change controls
+[69/120] [webkit-desktop] › tests/e2e/shell.spec.ts:391:3 › P1-F keyboard, motion, mobile › navigation stays reachable and touch sized on a phone
+[70/120] [webkit-desktop] › tests/e2e/shell.spec.ts:406:3 › P1-F keyboard, motion, mobile › light theme passes the same accessibility checks
+[71/120] [webkit-iphone] › tests/e2e/core.spec.ts:36:1 › P2-A and P2-C a case runs its whole life and survives a refresh
+[72/120] [webkit-desktop] › tests/e2e/shell.spec.ts:416:3 › P1-C admin through the local test double › a guest gets 401 at /admin, with no page
+[73/120] [webkit-desktop] › tests/e2e/shell.spec.ts:423:3 › P1-C admin through the local test double › the double owner sees the honest label and can sign out
+[74/120] [webkit-iphone] › tests/e2e/evidence.spec.ts:7:1 › screens
+[75/120] [webkit-iphone] › tests/e2e/core.spec.ts:81:1 › P2-B a stale edit is refused and explained, and Reload recovers
+[76/120] [webkit-iphone] › tests/e2e/guided-demo.spec.ts:23:1 › P8.1 a first visitor finishes the five steps, sees the recap and resets
+[77/120] [webkit-iphone] › tests/e2e/core.spec.ts:107:1 › P2-B a role that can't act sees why, and nothing to press
+[78/120] [webkit-iphone] › tests/e2e/core.spec.ts:126:1 › JOB-TEST-02 handoff with a flagged item persists, and an observer is refused
+[79/120] [webkit-iphone] › tests/e2e/guided-demo.spec.ts:105:1 › P8.1 the checklist and reset work from the keyboard alone
+[80/120] [webkit-iphone] › tests/e2e/guided-demo.spec.ts:123:1 › P8.1 if progress can't load, the steps and links still work, and Retry recovers
+[81/120] [webkit-iphone] › tests/e2e/core.spec.ts:148:1 › list search, filters, empty state and a shared read-only case
+[82/120] [webkit-iphone] › tests/e2e/guided-demo.spec.ts:138:1 › E2E-28 a visitor reads the engineering evidence with no session and no admin data
+[83/120] [webkit-iphone] › tests/e2e/guided-demo.spec.ts:160:1 › P8.1 New case stays put while the assignee filter fills (WebKit intermittent)
+[84/120] [webkit-iphone] › tests/e2e/integration.spec.ts:21:1 › the showcase: a reviewer maps one CRM organization to two ERP bill-tos
+[85/120] [webkit-iphone] › tests/e2e/core.spec.ts:174:1 › a lost response retries with the same key, so one case is made
+[86/120] [webkit-iphone] › tests/e2e/integration.spec.ts:39:1 › a sync runs, a replay adds nothing, and a fault recovers from its saved cursor
+[87/120] [webkit-iphone] › tests/e2e/core.spec.ts:198:1 › the new-case form and keyboard path pass axe
+[88/120] [webkit-iphone] › tests/e2e/security.spec.ts:16:1 › stored XSS in a case title renders as text and runs nothing
+[89/120] [webkit-iphone] › tests/e2e/integration.spec.ts:62:1 › a renamed ERP customer opens a finding with both values and changes no customer
+[90/120] [webkit-iphone] › tests/e2e/security.spec.ts:42:1 › the page CSP allows no inline or remote script
+[91/120] [webkit-iphone] › tests/e2e/shell.spec.ts:20:3 › landing › is static: a first visit makes no API call
+[92/120] [webkit-iphone] › tests/e2e/integration.spec.ts:78:1 › inventory is read-only and labeled, and unknown items stay unknown
+[93/120] [webkit-iphone] › tests/e2e/shell.spec.ts:34:3 › landing › assets carry the security headers
+[94/120] [webkit-iphone] › tests/e2e/shell.spec.ts:43:3 › landing › no CSP violation or console error on the main path
+[95/120] [webkit-iphone] › tests/e2e/integration.spec.ts:92:1 › a viewer can read every integration page and can't act
+[96/120] [webkit-iphone] › tests/e2e/shell.spec.ts:56:3 › P1-A launch and reset › launch gives a hardened cookie and a working shell
+[97/120] [webkit-iphone] › tests/e2e/integration.spec.ts:102:1 › a case shows its source references, and a handoff can carry an item
+[98/120] [webkit-iphone] › tests/e2e/shell.spec.ts:68:3 › P1-A launch and reset › a second click on Launch reuses the live session
+[99/120] [webkit-iphone] › tests/e2e/shell.spec.ts:80:3 › P1-A launch and reset › reset restores the pack and drops edits
+[100/120] [webkit-iphone] › tests/e2e/integration.spec.ts:116:1 › the new pages pass axe, light and on a phone
+[101/120] [webkit-iphone] › tests/e2e/shell.spec.ts:103:1 › E2E-02 two browsers stay apart, including by guessed URL
+[102/120] [webkit-iphone] › tests/e2e/shell.spec.ts:121:1 › role switch is server-side and shows up in the UI
+[103/120] [webkit-iphone] › tests/e2e/shell.spec.ts:134:3 › states › no session on an app route: clear next step, not a blank page
+[104/120] [webkit-iphone] › tests/e2e/shell.spec.ts:142:3 › states › E2E-21 session ends mid-edit: recovery, no unauthorized write
+[105/120] [webkit-iphone] › tests/e2e/shell.spec.ts:158:3 › states › server error shows a request ID and Retry
+[106/120] [webkit-iphone] › tests/e2e/shell.spec.ts:185:3 › states › 403 shows Access denied
+[107/120] [webkit-iphone] › tests/e2e/shell.spec.ts:202:3 › states › empty filter result offers Clear
+[108/120] [webkit-iphone] › tests/e2e/shell.spec.ts:221:3 › states › error boundary catches a render failure
+[109/120] [webkit-iphone] › tests/e2e/shell.spec.ts:233:3 › states › an app area that isn't built says so and offers no fake controls
+[110/120] [webkit-iphone] › tests/e2e/shell.spec.ts:240:3 › states › unknown page
+[111/120] [webkit-iphone] › tests/e2e/shell.spec.ts:247:3 › waking state, PRD 13.2 › message at 1 s, Retry at 8 s, walkthrough at 15 s
+[112/120] [webkit-iphone] › tests/e2e/shell.spec.ts:273:3 › waking state, PRD 13.2 › launch failure offers Retry; quota offers the walkthrough instead
+[113/120] [webkit-iphone] › tests/e2e/shell.spec.ts:293:3 › P1-F keyboard, motion, mobile › keyboard alone reaches launch, navigation and a case
+[114/120] [webkit-iphone] › tests/e2e/shell.spec.ts:333:3 › P1-F keyboard, motion, mobile › reset can be cancelled and confirmed by keyboard, keeping focus
+[115/120] [webkit-iphone] › tests/e2e/shell.spec.ts:354:3 › P1-F keyboard, motion, mobile › reduced motion removes animation
+[116/120] [webkit-iphone] › tests/e2e/shell.spec.ts:372:3 › P1-F keyboard, motion, mobile › no horizontal page scroll on any main route
+[117/120] [webkit-iphone] › tests/e2e/shell.spec.ts:391:3 › P1-F keyboard, motion, mobile › navigation stays reachable and touch sized on a phone
+[118/120] [webkit-iphone] › tests/e2e/shell.spec.ts:406:3 › P1-F keyboard, motion, mobile › light theme passes the same accessibility checks
+[119/120] [webkit-iphone] › tests/e2e/shell.spec.ts:416:3 › P1-C admin through the local test double › a guest gets 401 at /admin, with no page
+[120/120] [webkit-iphone] › tests/e2e/shell.spec.ts:423:3 › P1-C admin through the local test double › the double owner sees the honest label and can sign out
+  7 skipped
+  113 passed (1.5m)
