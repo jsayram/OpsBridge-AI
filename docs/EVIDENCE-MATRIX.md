@@ -87,7 +87,7 @@ Until the matching row above changes state with evidence:
 | Issue | Severity | State |
 |---|---|---|
 | Demo capacity burst can refuse new visitors for hours | Medium, availability | Decide after the Workers CPU measurement |
-| One render error on the case search on a Pixel 7 profile, once in three full Chromium runs | Unknown, intermittent | Not reproduced in 240 later runs; recorded in `docs/reports/P8.1.md` |
+| Case list crashed after a search when an aborted request resolved as null | Was intermittent, user-visible | Cause found and fixed in P8.1 (`frontend/src/api.ts`), unit test plus 144 repro searches |
 | WebKit "New case" miss | Was intermittent | Cause found and fixed in P8.1 (layout shift); confirm in real Safari |
 | `TOKEN_ENCRYPTION_KEY` has no in-place rotation | Low | Documented workaround |
 | No independent human review | Process gap | Recommended before public launch |

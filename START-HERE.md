@@ -63,6 +63,16 @@ docker compose -f infra/docker-compose.yml down
 
 `/admin` answers 404 locally. That is deliberate: no identity provider is configured.
 
+**If `db:setup` stops with "changed after it was applied".** Your local database was migrated by an older build whose migration file later changed. It holds only throwaway synthetic data. Recreate it by removing the local Docker volume, which deletes every local OpsBridge database on this machine, then run the setup again:
+
+```bash
+docker compose -f infra/docker-compose.yml down -v
+```
+
+```bash
+npm run db:up && npm run db:setup
+```
+
 ## Check it
 
 ```bash

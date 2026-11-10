@@ -1,0 +1,78 @@
+# START-HERE rehearsal, P8.3 (JOB-TEST-07), run by the P8 AI session, not an independent person
+
+## Run 1: the steps exactly as written, on this machine's existing local database
+# START-HERE rehearsal 2026-11-10T00:49:05Z, Node v22.23.1, clone of phase/p8-launch-prep at 12d3bef
+PASS git clone
+PASS npm ci
+PASS cp .dev.vars.example .dev.vars
+PASS npm run db:up
+
+exit db:setup 0
+health/ready after 3s: {"status":"ok"}
+PASS /health/live is minimal (200)
+PASS /health/ready is minimal (200)
+PASS landing page (8 ms)
+PASS landing has a CSP
+PASS SPA route falls back to the app
+PASS 404 envelope has a request ID
+PASS anonymous /me is 401
+PASS demo launch (201, 54 ms)
+PASS cookie flags
+PASS session works (analyst)
+PASS no admin capability
+PASS cases list opens with own rows
+PASS a second visitor can't read the first one's case (404)
+PASS cross-origin write refused
+PASS guest cannot reach admin (404)
+PASS guest cannot load the admin page (404)
+PASS reset (200)
+PASS old cookie is dead after reset
+PASS new cookie works
+SMOKE PASSED
+landing: 200
+admin (expect 404): 404
+dev server stopped
+
+Finding: the db:setup line above hid its exit code behind a pipe. Rerun on its own:
+local database opsbridge_dev ready
+<clone>/scripts/db.mjs:89
+        if (done.get(file) !== sha) throw new Error(`${file} changed after it was applied`);
+                                          ^
+
+Error: 0007_automation.sql changed after it was applied
+exit 1
+
+Cause, most likely: this machine's opsbridge_dev was migrated during P4 with the 0007_automation.sql committed at 13:51 on 2026-11-09, which was changed at 14:05 the same day before review (git log on the file). db.mjs refuses an applied migration whose bytes changed, as designed. The dev server and smoke in run 1 therefore ran against that stale database, so run 1 does not prove the steps. A new machine has no such database.
+Fix: START-HERE.md now says what this error means and how to recreate the throwaway local database. This session did not drop opsbridge_dev.
+
+## Run 2: the same commands against a fresh database (opsbridge_rehearsal), as a new machine's opsbridge_dev would be
+# Fresh-database rehearsal 2026-11-10T00:49:43Z: db:setup's three commands with opsbridge_dev replaced by opsbridge_rehearsal
+local database opsbridge_rehearsal ready
+applied: 0001_foundation.sql, 0002_expiry_lock_order.sql, 0003_core_records.sql, 0004_integrations.sql, 0005_reconciliation.sql, 0006_inventory.sql, 0007_automation.sql, 0008_ai_review.sql, 0009_analytics.sql, 0010_dispatcher.sql, 0011_dispatcher_contract.sql
+seeded: {"customers":6,"cases":120}
+exit db setup: 0
+dev server ready after 3s on opsbridge_rehearsal
+PASS /health/live is minimal (200)
+PASS /health/ready is minimal (200)
+PASS landing page (7 ms)
+PASS landing has a CSP
+PASS SPA route falls back to the app
+PASS 404 envelope has a request ID
+PASS anonymous /me is 401
+PASS demo launch (201, 45 ms)
+PASS cookie flags
+PASS session works (analyst)
+PASS no admin capability
+PASS cases list opens with own rows
+PASS a second visitor can't read the first one's case (404)
+PASS cross-origin write refused
+PASS guest cannot reach admin (404)
+PASS guest cannot load the admin page (404)
+PASS reset (200)
+PASS old cookie is dead after reset
+PASS new cookie works
+SMOKE PASSED
+smoke exit 0
+launch 201
+progress {"provenance":"SYNTHETIC","startedAt":"2026-11-10T00:53:53.888Z","complete":false,"elapsedSeconds":null,"steps":[{"key":"workspace_launched","done":true,"comple
+dev server stopped
