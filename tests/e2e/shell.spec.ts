@@ -294,7 +294,7 @@ test.describe("P1-F keyboard, motion, mobile", () => {
     page,
     browserName,
   }, info) => {
-    test.skip(info.project.name === "mobile", "keyboard path runs on desktop");
+    test.skip(Boolean(info.project.use.isMobile), "keyboard path runs on desktop");
     const tab = tabKey(browserName);
     await page.goto("/");
     await page.keyboard.press(tab);
@@ -334,7 +334,7 @@ test.describe("P1-F keyboard, motion, mobile", () => {
     page,
     browserName,
   }, info) => {
-    test.skip(info.project.name === "mobile", "keyboard path runs on desktop");
+    test.skip(Boolean(info.project.use.isMobile), "keyboard path runs on desktop");
     const tab = tabKey(browserName);
     await openOverview(page);
     const reset = page.getByRole("button", { name: "Reset demo" });
@@ -389,7 +389,7 @@ test.describe("P1-F keyboard, motion, mobile", () => {
   });
 
   test("navigation stays reachable and touch sized on a phone", async ({ page }, info) => {
-    test.skip(info.project.name !== "mobile", "phone only");
+    test.skip(!info.project.use.isMobile, "phone only");
     await openOverview(page);
     const nav = page.getByRole("navigation", { name: "Primary" });
     await expect(nav).toBeVisible();
@@ -425,7 +425,7 @@ test.describe("P1-C admin through the local test double", () => {
     context,
   }, info) => {
     // Sign-out revokes the shared owner row, so this runs once per server.
-    test.skip(info.project.name === "mobile", "revocation is global to the owner");
+    test.skip(Boolean(info.project.use.isMobile), "revocation is global to the owner");
     await context.addCookies([
       {
         name: "CF_Authorization",

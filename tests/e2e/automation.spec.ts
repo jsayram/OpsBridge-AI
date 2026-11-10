@@ -37,7 +37,8 @@ test("P4: an approval becomes a Simulated run, and a rule is reused for the seco
   await expect(page.locator(".facts .chip").first()).toContainText("Approved");
 
   await page.goto("/app/automations");
-  const runs = page.getByRole("table").last();
+  // By its label: "the last table" is the rules table until the runs have loaded (P7.4, WebKit).
+  const runs = page.getByRole("region", { name: "Automation runs" });
   await expect(runs.getByText("approval.completed")).toBeVisible();
   await expect(runs.getByText("Simulated", { exact: true })).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Delivered");

@@ -8,7 +8,7 @@ Pre-release. Only the latest commit on the default branch receives fixes.
 
 ## Reporting a vulnerability
 
-The repository isn't public yet, so private reporting isn't open. Before the public release (P8.4) this section will name a private reporting channel. Please don't include exploit details in a public issue.
+A private reporting channel isn't set up yet. Before the public release (P8.4) this section will name one. Until then, please don't include exploit details in a public issue.
 
 ## How this project handles security
 
