@@ -102,6 +102,23 @@ paths:
               schema: { $ref: "#/components/schemas/Me" }
         "400": { $ref: "#/components/responses/Error" }
         "401": { $ref: "#/components/responses/Error" }
+  /api/v1/demo/progress:
+    get:
+      tags: [demo]
+      operationId: getDemoProgress
+      summary: Guided-demo checklist and recap, read back from this workspace's own records
+      description: >-
+        Guests only. A step is done only when the visitor's own audit rows (or, for the mismatch,
+        a finding a sync opened in this workspace) show it happened. Every count is synthetic;
+        nothing here is a measurement. Owners get 404.
+      responses:
+        "200":
+          description: Steps and recap
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoProgress" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
   /api/v1/me:
     get:
       tags: [demo]
@@ -1279,6 +1296,38 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
   schemas:
+    DemoProgress:
+      type: object
+      required: [provenance, startedAt, complete, elapsedSeconds, steps, recap]
+      properties:
+        provenance: { const: SYNTHETIC }
+        startedAt: { type: string, format: date-time }
+        complete: { type: boolean }
+        elapsedSeconds: { type: [integer, "null"] }
+        steps:
+          type: array
+          items:
+            type: object
+            required: [key, done, completedAt]
+            properties:
+              key:
+                enum:
+                  [workspace_launched, case_created, mismatch_detected, document_reviewed, resolution_approved]
+              done: { type: boolean }
+              completedAt: { type: [string, "null"], format: date-time }
+        recap:
+          type: object
+          properties:
+            casesCreated: { type: integer }
+            findingsOpened: { type: integer }
+            reviewsDecided: { type: integer }
+            approvals: { type: integer }
+            auditEventsWritten: { type: integer }
+            automationRuns: { type: integer }
+            automationRunsSimulated: { type: integer }
+            sources: { const: Simulated }
+            aiReview: { const: Deterministic fixture }
+            delivery: { const: Simulated }
     Error:
       type: object
       required: [code, message, requestId]

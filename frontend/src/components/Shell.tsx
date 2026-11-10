@@ -20,6 +20,7 @@ export const SkipLink = () => (
 );
 
 const NAV = [
+  ["/demo", "Guided demo"],
   ["/app/overview", "Overview"],
   ["/app/cases", "Cases"],
   ["/app/reconciliation", "Reconciliation"],

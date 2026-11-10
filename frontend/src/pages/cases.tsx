@@ -224,7 +224,11 @@ export function Cases() {
         </label>
         <label className="field">
           Assignee
-          <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+          <select
+            className="assignee-filter"
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+          >
             <option value="">Anyone</option>
             <option value="unassigned">Unassigned</option>
             {people.data?.items.map((p) => (

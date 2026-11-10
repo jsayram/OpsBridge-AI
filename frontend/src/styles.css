@@ -962,3 +962,41 @@ button.link {
 .kpi p.note {
   margin-top: 0;
 }
+
+/* ---------- guided demo (P8.1) ---------- */
+.steps.guided > li {
+  align-items: start;
+}
+.steps.guided .step-text {
+  display: grid;
+  gap: 4px;
+}
+.steps.guided .step-title {
+  font-weight: 600;
+}
+.steps.guided .step-side {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+.steps.guided > li.done::before {
+  border-color: var(--ok, currentColor);
+}
+@media (max-width: 560px) {
+  .steps.guided > li {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+  .steps.guided .step-side {
+    grid-column: 2;
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+/* The assignee filter fills from a request. A fixed width keeps the New case button where it
+   was when the list first drew, so a click can't land on the old spot (P8.1, WebKit). */
+.filters select.assignee-filter {
+  width: 17rem;
+  max-width: 100%;
+}

@@ -264,9 +264,9 @@ test.describe("waking state, PRD 13.2", () => {
     await expect(page.getByRole("button", { name: "Retry" })).toHaveCount(0);
     await page.clock.fastForward(7000);
     await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
-    await expect(page.getByText("recorded walkthrough")).toHaveCount(0);
+    await expect(page.getByText("written walkthrough")).toHaveCount(0);
     await page.clock.fastForward(7000);
-    await expect(page.getByText("recorded walkthrough")).toBeVisible();
+    await expect(page.getByText("written walkthrough")).toBeVisible();
     release();
   });
 
@@ -285,7 +285,7 @@ test.describe("waking state, PRD 13.2", () => {
     await page.goto("/");
     await page.getByRole("button", { name: "Launch Guided Demo" }).click();
     await expect(page.getByText("Too many demo launches.")).toBeVisible();
-    await expect(page.getByText("recorded walkthrough")).toBeVisible();
+    await expect(page.getByText("written walkthrough")).toBeVisible();
   });
 });
 
