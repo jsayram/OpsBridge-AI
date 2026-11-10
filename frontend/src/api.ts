@@ -39,7 +39,13 @@ export async function api<T>(
     if (e instanceof DOMException && e.name === "AbortError") throw e;
     throw new ApiFailure(0, "offline", "We couldn't reach the server.", null);
   }
-  const body = (await res.json().catch(() => null)) as Record<string, string> | null;
+  // An abort can land after the headers, while the body is still being read. That must stay an
+  // AbortError: turning it into "no body" made a cancelled list request look like a success
+  // with a null page, which crashed the case list when a search replaced it (P8.1).
+  const body = (await res.json().catch((e: unknown) => {
+    if (e instanceof DOMException && e.name === "AbortError") throw e;
+    return null;
+  })) as Record<string, string> | null;
   if (!res.ok) {
     throw new ApiFailure(
       res.status,
