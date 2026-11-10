@@ -13,10 +13,10 @@ Stop if any screen asks for a card. R2 and Zero Trust may ask even at $0, so rea
 ## 2. Database roles, on the `staging` branch
 
 1. In the Neon SQL editor, run `infra/db/bootstrap-roles.sql`.
-2. Give the three roles a login with long generated passwords, using Neon's role screen or `ALTER ROLE … LOGIN PASSWORD`. Keep them in a password manager.
+2. Give the four roles (app, cleanup, dispatcher, migrator) a login with long generated passwords, using Neon's role screen or `ALTER ROLE … LOGIN PASSWORD`. Keep them in a password manager.
 3. Keep the connection strings, with `sslmode=require`, for steps 3 and 5.
 
-## 3. Hyperdrive, two configs with caching off
+## 3. Hyperdrive, three configs with caching off
 
 Run in this repository after `npx wrangler login`, or use the dashboard with **caching disabled**. The command prompts nothing, so type the connection string only in your own terminal.
 

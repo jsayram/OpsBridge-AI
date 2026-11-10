@@ -3,16 +3,16 @@
   "Trivy": {
     "Version": "0.76.1"
   },
-  "ReportID": "01a1c287-0b58-77e3-9f09-6b07f933d5e5",
-  "CreatedAt": "2026-11-09T17:56:32.600519-05:00",
-  "ArtifactID": "sha256:84d2d0d98406450af55d8865776e12e516147805d39f8173b3f331487323bf2e",
+  "ReportID": "01a1c2c3-29b4-74c6-8436-d397f9de1338",
+  "CreatedAt": "2026-11-09T19:02:12.532315-05:00",
+  "ArtifactID": "sha256:0aabdb2e098414d1d405e33560ee46291da8dcfc1ac2e4f6446a43f23162f009",
   "ArtifactName": ".",
   "ArtifactType": "repository",
   "Metadata": {
     "RepoURL": "https://github.com/jsayram/OpsBridge-AI.git",
     "Branch": "phase/p7-release-gate",
-    "Commit": "ab923ffa99728ffb41b2acd4f264313b1522d85c",
-    "CommitMsg": "P7.1: give the outbox dispatcher its own database role (D-061, D-076)\n\nMigration 0010 revokes claim_due_outbox and finish_outbox from the request\nrole and grants them to opsbridge_dispatcher, which reads only the rules of\nthe workspace it sets. New HYPERDRIVE_DISPATCH binding; release-config gate\nrequires three separate Hyperdrive configs.\n\nCo-Authored-By: Claude Opus 5.5 \u003cnoreply@anthropic.com\u003e",
+    "Commit": "49fa5db8fa161b62fccaff37431e183d833ea654",
+    "CommitMsg": "P7.4 and P7.5: final browser evidence, isMobile skips, runs table found by label, SECURITY.md wording\n\nCo-Authored-By: Claude Opus 5.5 \u003cnoreply@anthropic.com\u003e",
     "Author": "jsayram \u003cjsayram@Gmail.com\u003e",
     "Committer": "jsayram \u003cjsayram@Gmail.com\u003e"
   },

@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:12a76c8f-ba8e-4563-95f6-43e53dbd2662",
+  "serialNumber": "urn:uuid:a444b9d3-b036-4cc4-affc-9533a9bde86e",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-09T22:56:33+00:00",
+    "timestamp": "2026-11-10T00:02:12+00:00",
     "tools": {
       "components": [
         {
@@ -20,7 +20,7 @@
       ]
     },
     "component": {
-      "bom-ref": "c5926486-d49f-4eb4-899a-bef56ceec56f",
+      "bom-ref": "b384b06a-70ba-4174-a90e-f75e48683e86",
       "type": "application",
       "name": ".",
       "properties": [
@@ -33,7 +33,7 @@
   },
   "components": [
     {
-      "bom-ref": "4efb0636-d354-4b82-af5f-753e9a5c2275",
+      "bom-ref": "a4195206-9df3-4d35-96c3-4121b4370a2a",
       "type": "application",
       "name": "package-lock.json",
       "properties": [
@@ -506,7 +506,7 @@
   ],
   "dependencies": [
     {
-      "ref": "4efb0636-d354-4b82-af5f-753e9a5c2275",
+      "ref": "a4195206-9df3-4d35-96c3-4121b4370a2a",
       "dependsOn": [
         "pkg:npm/hono@4.13.16",
         "pkg:npm/jose@6.2.15",
@@ -516,9 +516,9 @@
       ]
     },
     {
-      "ref": "c5926486-d49f-4eb4-899a-bef56ceec56f",
+      "ref": "b384b06a-70ba-4174-a90e-f75e48683e86",
       "dependsOn": [
-        "4efb0636-d354-4b82-af5f-753e9a5c2275"
+        "a4195206-9df3-4d35-96c3-4121b4370a2a"
       ]
     },
     {

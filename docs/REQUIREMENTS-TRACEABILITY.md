@@ -106,6 +106,19 @@ E2E-06, E2E-07, E2E-08, E2E-09 (simulated and double), E2E-10, JOB-TEST-01 and J
 
 JOB-TEST-06 passes locally: `automation-rules.test.ts`, `tests/e2e/automation.spec.ts`. E2E-05 and E2E-06 still pass, now through dispatch.
 
+## P7 acceptance
+
+| Criterion | Evidence | State |
+|---|---|---|
+| P7-A No known critical or high exploitable issue | `scripts/security-scan.sh`, `scripts/sast.mjs`, `docs/SECURITY-CHECKLIST.md`, `docs/evidence/P7.1/scans/` | Met locally |
+| P7-B Negative security suite passes | `tests/integration/release-negative.test.ts`, `tests/e2e/security.spec.ts`, earlier suites | Met locally |
+| P7-C Restore and rollback rehearsed | `scripts/rollback-rehearsal.mjs`, `scripts/restore-drill.mjs`, `scripts/restore-proof.sh`, `tests/integration/incident-drill.test.ts`, `docs/evidence/P7.3/` | Met locally; **hosted half Pending Owner Configuration** |
+| P7-D Chrome, Safari, mobile | `docs/evidence/P7.4/chromium-run.txt`, `webkit-run.txt` | Met in Chromium and Playwright WebKit; real Safari, iPhone and VoiceOver pending |
+| P7-E Usable with each provider down | `tests/integration/provider-outages.test.ts` | Met locally against doubles |
+| P7-F Licenses, terms, retention, no badges | `docs/reports/P7.5.md`, `docs/evidence/P7.1/scans/licenses.json` | Met; repository license is Jose's decision |
+
+E2E-01 to E2E-28 each have a state in `docs/reports/P7.5.md`. E2E-23 and E2E-24 are met locally only; E2E-28 is not built.
+
 ## ADR-000 proof items
 
 See `ADR/000-stack-and-hosting.md` for the state of each item and `docs/reports/P0.2.md` for the evidence.

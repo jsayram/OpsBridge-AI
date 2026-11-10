@@ -3,8 +3,8 @@
   "Trivy": {
     "Version": "0.76.1"
   },
-  "ReportID": "01a1c287-0996-7943-80ad-cd42646d813b",
-  "CreatedAt": "2026-11-09T17:56:32.15061-05:00",
+  "ReportID": "01a1c2c3-27c6-777a-bb00-eb244919fb30",
+  "CreatedAt": "2026-11-09T19:02:12.038492-05:00",
   "ArtifactName": "spikes/p0.2",
   "ArtifactType": "filesystem",
   "Results": [

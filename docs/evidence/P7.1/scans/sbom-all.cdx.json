@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:3b7f58dc-9d74-49d1-be5f-a95ad6716a74",
+  "serialNumber": "urn:uuid:cd1133ad-0227-49ef-b507-e79842cd285f",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-09T22:56:33+00:00",
+    "timestamp": "2026-11-10T00:02:13+00:00",
     "tools": {
       "components": [
         {
@@ -20,7 +20,7 @@
       ]
     },
     "component": {
-      "bom-ref": "45cfb8bb-ffc1-4b90-8a7a-336027bbce88",
+      "bom-ref": "1496db64-e0e5-42d8-a252-17f361dcacc0",
       "type": "application",
       "name": ".",
       "properties": [
@@ -33,7 +33,7 @@
   },
   "components": [
     {
-      "bom-ref": "fd7daf05-e16b-4a5b-955d-d37e2ec9560d",
+      "bom-ref": "3fd2afdd-3043-4dce-b9db-f6605e314cce",
       "type": "application",
       "name": "package-lock.json",
       "properties": [
@@ -4852,13 +4852,13 @@
   ],
   "dependencies": [
     {
-      "ref": "45cfb8bb-ffc1-4b90-8a7a-336027bbce88",
+      "ref": "1496db64-e0e5-42d8-a252-17f361dcacc0",
       "dependsOn": [
-        "fd7daf05-e16b-4a5b-955d-d37e2ec9560d"
+        "3fd2afdd-3043-4dce-b9db-f6605e314cce"
       ]
     },
     {
-      "ref": "fd7daf05-e16b-4a5b-955d-d37e2ec9560d",
+      "ref": "3fd2afdd-3043-4dce-b9db-f6605e314cce",
       "dependsOn": [
         "pkg:npm/%40axe-core/playwright@4.14.0",
         "pkg:npm/%40biomejs/biome@2.6.6",

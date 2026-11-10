@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-09 (America/New_York), end of the local P6 phase session.
+Updated: 2026-11-09 (America/New_York), end of the local P7 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -13,7 +13,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P4 Automation/Zapier | P4.1–P4.5 | 5 | Run locally | Typed rules, durable dispatcher, Sheet bridge on a labeled double and operator controls on `phase/p4-automation` | Local checks passed at `89334a1`; P4-A, B, D and E met locally; P4-C Pending Owner Credentials; see `docs/reports/P4.md` | | No | No |
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Run locally | Fixture document lifecycle, validated fixture review, owner-only live gateway on a labeled double, reviewer decisions through the checklist command, 40-document evaluation on `phase/p5-ai-review` | Local checks passed; P5-A to P5-F met locally in fixture mode; P5.3 live provider Pending Owner Credentials; see `docs/reports/P5.md` | | No | No |
 | P6 Analytics/business insight | P6.1–P6.5 | 5 | Run locally | Metric glossary and live overview, snapshots, six dashboards, bounded reports and safe CSV export, ROI calculator, executive business case on `phase/p6-analytics` | Local checks passed; P6-A to P6-G met locally, P6-E without a screen-reader run; see `docs/reports/P6.md` | | No | No |
-| P7 Hardening/recovery | P7.1–P7.5 | 5 | Planned | No | No | No | No | No |
+| P7 Hardening/recovery | P7.1–P7.5 | 5 | Run locally | Dispatcher role (`0010`, `0011`), offline scans and SAST, OpenAPI lint and route check, negative sweep, outage drills, rollback and restore rehearsals, incident runbook, WebKit projects, load profile on `phase/p7-release-gate` | Local checks passed; P7-A, B, E, F met locally; P7-C met locally with the hosted half pending; P7-D met in Chromium and Playwright WebKit, real Safari, iPhone and VoiceOver pending; see `docs/reports/P7.md` | | No | No |
 | P8 Demo/launch/handoff | P8.1–P8.5 | 5 | Planned | No | No | No | No | No |
 
 Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. If they change, update this inventory in the same revision and preserve retired IDs rather than reusing them for unrelated work.
@@ -45,6 +45,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P6:** Local run on `phase/p6-analytics` from `57d0166`, waiting for coordinator review. P6-A to P6-G are met locally on Docker Postgres and workerd. P6-E is met for keyboard, axe and the accessibility tree; no VoiceOver or Safari run happened, and both carry to P7.4. P6 has no live-account criterion of its own; P5.3, P4-C, P3-D and P1-E stay pending under DEC-008. Every ROI figure is labeled illustrative. An independent AI review found no High, four Medium and eight Low; all fixed with tests or labels. Owner Accepted stays empty. Nothing from P6 is pushed, merged or deployed.
 
 **P6:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `41c6668`, after the master reran `npm run ci:local`. P6-A, B, C, D, F and G are met locally. P6-E is met for keyboard, axe and the accessibility tree only; Safari and screen-reader runs carry to P7.4. Every ROI figure is labeled illustrative. P6 paused once at the usage limit and resumed from `fabb5f4`. Owner Accepted stays empty. Nothing from P6 is pushed, merged or deployed.
+
+**P7:** Local run on `phase/p7-release-gate` from `48eac5d`, waiting for coordinator review. No critical or high exploitable issue open: one High in the P0.2 spike's `ws` fixed. The dispatcher has its own database role (D-076), split into expand `0010` and contract `0011` after the rollback rehearsal showed the first version would break a rollback. Clean-copy CI passed on Node 22 at `d5396a7`; later commits change tests and documents only. Hosted restore, rollback, Hyperdrive, Neon, Access, R2 and Workers CPU stay Pending Owner Configuration under DEC-002 and DEC-008; real Safari, a physical iPhone and a VoiceOver pass need a person. The intermittent P3 purge-list test was reproduced and fixed (D-079). Owner Accepted stays empty. Nothing from P7 is pushed, merged or deployed.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -87,11 +89,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P6.3 | Local run | Done: bounded report and export routes, one WHERE for table, chart and CSV, formula-safe CSV, reports page | Nine filter sets agree, F8, limits, 413 over cap, cross-workspace refusal, UTC bounds, browser download | Not reviewed | | No | No |
 | P6.4 | Local run | Done: PRD 11.2 calculator, three scenarios, sensitivity, break-even, zero-denominator handling, ROI page | Known cases and boundaries; E2E-19 desktop and phone with axe | Not reviewed | | No | No |
 | P6.5 | Local run | Done: executive business case, stakeholder walkthrough, reports, P7 brief | Business-case figures held to the calculator by test; clean-copy CI; independent review | Not reviewed | | No | No |
-| P7.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P7.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P7.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P7.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P7.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P7.1 | Local run | Done: `opsbridge_dispatcher`, offline trivy and gitleaks with canaries, project SAST, SBOMs, OpenAPI lint and route cross-check, security checklist | Scans clean at the final head; spike `ws` High fixed; 3 undocumented routes added | Not reviewed | | No | No |
+| P7.2 | Local run | Done: spec-driven negative sweep over 64 operations, provider outage drills, stored XSS in four browsers, purge-list intermittent fixed | Sweep with positive control; P7-E with each provider and all down; 412 integration tests with file order shuffled twice | Not reviewed | | No | No |
+| P7.3 | Local run | Done: expand and contract migrations, `migrate --to`, upgrade path, rollback rehearsal with two real Workers, restore drill, incident runbook and drill | Rollback, restore drill and 57-check restore proof passed; hosted half Pending Owner Configuration | Not reviewed | | No | No |
+| P7.4 | Local run | Done: WebKit desktop and iPhone projects over https, load profile | Chromium 104 passed; WebKit 104 passed with one retry; p95 under 500 ms at 20 visitors; real Safari, iPhone and VoiceOver pending | Not reviewed | | No | No |
+| P7.5 | Local run | Done: costs, caps, retention, revocation and claims review, E2E-01 to E2E-28 status, release-readiness list, P8 brief | Clean-copy CI on Node 22 passed | Not reviewed | | No | No |
 | P8.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P8.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
 | P8.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
