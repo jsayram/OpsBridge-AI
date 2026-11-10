@@ -79,7 +79,7 @@ npm run db:up && npm run db:setup
 npm run ci:local
 ```
 
-This copies the repository to a temporary folder and runs everything CI runs, in order, on its own databases: format, lint, types, unit, integration on real Postgres, the query profile, build, bundle scan, fixture checks, the AI evaluation in fixture mode, Playwright in Chromium, the dependency audit and a secret scan. It needs `gitleaks` and the Playwright Chromium browser (`npx playwright install chromium`). It takes about ten minutes.
+This copies the repository to a temporary folder and runs everything CI runs, in order, on its own databases: format, lint, types, unit, integration on real Postgres, the query profile, build, bundle scan, fixture checks, the AI evaluation in fixture mode, Playwright in Chromium, the dependency audit and a secret scan. It needs `gitleaks` and the Playwright Chromium browser (`npx playwright install chromium`). It took about four minutes on the development Mac.
 
 Run one test suite at a time. Each suite drops and recreates its own database in setup, so two suites at once break each other.
 

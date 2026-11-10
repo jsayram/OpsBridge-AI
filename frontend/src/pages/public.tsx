@@ -524,13 +524,13 @@ export function Demo() {
 // E2E-28: public engineering evidence. Static text, no API call, nothing from the owner side.
 // Every figure is copied from a dated local run named in docs/reports; update it only from a
 // new run, never by hand-editing a number.
-const EVIDENCE_RUN = "Local clean-copy run on Node 22, 2026-11-09, at the P8 head";
+const EVIDENCE_RUN = "Local clean-copy run on Node 22, 2026-11-09, at commit 69d75eb";
 const RESULTS: [string, string][] = [
-  ["Unit tests", "233 passed"],
-  ["Integration tests on real PostgreSQL", "412 passed"],
+  ["Unit tests", "236 passed"],
+  ["Integration tests on real PostgreSQL", "417 passed"],
   ["Query profile", "11 passed"],
   ["AI evaluation, fixture mode, 40 documents", "3 of 3 threshold checks passed"],
-  ["Browser tests on workerd, Chromium desktop and phone", "Passed, 6 skipped by design"],
+  ["Browser tests on workerd, Chromium desktop and phone", "113 passed, 7 skipped by design"],
   ["Dependency audit", "0 known vulnerabilities"],
   ["Secret scan of the tree and history", "No leaks"],
 ];

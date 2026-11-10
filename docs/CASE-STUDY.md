@@ -78,13 +78,13 @@ The project kept a decision log of 79 entries and one stack ADR [E9]. A few that
 
 ## Test results
 
-From the latest local clean-copy run on Node 22 [E16]:
+From the local clean-copy run on Node 22 at commit `69d75eb`, 2026-11-09 [E16]:
 
 | Check | Result |
 |---|---|
-| Unit tests | 233 passed |
-| Integration tests on real PostgreSQL | 412 passed |
-| Browser tests on workerd, Chromium desktop and phone | Passed, with 6 skipped by design |
+| Unit tests | 236 passed |
+| Integration tests on real PostgreSQL | 417 passed |
+| Browser tests on workerd, Chromium desktop and phone | 113 passed, 7 skipped by design |
 | AI evaluation, fixture mode, 40 documents | All PRD thresholds met in fixture mode; one messy-document failure reported [E4] |
 | Local load profile, 20 visitors for 60 seconds | No errors, worst route p95 475 ms [E17] |
 | Restore and rollback | Rehearsed locally with two real Worker builds and a damage-and-restore drill [E12] |

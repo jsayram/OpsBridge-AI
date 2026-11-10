@@ -1,6 +1,6 @@
 # OpsBridge AI master inbox
 
-Updated: 2026-11-06 (America/New_York), P3 phase session. One item is open: DEC-008. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
+Updated: 2026-11-09 (America/New_York), P8 phase session. One item is open: DEC-009. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
 
 ## Open decisions
 
@@ -96,6 +96,17 @@ Updated: 2026-11-06 (America/New_York), P3 phase session. One item is open: DEC-
 - Decision needed by: before P4.
 - Actual owner answer: 2026-11-06, in the master thread: “Defer all live gaps (Recommended)”.
 - Authorized scope and explicit exclusions: P3 accepted for limited scope with P3-D pending. Standing deferral for later live-account criteria (Salesforce, Google Sheets and Zapier, the AI provider, hosted Access and Hyperdrive or Neon proofs): phases keep going locally on labeled simulations without a new question each time. Excludes creating accounts, credentials, spending, deploys, pushes and merges, and any portfolio claim of a live integration before its real proof runs.
+
+### DEC-009 — After local P8: accept, and start the launch?
+
+- State: open, raised 2026-11-09 by the P8 phase session.
+- Package and blocking dependency: P8.4 (public launch) and the P8 gate. Nothing local is blocked.
+- Decision needed and why: P8 ran locally on `phase/p8-launch-prep` (`docs/reports/P8.md`). Everything left needs Jose: his own P8 acceptance, the accounts, each push, merge, deploy and publication, and the checks only a person can run. `docs/LAUNCH-CHECKLIST.md` lists them in order, and each step needs its own approval record (`templates/release-approval-record.md`).
+- Options with consequence/cost: (a) Accept P8 for its local scope and start section B of the checklist: Jose creates the free Cloudflare and Neon accounts, then approves a staging deploy. $0 on the free plans; about an afternoon of his time. (b) Revise: name what to change first; no launch work starts. (c) Stop at a local portfolio: keep the repository and run the demo from his machine in interviews. $0, but P8-B, P8-C and P8-F stay unmet and there is no shareable URL.
+- Recommendation: (a), staging only first. The real unknowns (Workers CPU on the analytics routes, Neon wake-up time, real Safari) can only be measured on a host, and staging costs nothing and is private until he shares the URL.
+- Decision needed by: before any P8.4 step.
+- Actual owner answer: none yet.
+- Authorized scope and explicit exclusions: none until answered. An answer to (a) still needs separate approvals for each push, merge, deploy and publication.
 
 ## Recorded user direction
 

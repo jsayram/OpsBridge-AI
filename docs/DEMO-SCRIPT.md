@@ -47,8 +47,8 @@ These are runs on this machine, not a person's timing. A first-time interviewer'
 
 | Run | Result | Where |
 |---|---|---|
-| Automated scripted run of all five steps through the screens, recap and reset, Chromium desktop and Pixel 7 sizes | See `docs/evidence/P8.1/timed-run.txt` | `tests/e2e/guided-demo.spec.ts` |
-| Same, Playwright WebKit desktop and iPhone 15 sizes | See `docs/evidence/P8.1/webkit-run.txt` | same |
+| Automated scripted run of all five steps through the screens, recap and reset, Chromium desktop and Pixel 7 sizes | Passed in `docs/evidence/P8.1/chromium-run.txt` | `tests/e2e/guided-demo.spec.ts` |
+| Same, Playwright WebKit desktop and iPhone 15 sizes | Passed in `docs/evidence/P8.1/webkit-run.txt` | same |
 | Server-timed duration from launch to the last step | Shown in the recap of every run | `GET /api/v1/demo/progress` |
 
 A machine runs the steps in seconds, so these runs prove the path works end to end. They do not prove a person finishes in five minutes. That check (P8-A) needs one real first-time visitor, timed, with the result written into `docs/reports/P8.1.md`.

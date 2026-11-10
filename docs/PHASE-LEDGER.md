@@ -1,6 +1,6 @@
 # OpsBridge AI phase ledger
 
-Updated: 2026-11-09 (America/New_York), end of the local P7 phase session.
+Updated: 2026-11-09 (America/New_York), end of the local P8 phase session.
 
 The nine macro phases are planned. The revised plan subdivides them into **47 bounded work packages**. This table reports actual state at the named revision. The build resumed on 2026-11-06. P0 ran on local branch `phase/p0-foundation` from `b39223f`; the branch head is in `docs/reports/P0.md`. Owner Accepted stays empty unless Jose accepts himself.
 
@@ -14,7 +14,7 @@ The nine macro phases are planned. The revised plan subdivides them into **47 bo
 | P5 AI review/evaluation | P5.1–P5.5 | 5 | Run locally | Fixture document lifecycle, validated fixture review, owner-only live gateway on a labeled double, reviewer decisions through the checklist command, 40-document evaluation on `phase/p5-ai-review` | Local checks passed; P5-A to P5-F met locally in fixture mode; P5.3 live provider Pending Owner Credentials; see `docs/reports/P5.md` | | No | No |
 | P6 Analytics/business insight | P6.1–P6.5 | 5 | Run locally | Metric glossary and live overview, snapshots, six dashboards, bounded reports and safe CSV export, ROI calculator, executive business case on `phase/p6-analytics` | Local checks passed; P6-A to P6-G met locally, P6-E without a screen-reader run; see `docs/reports/P6.md` | | No | No |
 | P7 Hardening/recovery | P7.1–P7.5 | 5 | Run locally | Dispatcher role (`0010`, `0011`), offline scans and SAST, OpenAPI lint and route check, negative sweep, outage drills, rollback and restore rehearsals, incident runbook, WebKit projects, load profile on `phase/p7-release-gate` | Local checks passed; P7-A, B, E, F met locally; P7-C met locally with the hosted half pending; P7-D met in Chromium and Playwright WebKit, real Safari, iPhone and VoiceOver pending; see `docs/reports/P7.md` | | No | No |
-| P8 Demo/launch/handoff | P8.1–P8.5 | 5 | Planned | No | No | No | No | No |
+| P8 Demo/launch/handoff | P8.1–P8.5 | 5 | Run locally | Guided demo checklist, recap and reset (`GET /api/v1/demo/progress`), public evidence page, case study draft, START-HERE and handoff documents, launch checklist and approval template, evidence matrix on `phase/p8-launch-prep` | Local checks passed; P8-E and E2E-28 met locally; P8-A path met, a person's timed run pending; P8-C and P8-D local halves; P8-B, P8-F and P8.4 pending Jose and a host; see `docs/reports/P8.md` | | No | No |
 
 Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. If they change, update this inventory in the same revision and preserve retired IDs rather than reusing them for unrelated work.
 
@@ -49,6 +49,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 **P7:** Local run on `phase/p7-release-gate` from `48eac5d`, waiting for coordinator review. No critical or high exploitable issue open: one High in the P0.2 spike's `ws` fixed. The dispatcher has its own database role (D-076), split into expand `0010` and contract `0011` after the rollback rehearsal showed the first version would break a rollback. Clean-copy CI passed on Node 22 at `d5396a7`; later commits change tests and documents only. Hosted restore, rollback, Hyperdrive, Neon, Access, R2 and Workers CPU stay Pending Owner Configuration under DEC-002 and DEC-008; real Safari, a physical iPhone and a VoiceOver pass need a person. The intermittent P3 purge-list test was reproduced and fixed (D-079). Owner Accepted stays empty. Nothing from P7 is pushed, merged or deployed.
 
 **P7:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `db40c7f`. The master reran `npm run ci:local`, which passed: 412 integration tests, and 104 browser tests in Chromium and WebKit passed with 6 skipped, 0 vulnerabilities, no leaks. P7-A, B, C, E and F are met locally. P7-D is met in Chromium and Playwright WebKit; real Safari, a physical iPhone and VoiceOver are pending a person. Everything hosted is pending DEC-002. Residuals: a WebKit "New case" intermittent and a Medium demo-capacity availability risk. Jose's release-readiness list is in `docs/reports/P7.md`. Owner Accepted stays empty. Nothing from P7 is pushed, merged or deployed.
+
+**P8:** Local run on `phase/p8-launch-prep` from `a6a4740`, waiting for coordinator review. The guided demo is one page with a checklist read back from the records, a recap and a reset; `/about/engineering` is the public evidence page (E2E-28). Two user-visible bugs fixed: the WebKit "New case" miss (a layout shift) and a case-list crash when a search aborted a request mid-body. P8-E is met locally. P8-A's path is met locally; a timed run by a first-time person is pending. P8-B, P8-C's deployed half, P8-D's owner walkthrough and P8-F need Jose and a host. P8.4 prepared only: nothing created, deployed, pushed, merged or published. DEC-009 is open. Owner Accepted stays empty.
 
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
@@ -96,11 +98,11 @@ Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual res
 | P7.3 | Local run | Done: expand and contract migrations, `migrate --to`, upgrade path, rollback rehearsal with two real Workers, restore drill, incident runbook and drill | Rollback, restore drill and 57-check restore proof passed; hosted half Pending Owner Configuration | Not reviewed | | No | No |
 | P7.4 | Local run | Done: WebKit desktop and iPhone projects over https, load profile | Chromium 104 passed; WebKit 104 passed with one retry; p95 under 500 ms at 20 visitors; real Safari, iPhone and VoiceOver pending | Not reviewed | | No | No |
 | P7.5 | Local run | Done: costs, caps, retention, revocation and claims review, E2E-01 to E2E-28 status, release-readiness list, P8 brief | Clean-copy CI on Node 22 passed | Not reviewed | | No | No |
-| P8.1 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P8.2 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P8.3 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P8.4 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
-| P8.5 | Planned | Not started | Not run | Not reviewed | Not received | No | No |
+| P8.1 | Local run | Done: progress route, checklist, recap, reset, offline fallback, demo script and shot list, WebKit New case fix, search crash fix | Integration 5 of 5, guided spec in Chromium and WebKit, full suites 113 passed each; a person's timed run pending | Not reviewed | | No | No |
+| P8.2 | Local run | Done: case study draft, evidence page, private interview packet | E2E-28 in four profiles; claim audit; no employer name; not published | Not reviewed | | No | No |
+| P8.3 | Local run | Done: START-HERE, onboarding, operator guide, ownership, handoff runbook, sprint history, illustrative rubric | START-HERE rehearsed by the AI on a fresh clone and database, one gap fixed; Jose's walkthrough pending | Not reviewed | | No | No |
+| P8.4 | Prepared only | Launch checklist and approval record template; nothing created or deployed | Coverage of the P7 list checked | Not reviewed | | No | No |
+| P8.5 | Local run | Done: evidence matrix, README status, P8 report, ledger, handoff, inbox, vault | Clean-copy CI on Node 22; vault read-back | Not reviewed | | No | No |
 
 ## State rules
 
