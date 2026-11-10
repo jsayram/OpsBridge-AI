@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opsbridge.example/schemas/event-envelope.json",
+  "title": "OpsBridge event envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "version", "occurredAt", "workspaceMode", "requestId", "data"],
+  "properties": {
+    "id": { "type": "string", "format": "uuid" },
+    "type": { "enum": ["case.created", "case.needs_review", "approval.completed", "reconciliation.resolved", "integration.degraded"] },
+    "version": { "const": 1 },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "workspaceMode": { "enum": ["owner", "demo"] },
+    "requestId": { "type": "string", "maxLength": 64 },
+    "data": { "type": "object", "maxProperties": 4 }
+  },
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "case.created" } } },
+      "then": { "properties": { "data": { "additionalProperties": false, "required": ["caseRef", "caseType", "queue"], "properties": { "caseRef": { "type": "string", "maxLength": 32 }, "caseType": { "type": "string", "maxLength": 32 }, "queue": { "enum": ["Field Services", "Seasonal Staffing"] } } } } } },
+    { "if": { "properties": { "type": { "const": "case.needs_review" } } },
+      "then": { "properties": { "data": { "additionalProperties": false, "required": ["caseRef", "reason", "queue"], "properties": { "caseRef": { "type": "string", "maxLength": 32 }, "reason": { "enum": ["intake", "returned", "reopened"] }, "queue": { "enum": ["Field Services", "Seasonal Staffing"] } } } } } },
+    { "if": { "properties": { "type": { "const": "approval.completed" } } },
+      "then": { "properties": { "data": { "additionalProperties": false, "required": ["caseRef", "decision", "queue"], "properties": { "caseRef": { "type": "string", "maxLength": 32 }, "decision": { "enum": ["approved", "rejected"] }, "queue": { "enum": ["Field Services", "Seasonal Staffing"] } } } } } },
+    { "if": { "properties": { "type": { "const": "reconciliation.resolved" } } },
+      "then": { "properties": { "data": { "additionalProperties": false, "required": ["findingRef", "kind"], "properties": { "findingRef": { "type": "string", "maxLength": 32 }, "kind": { "type": "string", "maxLength": 32 } } } } } },
+    { "if": { "properties": { "type": { "const": "integration.degraded" } } },
+      "then": { "properties": { "data": { "additionalProperties": false, "required": ["provider", "status"], "properties": { "provider": { "type": "string", "maxLength": 32 }, "status": { "enum": ["degraded"] } } } } } }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "$comment": "Source data for the CRM, ERP and inventory simulators. All names are fictional. Field names follow public conventions of the systems each simulator imitates; no vendor sample is copied and nothing here came from a real system. Timestamps are relative to the seed manifest clock and are shifted per workspace.",
+  "crm": {
+    "organizations": [
+      { "Id": "CRM-ORG-1001", "Name": "Harbor Ridge Produce LLC (fictional)", "Type": "Customer", "AccountNumber": "NS-1001", "LastModifiedDate": "2026-01-13T09:00:00Z" },
+      { "Id": "CRM-ORG-1002", "Name": "Cedar Point Landscaping (fictional)", "Type": "Customer", "AccountNumber": "NS-1002", "LastModifiedDate": "2026-01-13T09:10:00Z" },
+      { "Id": "CRM-ORG-1003", "Name": "Tall Pine Nursery (fictional)", "Type": "Prospect", "AccountNumber": null, "LastModifiedDate": "2026-01-12T15:30:00Z" }
+    ]
+  },
+  "erp": {
+    "customers": [
+      { "id": "5001", "entityid": "ERP-BT-5001", "companyname": "Harbor Ridge Holdings Inc. (fictional)", "isperson": "F", "stage": "CUSTOMER", "subsidiary": "1", "parent": null, "accountnumber": "NS-1001", "externalid": null, "custentity_ob_crm_account_id": "CRM-ORG-1001", "lastmodifieddate": "2026-01-14T08:00:00Z", "isinactive": "F" },
+      { "id": "5002", "entityid": "ERP-BT-5002", "companyname": "Harbor Ridge Packing LLC (fictional)", "isperson": "F", "stage": "CUSTOMER", "subsidiary": "1", "parent": "5001", "accountnumber": "NS-1001", "externalid": null, "custentity_ob_crm_account_id": "CRM-ORG-1001", "lastmodifieddate": "2026-01-14T08:05:00Z", "isinactive": "F" },
+      { "id": "6001", "entityid": "ERP-BT-6001", "companyname": "Cedar Point Landscaping, Inc. (fictional)", "isperson": "F", "stage": "CUSTOMER", "subsidiary": "1", "parent": null, "accountnumber": "NS-1002", "externalid": null, "custentity_ob_crm_account_id": "CRM-ORG-1002", "lastmodifieddate": "2026-01-14T08:10:00Z", "isinactive": "F" },
+      { "id": "6002", "entityid": "ERP-BT-6002", "companyname": "Cedar Point Landscaping Inc (fictional)", "isperson": "F", "stage": "CUSTOMER", "subsidiary": "1", "parent": null, "accountnumber": "NS-1902", "externalid": null, "custentity_ob_crm_account_id": null, "lastmodifieddate": "2026-01-14T08:15:00Z", "isinactive": "F" },
+      { "id": "7001", "entityid": "ERP-BT-7001", "companyname": "Bluebird Snow Services (fictional)", "isperson": "F", "stage": "CUSTOMER", "subsidiary": "1", "parent": null, "accountnumber": "NS-1003", "externalid": null, "custentity_ob_crm_account_id": null, "lastmodifieddate": "2026-01-14T08:20:00Z", "isinactive": "F" }
+    ],
+    "invoiceTemplate": { "customers": ["5001", "5002", "5001", "6001", "6002", "5002", "7001"], "count": 12, "startDay": "2026-01-02", "firstAmount": 1180, "amountStep": 245, "currency": "USD" }
+  },
+  "inventory": {
+    "snapshots": [
+      { "externalId": "INV-200", "itemCode": "SKU-100", "quantity": "10", "unit": "each", "location": "North yard", "version": 1, "sourceTimestamp": "2026-01-14T12:00:00Z" },
+      { "externalId": "INV-201", "itemCode": "SKU-100", "quantity": "13", "unit": "each", "location": "South yard", "version": 1, "sourceTimestamp": "2026-01-14T12:00:00Z" },
+      { "externalId": "INV-202", "itemCode": "SKU-101", "quantity": "40", "unit": "each", "location": "North yard", "version": 1, "sourceTimestamp": "2026-01-14T12:05:00Z" },
+      { "externalId": "INV-203", "itemCode": "SKU-102", "quantity": "7", "unit": "each", "location": "Depot", "version": 3, "sourceTimestamp": "2025-12-06T12:00:00Z" },
+      { "externalId": "INV-204", "itemCode": "SKU-998", "quantity": "2", "unit": "each", "location": "Depot", "version": 1, "sourceTimestamp": "2026-01-14T12:10:00Z" },
+      { "externalId": "INV-205", "itemCode": "SKU-100", "quantity": "3", "unit": "pallet", "location": "Depot", "version": 1, "sourceTimestamp": "2026-01-14T12:15:00Z" },
+      { "externalId": "INV-206", "itemCode": "SKU-102", "quantity": "21", "unit": "each", "location": "North yard", "version": 2, "sourceTimestamp": "2026-01-14T12:20:00Z" }
+    ]
+  }
+}

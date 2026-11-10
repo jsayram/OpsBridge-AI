@@ -1,0 +1,222 @@
+{
+  "takenAt": "2026-11-06T17:37:13.633Z",
+  "environment": "Docker postgres:17-alpine, wrangler dev local mode, Hyperdrive localConnectionString (Hyperdrive not in path)",
+  "passed": 42,
+  "failed": 0,
+  "results": [
+    {
+      "id": "P2.a 20 concurrent approvals, 30 rounds: 1 winner, 19 typed conflicts",
+      "pass": true,
+      "detail": "30/30 rounds"
+    },
+    {
+      "id": "P2.b exactly one state change, audit row and outbox row per round",
+      "pass": true,
+      "detail": "30/30 rounds"
+    },
+    {
+      "id": "P2.c injected failure before COMMIT leaves nothing behind",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P2.d stale case version rejected and rolled back",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P2.e duplicate idempotency key rejected by unique constraint",
+      "pass": true,
+      "detail": "duplicate key value violates unique constraint \"outbox_workspace_id_idempotency_key_key\""
+    },
+    {
+      "id": "P3.a no workspace set returns no rows",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.b A cannot read B by id",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.c A cannot update B",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.d A cannot insert into B",
+      "pass": true,
+      "detail": "new row violates row-level security policy for table \"cases\""
+    },
+    {
+      "id": "P3.e set_config does not survive COMMIT on a reused connection",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.f app role cannot DELETE cases",
+      "pass": true,
+      "detail": "permission denied for table cases"
+    },
+    {
+      "id": "P3.g app role cannot DELETE audit_events",
+      "pass": true,
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.h app role cannot UPDATE audit_events",
+      "pass": true,
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.i app role cannot TRUNCATE audit_events",
+      "pass": true,
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.j app role cannot run the purge",
+      "pass": true,
+      "detail": "permission denied for function purge_demo_workspace"
+    },
+    {
+      "id": "P3.k even the admin owner cannot UPDATE an audit row",
+      "pass": true,
+      "detail": "audit_events is append-only (UPDATE by opsbridge_admin)"
+    },
+    {
+      "id": "P3.l even the admin owner cannot DELETE an audit row",
+      "pass": true,
+      "detail": "audit_events is append-only (DELETE by opsbridge_admin)"
+    },
+    {
+      "id": "P3.m even the admin owner cannot TRUNCATE audit_events",
+      "pass": true,
+      "detail": "audit_events is append-only (TRUNCATE)"
+    },
+    {
+      "id": "P3.n cleanup cannot UPDATE audit rows",
+      "pass": true,
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.o cleanup cannot INSERT business rows",
+      "pass": true,
+      "detail": "permission denied for table cases"
+    },
+    {
+      "id": "P3.p cleanup cannot purge an unexpired demo workspace",
+      "pass": true,
+      "detail": "refusing to purge workspace 40b3b70a-87ee-48d9-b22d-d09dcef1f38c"
+    },
+    {
+      "id": "P3.q cleanup has no direct DELETE on audit rows",
+      "pass": true,
+      "detail": "permission denied for table audit_events"
+    },
+    {
+      "id": "P3.q2 cleanup has no direct DELETE on business rows",
+      "pass": true,
+      "detail": "permission denied for table cases"
+    },
+    {
+      "id": "P3.r cleanup cannot purge an owner workspace",
+      "pass": true,
+      "detail": "refusing to purge workspace 92ef9ba7-42f7-45c3-b89e-1e74b2ccb5b8"
+    },
+    {
+      "id": "P3.s cleanup cannot delete owner cases directly",
+      "pass": true,
+      "detail": "permission denied for table cases"
+    },
+    {
+      "id": "P3.s2 app cannot flip a workspace mode or expiry directly",
+      "pass": true,
+      "detail": "permission denied for table workspaces"
+    },
+    {
+      "id": "P3.s3 app cannot insert a workspace directly",
+      "pass": true,
+      "detail": "permission denied for table workspaces"
+    },
+    {
+      "id": "P3.s4 A cannot see B or owner in workspaces",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s5 expire function refuses an owner workspace",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s6 expire function works on own demo workspace only",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.s7 launch refused at capacity, expired workspaces counted",
+      "pass": true,
+      "detail": "demo_capacity"
+    },
+    {
+      "id": "P3.s8 launch works under capacity",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.t0 cleanup lists expired demo workspaces only",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P3.t expired demo purge removes every row and writes a retention record",
+      "pass": true,
+      "detail": "purged=4 retention={\"audit_rows\":1,\"business_rows\":3}"
+    },
+    {
+      "id": "P3.u purge of A left B and owner rows intact",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P4.a crash after sink write, before ack: rows written, events stay processing",
+      "pass": true,
+      "detail": "{\"claimed\":5,\"written\":5,\"skippedDuplicate\":0,\"crashed\":5}"
+    },
+    {
+      "id": "P4.b live lease blocks a second claim",
+      "pass": true,
+      "detail": "{\"claimed\":0,\"written\":0,\"skippedDuplicate\":0,\"crashed\":0}"
+    },
+    {
+      "id": "P4.c replay after lease expiry: check-before-append skips all, sheet still 5 rows",
+      "pass": true,
+      "detail": "{\"claimed\":5,\"written\":0,\"skippedDuplicate\":5,\"crashed\":0}"
+    },
+    {
+      "id": "P4.d 8 parallel dispatchers never double-claim (SKIP LOCKED)",
+      "pass": true,
+      "detail": "parallel claimed=20, follow-up=0, sheet=25"
+    },
+    {
+      "id": "P4.e cron sweep picks up committed events that were never dispatched after commit",
+      "pass": true,
+      "detail": "status=200 open=0 sheet=28"
+    },
+    {
+      "id": "P4.f dispatcher never claims template events",
+      "pass": true,
+      "detail": "{\"claimed\":0,\"written\":0,\"skippedDuplicate\":0,\"crashed\":0}"
+    },
+    {
+      "id": "P4.g event whose Worker keeps dying stops at the attempt cap",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "seedTiming": {
+    "rows35Ms": 2.28,
+    "rows1500Ms": 21.38
+  }
+}

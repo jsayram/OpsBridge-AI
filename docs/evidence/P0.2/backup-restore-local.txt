@@ -1,0 +1,21 @@
+# Local backup and clean restore, 2026-11-06T17:17:42Z
+dump bytes: 84546
+NOTICE:  database "opsbridge_restore" does not exist, skipping
+cases|1598|c397a84c91780e89c5e8bd17c65fba6c
+audit|59|146d6588beb2a3f4dab289c7c3a933c2
+outbox|59|479dbc58eefaf3e83b4c0c44bf92de3a
+RESTORE MATCH: row counts and md5 equal
+guard after restore:
+CONTEXT:  PL/pgSQL function app.audit_guard() line 8 at RAISE
+RLS and grants after restore:
+approvals|t
+audit_events|t
+cases|t
+outbox|t
+retention_log|f
+workspaces|f
+opsbridge_app|INSERT
+opsbridge_app|SELECT
+opsbridge_cleanup|DELETE
+opsbridge_cleanup|SELECT
+guard check on source db (same trigger as restored copy): ERROR:  audit_events is append-only (DELETE by opsbridge_admin)

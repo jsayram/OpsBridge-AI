@@ -1,0 +1,45 @@
+# Local backup and clean restore, 2026-11-06T21:09:28Z, source opsbridge_restart_test
+dump bytes: 149370
+PASS data ai_reviews 2 rows
+PASS data approvals 16 rows
+PASS data assignees 7 rows
+PASS data audit_events 36 rows
+PASS data case_checklist_items 21 rows
+PASS data cases 125 rows
+PASS data consultant_handoffs 1 rows
+PASS data customer_source_relationships 6 rows
+PASS data customers 9 rows
+PASS data demo_limits 1 rows
+PASS data demo_quota 1 rows
+PASS data demo_sessions 1 rows
+PASS data documents 43 rows
+PASS data external_record_links 8 rows
+PASS data idempotency_keys 2 rows
+PASS data inventory_items 7 rows
+PASS data inventory_snapshots 22 rows
+PASS data memberships 0 rows
+PASS data outbox 22 rows
+PASS data reconciliation_findings 18 rows
+PASS data retention_log 0 rows
+PASS data users 0 rows
+PASS data workflow_rules 4 rows
+PASS data workspaces 3 rows
+PASS RLS flags
+PASS policies
+PASS table grants
+PASS function grants
+PASS triggers
+PASS cleanup role has no table rights
+PASS guard on restored copy: admin UPDATE audit row
+PASS guard on restored copy: admin DELETE audit row
+PASS guard on restored copy: admin TRUNCATE audit
+PASS restored copy: app role cannot DELETE audit
+PASS restored copy: app role cannot write workspaces
+PASS restored copy: cleanup cannot read cases
+PASS restored copy: app role cannot change the outbox
+PASS restored copy: app role cannot rewrite a handoff
+PASS restored copy: one outbox row per idempotency key
+PASS restored copy: one pending approval per case
+PASS restored copy: migrations recorded
+PASS restored copy: no-context app read returns nothing but template
+RESTORE PROOF PASSED

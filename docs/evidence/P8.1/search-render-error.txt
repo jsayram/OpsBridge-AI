@@ -1,0 +1,23 @@
+# Case-list render error after a search, P8.1, 2026-11-09 (America/New_York)
+
+Seen first in the full Chromium run on a Pixel 7 profile (core.spec.ts "list search, filters,
+empty state"), then once in five WebKit desktop repeats. The page showed the error boundary.
+
+Repro: a temporary spec opened the case list and searched "no such thing" six times per run,
+listening to console errors, on desktop Chromium, Pixel 7 and WebKit desktop, 6 runs each.
+
+Before the fix: 3 of 18 runs failed, each with
+  TypeError: Cannot read properties of null (reading 'items')
+    at ... useState updater in Cases (setItems(... page.items))
+  {"event":"render_error","name":"TypeError"}
+
+Cause: the search changes the list effect, which aborts the request still in flight. When the
+abort landed after the response headers but during res.json(), api() caught the AbortError,
+treated it as "no body", and resolved the aborted request with null. Cases then read
+page.items from null inside a state updater. The bug dates from P1's api.ts; it surfaced now.
+
+Fix: api() rethrows an AbortError raised while reading the body (frontend/src/api.ts).
+Unit test tests/unit/api-client.test.ts fails without the fix and passes with it.
+
+After the fix: 24 of 24 runs passed (8 per profile, 6 searches each, 144 searches), no console
+error. The temporary spec was deleted afterward; the unit test stays.

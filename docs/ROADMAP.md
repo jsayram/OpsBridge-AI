@@ -1,6 +1,6 @@
 # OpsBridge AI roadmap
 
-Planning revision 1.1, November 5, 2026 (America/New_York). Implementation remains paused.
+Plan from PRD revision 1.1, current at PRD v1.3, November 6, 2026 (America/New_York). The build resumed on November 6 as phased sessions. `docs/PHASE-LEDGER.md` holds actual state, and these checkboxes are not status.
 
 **9 macro phases, 47 bounded work packages, 9 owner acceptance gates.** PRD.md Section 14 owns full scope, dependencies, deliverables and verification. Every package is Planned; no implementation or acceptance is implied.
 

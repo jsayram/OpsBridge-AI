@@ -1,0 +1,54 @@
+# Manual release. Has never run: no repository, account or secret exists yet (DEC-002,
+# DEC-004). The environment needs a required reviewer before any job here can start.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    # Protected main only. CI must be green there, which the branch rules enforce.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    env:
+      RELEASE_CONFIG: infra/wrangler.${{ inputs.environment }}.jsonc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: node scripts/check-release-config.mjs "$RELEASE_CONFIG"
+      - run: npx vite build --config frontend/vite.config.ts
+      - run: npm run check:bundle
+      - name: Apply migrations, a controlled step and never on Worker boot
+        env:
+          DATABASE_MIGRATOR_URL: ${{ secrets.DATABASE_MIGRATOR_URL }}
+        run: |
+          node scripts/db.mjs migrate
+          node scripts/db.mjs seed
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config "$RELEASE_CONFIG"
+      - name: Smoke
+        env:
+          SMOKE_URL: ${{ vars.APP_ORIGIN }}
+        run: node scripts/smoke.mjs "$SMOKE_URL" --allow-remote

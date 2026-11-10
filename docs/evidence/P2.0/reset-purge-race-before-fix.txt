@@ -1,0 +1,43 @@
+
+ RUN  v5.1.0 /Users/jramirez/Git/OpsBridge-AI
+
+stdout | tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadlock, and nothing is left half-done
+{"ts":"2026-11-06T20:29:37.564Z","level":"info","event":"request","requestId":"5b010d22-c8ea-4bf6-90d6-96c111c1155c","method":"POST","route":"/api/v1/demo/sessions","status":201,"durationMs":61,"actor":"anonymous"}
+
+stdout | tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadlock, and nothing is left half-done
+{"ts":"2026-11-06T20:29:37.671Z","level":"info","event":"request","requestId":"0d1d0382-f752-4e12-ac6c-89ee0e171a10","method":"GET","route":"/api/v1/cases","status":200,"durationMs":106,"actor":"guest"}
+
+stdout | tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadlock, and nothing is left half-done
+{"ts":"2026-11-06T20:29:39.489Z","level":"info","event":"request","requestId":"e24e16ae-6bf7-4891-89ae-60ea1704bacf","method":"POST","route":"/api/v1/demo/reset","status":200,"durationMs":1385,"actor":"guest"}
+
+stdout | tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadlock, and nothing is left half-done
+reset=200  purge=40P01
+
+ ❯ tests/integration/expiry-race.test.ts (1 test | 1 failed) 2035ms
+   ❯ reset meeting purge at the expiry boundary (1)
+     × both finish without a deadlock, and nothing is left half-done 2034ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/expiry-race.test.ts > reset meeting purge at the expiry boundary > both finish without a deadlock, and nothing is left half-done
+AssertionError: expected '40P01' to be 'purged' // Object.is equality
+
+Expected: "purged"
+Received: "40P01"
+
+ ❯ tests/integration/expiry-race.test.ts:33:21
+     31|     await Promise.all([gate.end(), mig.end(), clean.end()]);
+     32|     expect(res.status).toBe(200);
+     33|     expect(outcome).toBe("purged");
+       |                     ^
+     34|     const after = await call("/api/v1/cases?limit=1", { cookie: cookie…
+     35|     expect(after.status).toBe(200);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  15:29:35
+   Duration  3.99s (tests 79%, transform 14%, import 7%)
+

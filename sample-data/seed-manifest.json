@@ -1,0 +1,46 @@
+{
+  "$comment": "Deterministic seed plan. All data is fictional. Counts are checked against PRD Section 16 by scripts/check-fixtures.mjs.",
+  "manifestVersion": 1,
+  "packVersion": "pack-3",
+  "randomSeed": "northstar-v1",
+  "clock": "2026-01-15T12:00:00Z",
+  "template": {
+    "organizations": 6,
+    "contacts": 40,
+    "cases": { "total": 120, "needingReview": 20,
+      "byStatus": { "Draft": 10, "Intake": 20, "Needs Review": 20, "Ready": 15, "Approved": 15, "Closed": 40 } },
+    "documents": { "total": 40, "standard": 20, "messy": 10, "adversarial": 10 },
+    "invoices": 80,
+    "inventoryReferences": 20,
+    "reconciliationDiscrepancies": 15,
+    "activityEvents": 30,
+    "automationEvents": { "total": 20, "byLabel": { "Confirmed": 4, "Accepted": 4, "Simulated": 6, "Queued": 3, "Failed": 3 } },
+    "snapshotDays": 90,
+    "inventoryItems": 6,
+    "teams": ["Field Services", "Seasonal Staffing"]
+  },
+  "scenarioPack": {
+    "rows": {
+      "customers": 2, "external_record_links": 3, "customer_source_relationships": 1,
+      "assignees": 3, "cases": 3, "case_checklist_items": 8, "documents": 3, "ai_reviews": 1,
+      "approvals": 1, "reconciliation_findings": 3, "inventory_items": 3, "inventory_snapshots": 2,
+      "workflow_rules": 2, "external_connections": 3
+    }
+  },
+  "profile": { "cases": 1000, "auditRowsPerCase": 3 },
+  "namedFixtures": [
+    { "id": "F1a", "prd": 1, "summary": "CRM organization spelled differently from ERP billing entity" },
+    { "id": "F1b", "prd": 1, "summary": "One CRM organization maps to two ERP bill-to entities; no auto-merge" },
+    { "id": "F2", "prd": 2, "summary": "Duplicate client: separate external ID, same normalized identity" },
+    { "id": "F3", "prd": 3, "summary": "Invoice referencing a missing canonical client" },
+    { "id": "F4", "prd": 4, "summary": "AI sample missing a required internal checklist field" },
+    { "id": "F5", "prd": 5, "summary": "Malicious sample telling the reader to send data to an attacker URL at example.com" },
+    { "id": "F6", "prd": 6, "summary": "Handoff with open checklist item, due date, stale update and unauthorized-assignee variants" },
+    { "id": "F7", "prd": 7, "summary": "Inventory: known and unknown SKU, mismatched unit, duplicate, stale snapshot, paginated replay" },
+    { "id": "F8", "prd": 8, "summary": "Reports: zero results, stale sources, multiple assignees, formula-prefix strings, two teams" }
+  ],
+  "organizationNames": [
+    "Harbor Ridge Produce LLC (fictional)", "Cedar Point Landscaping (fictional)", "Bluebird Snow Services (fictional)",
+    "Maple Grove Pools (fictional)", "Lakeshore Hospitality Group (fictional)", "Tall Pine Nursery (fictional)"
+  ]
+}

@@ -1,0 +1,1578 @@
+openapi: 3.1.0
+info:
+  title: OpsBridge AI API
+  version: 0.1.0
+  description: >
+    PRD 8.2 surface. Implemented through P3: health, demo, me, summary, cases and their
+    workflow routes, approvals, customers, assignees, reconciliation, integrations, inventory,
+    and admin status, logout, sync and the Salesforce connection routes. Every other operation
+    is design until a phase implements it. All records are synthetic.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: http://localhost:8787
+    description: Local wrangler dev
+tags:
+  - name: demo
+    description: Guest sessions
+  - name: cases
+    description: Case workflow
+  - name: documents
+    description: Documents and review
+  - name: reconciliation
+    description: Findings
+  - name: automations
+    description: Outbox runs
+  - name: reporting
+    description: Analytics and reports
+  - name: integrations
+    description: Connector state
+  - name: admin
+    description: Owner only
+  - name: health
+    description: Platform checks
+security:
+  - demoSession: []
+  - ownerSession: []
+paths:
+  /health/live:
+    get:
+      tags: [health]
+      operationId: healthLive
+      summary: Liveness, no dependencies
+      security: []
+      responses:
+        "200": { $ref: "#/components/responses/Health" }
+  /health/ready:
+    get:
+      tags: [health]
+      operationId: healthReady
+      summary: Readiness, minimal payload
+      security: []
+      responses:
+        "200": { $ref: "#/components/responses/Health" }
+        "503": { $ref: "#/components/responses/Error" }
+  /api/v1/demo/sessions:
+    post:
+      tags: [demo]
+      operationId: createDemoSession
+      summary: Create an isolated workspace and session cookie
+      security: []
+      responses:
+        "201":
+          description: Session created; sets the __Host-obs_demo cookie
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSession" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/demo/reset:
+    post:
+      tags: [demo]
+      operationId: resetDemo
+      summary: Replace the current workspace with a fresh one
+      responses:
+        "200":
+          description: New workspace in place
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoSession" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/demo/role:
+    post:
+      tags: [demo]
+      operationId: switchDemoRole
+      summary: Switch the simulated role inside the demo workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [role]
+              properties:
+                role: { enum: [viewer, analyst, manager] }
+      responses:
+        "200":
+          description: Updated capabilities
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/demo/progress:
+    get:
+      tags: [demo]
+      operationId: getDemoProgress
+      summary: Guided-demo checklist and recap, read back from this workspace's own records
+      description: >-
+        Guests only. A step is done only when the visitor's own audit rows (or, for the mismatch,
+        a finding a sync opened in this workspace) show it happened. Every count is synthetic;
+        nothing here is a measurement. Owners get 404.
+      responses:
+        "200":
+          description: Steps and recap
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoProgress" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/me:
+    get:
+      tags: [demo]
+      operationId: getMe
+      summary: Server-authorized capabilities
+      responses:
+        "200":
+          description: Capabilities
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/workspace/summary:
+    get:
+      tags: [demo]
+      operationId: getWorkspaceSummary
+      summary: Case counts by status for the current workspace and the shared template
+      responses:
+        "200":
+          description: Counts, labeled synthetic
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkspaceSummary" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/cases:
+    get:
+      tags: [cases]
+      operationId: listCases
+      summary: Scoped, paginated list
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+        - { name: status, in: query, schema: { $ref: "#/components/schemas/CaseStatus" } }
+        - { name: queue, in: query, schema: { $ref: "#/components/schemas/Queue" } }
+        - { name: caseType, in: query, schema: { $ref: "#/components/schemas/CaseType" } }
+        - { name: assignee, in: query, description: An assignee ID or the word unassigned, schema: { type: string } }
+        - { name: overdue, in: query, schema: { const: "true" } }
+        - { name: q, in: query, description: Text in the title or client name, schema: { type: string, maxLength: 100 } }
+      responses:
+        "200":
+          description: Page of cases
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Case" }
+                  nextCursor: { type: string }
+        "401": { $ref: "#/components/responses/Error" }
+    post:
+      tags: [cases]
+      operationId: createCase
+      summary: Create a fictional case
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseCreate" }
+      responses:
+        "201":
+          description: Created, or the stored result of the same key with Idempotency-Replayed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Case" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /api/v1/cases/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [cases]
+      operationId: getCase
+      summary: One case with checklist, handoffs, latest approval and documents
+      responses:
+        "200":
+          description: Case detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CaseDetail" }
+        "404": { $ref: "#/components/responses/Error" }
+    patch:
+      tags: [cases]
+      operationId: updateCase
+      summary: Update with a version check
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CaseUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Case" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/cases/{id}/activity:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [cases]
+      operationId: caseActivity
+      summary: Newest first. Empty for shared template cases, whose audit rows are private
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: Page of activity
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Activity" }
+                  nextCursor: { type: string }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/customers:
+    get:
+      tags: [cases]
+      operationId: listCustomers
+      summary: Own-workspace pick list for the create form, at most 100
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/assignees:
+    get:
+      tags: [cases]
+      operationId: listAssignees
+      summary: Own-workspace pick list of fictional consultants, at most 100
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/cases/{id}/reopen:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [cases]
+      operationId: reopenCase
+      summary: Closed to Needs Review, reason required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Reopen" }
+      responses:
+        "200":
+          description: Reopened
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Case" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/cases/{id}/handoffs:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [cases]
+      operationId: createHandoff
+      summary: Version-checked assignment transfer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Handoff" }
+      responses:
+        "201": { $ref: "#/components/responses/Accepted" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/cases/{id}/checklist/{itemId}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - { name: itemId, in: path, required: true, schema: { type: string, format: uuid } }
+    patch:
+      tags: [cases]
+      operationId: updateChecklistItem
+      summary: Update allowed checklist fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [state, version]
+              properties:
+                state: { enum: [open, flagged, done, not_applicable] }
+                version: { type: integer }
+                evidenceRef: { type: string, maxLength: 200 }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/fixtures/documents:
+    get:
+      tags: [documents]
+      operationId: listFixtures
+      summary: The 40 allowlisted fictional documents a person can attach (P5.1)
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/cases/{id}/documents:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: initiateUpload
+      x-disabled: DEC-003 keeps owner uploads off, so this operation never succeeds
+      summary: >-
+        Owner only. DEC-003 (fixtures only): checks size (1 MiB), declared type, magic bytes,
+        structure, active content and page count (20) without parsing, then always refuses with
+        owner_upload_disabled. Nothing is stored. Guests receive 403 before the body is read.
+      security:
+        - ownerSession: []
+      requestBody:
+        content:
+          application/pdf:
+            schema: { type: string, format: binary, maxLength: 1048576 }
+      responses:
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { description: "owner_upload_disabled, after every check passed" }
+        "413": { description: "file_too_large or too_many_pages" }
+        "415": { description: "unsupported_media_type, unsupported_type or type_mismatch" }
+        "422": { description: "malformed_pdf, active_content or unscannable_pdf" }
+  /api/v1/cases/{id}/documents/from-fixture:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: attachFixture
+      summary: Attach an allowlisted fixture document. Analyst, manager or owner; Idempotency-Key required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [fixtureId]
+              properties:
+                fixtureId: { type: string, pattern: "^fx-[a-z0-9-]{1,40}$" }
+      responses:
+        "201": { $ref: "#/components/responses/Accepted" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { description: "document_limit" }
+        "422": { description: "unknown_fixture" }
+  /api/v1/documents/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [documents]
+      operationId: getDocument
+      summary: Metadata, the build-time text segments with page numbers, and the latest reviews
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/documents/{id}/review:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: requestReview
+      summary: >-
+        Request a bounded review. Guests get the deterministic fixture. Live mode is owner-only and
+        off unless fully configured (P5.3, Pending Owner Credentials); when it can't run, or fails,
+        the response carries the labeled fixture and a degraded code.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                mode: { enum: [fixture, live], default: fixture }
+      responses:
+        "201":
+          description: Review finished, failed, or fell back
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  review: { $ref: "#/components/schemas/AiReview" }
+                  fallback: { $ref: "#/components/schemas/AiReview" }
+                  degraded: { type: string }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { description: "document_not_ready or review_in_progress" }
+        "429": { description: "review_quota" }
+  /api/v1/ai-reviews/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [documents]
+      operationId: getReview
+      summary: One review with citations, validation codes and the policy result on the current case
+      responses:
+        "200":
+          description: Review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiReview" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/ai-reviews/{id}/retry:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: retryReview
+      summary: Failed to Processing on the same row through the fixture path, within 5 attempts
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "409": { description: "not_failed or retry_limit" }
+  /api/v1/ai-reviews/{id}/preview:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: previewReviewEdits
+      summary: >-
+        Manager or owner. Read-only: the checklist changes an accept with these edits would apply
+        to the case now, and what the rules refuse. Nothing is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [edits]
+              properties:
+                edits:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    clientName: { type: [string, "null"] }
+                    caseNumber: { type: [string, "null"] }
+                    serviceStart: { type: [string, "null"] }
+                    serviceEnd: { type: [string, "null"] }
+                    billingContact: { type: [string, "null"] }
+                    scopeSigned: { enum: ["yes", "no", null] }
+      responses:
+        "200":
+          description: The changes an accept would apply
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/ai-reviews/{id}/decision:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [documents]
+      operationId: decideReview
+      summary: >-
+        Manager or owner. Accept, accept with edits, or reject. With caseVersion, an accept applies
+        the checklist changes the rules allow through the ordinary checklist command, in the same
+        transaction. A stale case or review version changes nothing. Idempotency-Key required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, version]
+              properties:
+                decision: { enum: [accept, accept_with_edits, reject] }
+                version: { type: integer, minimum: 1 }
+                caseVersion: { type: integer, minimum: 1 }
+                edits:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    clientName: { type: [string, "null"] }
+                    caseNumber: { type: [string, "null"] }
+                    serviceStart: { type: [string, "null"] }
+                    serviceEnd: { type: [string, "null"] }
+                    billingContact: { type: [string, "null"] }
+                    scopeSigned: { enum: ["yes", "no", null] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        "200":
+          description: Decided
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AiReview" }
+        "409": { description: "already_decided, not_ready, stale_review or stale_version" }
+        "422": { description: "invalid_edit" }
+  /api/v1/approvals/{id}/decision:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [cases]
+      operationId: decideApproval
+      summary: Atomic decision with audit and outbox
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, caseVersion]
+              properties:
+                decision: { enum: [approve, reject] }
+                caseVersion: { type: integer }
+                reason: { type: string, maxLength: 500, description: Required on reject }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/reconciliation:
+    get:
+      tags: [reconciliation]
+      operationId: listFindings
+      summary: Mismatches with source evidence
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+        - name: status
+          in: query
+          schema: { enum: [Open, Investigating, Proposed, Deferred, Resolved, Dismissed] }
+        - name: scope
+          in: query
+          description: shared lists read-only template samples, guests only
+          schema: { enum: [shared] }
+      responses:
+        "200":
+          description: Page of findings
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Finding" }
+                  nextCursor: { type: string }
+  /api/v1/reconciliation/definitions:
+    get:
+      tags: [reconciliation]
+      operationId: businessDefinitions
+      summary: Business dictionary and rules
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/reconciliation/customers/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [reconciliation]
+      operationId: customerSources
+      summary: One customer's source identities and bill-tos
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/reconciliation/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [reconciliation]
+      operationId: getFinding
+      summary: One finding with its evidence
+      responses:
+        "200":
+          description: Finding
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Finding" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/reconciliation/{id}/advance:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [reconciliation]
+      operationId: advanceFinding
+      summary: Move to Investigating, Proposed, or back to Open from Deferred
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [to, version]
+              properties:
+                to: { enum: [Open, Investigating, Proposed] }
+                version: { type: integer }
+                proposal: { type: string, maxLength: 500 }
+      responses:
+        "200":
+          description: Updated finding
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Finding" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/reconciliation/{id}/resolve:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [reconciliation]
+      operationId: resolveFinding
+      summary: Approve, reject or defer
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision, version]
+              properties:
+                decision: { enum: [approve, reject, defer] }
+                version: { type: integer }
+                deferUntil: { type: string, format: date-time }
+                reason: { type: string, maxLength: 500 }
+                targetCustomerId:
+                  type: string
+                  format: uuid
+                  description: Required to approve a link that rests on a normalized name
+      responses:
+        "200":
+          description: Updated finding
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Finding" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations:
+    get:
+      tags: [integrations]
+      operationId: listIntegrations
+      summary: Redacted provider state
+      responses:
+        "200":
+          description: Integration list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Integration" }
+  /api/v1/integrations/{id}/runs:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [integrations]
+      operationId: listSyncRuns
+      summary: Recent sync runs
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/sync:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [integrations]
+      operationId: syncSimulated
+      summary: Run a simulated sync. Refuses a live connection
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                scenario: { type: string, description: A name from the closed scenario list }
+                full: { type: boolean }
+      responses:
+        "200":
+          description: The run, finished or still running
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/runs/{runId}/continue:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [integrations]
+      operationId: continueRun
+      summary: Carry on a healthy run that ran out of pages for one request
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/integrations/{id}/runs/{runId}/resume:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [integrations]
+      operationId: resumeRun
+      summary: Operator recovery of a failed run from its saved cursor
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/automations/rules:
+    get:
+      tags: [automations]
+      operationId: listRules
+      summary: Rules in the caller's workspace, the pause state and where an effect would go
+      responses:
+        "200":
+          description: Rules
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, status, transport, teams]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Rule" }
+                  status:
+                    type: object
+                    properties:
+                      paused: { type: boolean }
+                      reason: { type: [string, "null"] }
+                  transport: { type: string }
+                  teams: { type: array, items: { type: string } }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/automations/rules/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    patch:
+      tags: [automations]
+      operationId: updateRule
+      summary: Enable, disable or narrow a rule. Any change is a new version
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+                enabled: { type: boolean }
+                condition:
+                  type: object
+                  description: Only the fields listed for the rule's trigger, with listed values
+      responses:
+        "200":
+          description: The new version
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Rule" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/automations/rules/{id}/reuse:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [automations]
+      operationId: reuseRule
+      summary: The same typed rule for another fictional team (JOB-TEST-06). Needs Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [queue]
+              properties:
+                queue: { enum: [Field Services, Seasonal Staffing] }
+      responses:
+        "201":
+          description: The linked rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Rule" }
+        "400": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/automations/simulate:
+    post:
+      tags: [automations]
+      operationId: simulateRule
+      summary: Read-only preview of which rules a sample event would match. Nothing is queued
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [type]
+              properties:
+                type: { enum: [case.created, case.needs_review, approval.completed, reconciliation.resolved, integration.degraded] }
+                data: { type: object }
+      responses:
+        "200":
+          description: Matching rules and the outcome
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matched: { type: array, items: { type: object } }
+                  outcome: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/automations/runs:
+    get:
+      tags: [automations]
+      operationId: listRuns
+      summary: Attempts, status and delivery label
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200":
+          description: Page of runs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Run" }
+                  nextCursor: { type: string }
+  /api/v1/automations/runs/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    get:
+      tags: [automations]
+      operationId: getRun
+      summary: One run with its attempt history
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/inventory:
+    get:
+      tags: [integrations]
+      operationId: listInventory
+      summary: Read-only canonical items and snapshots
+      parameters:
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Cursor" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/analytics/overview:
+    get:
+      tags: [reporting]
+      operationId: analyticsOverview
+      summary: Metrics computed now from the caller's scope, each with formula and provenance (P6.1)
+      description: >-
+        A guest's scope is its workspace plus the read-only shared samples, the rows the case list
+        shows. An owner's is the owner workspace. Any query parameter is refused.
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [definitionVersion, computedAt, scope, provenanceText, glossary, pulse,
+                  funnel, integration, quality, ai, automation]
+                properties:
+                  definitionVersion: { type: string }
+                  computedAt: { type: string, format: date-time }
+                  scope: { enum: [workspace, workspace_and_shared_samples] }
+                  provenanceText: { type: object }
+                  glossary: { type: object }
+                  pulse: { type: array, items: { $ref: "#/components/schemas/Metric" } }
+                  funnel: { type: object }
+                  integration: { type: object, description: "Sources, each labeled Simulated or Connected test, with lastSuccessAt" }
+                  quality: { type: object }
+                  ai: { type: object, description: "Fixture evaluation summary; live cost null with provenance UNKNOWN until configured" }
+                  automation: { type: object, description: "Counts by the five delivery labels only" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/analytics/trends:
+    get:
+      tags: [reporting]
+      operationId: analyticsTrend
+      summary: Up to 90 daily snapshot values for one metric, shared history and own days apart
+      parameters:
+        - name: metric
+          in: query
+          required: true
+          schema: { enum: [open_cases, completed_cases, review_queue, open_findings, automation_failed] }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/analytics/snapshots:
+    post:
+      tags: [reporting]
+      operationId: recordSnapshot
+      summary: Record today's values for the caller's own workspace (manager, owner). Audited
+      description: One row per metric and UTC day; a repeat replaces that day's values.
+      responses:
+        "201":
+          description: Recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [period, values]
+                properties:
+                  period: { type: string, format: date }
+                  values: { type: object }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/reports/operations:
+    get:
+      tags: [reporting]
+      operationId: operationsReport
+      summary: Filtered cases with totals by status and source freshness (P6.3)
+      description: >-
+        Dates are UTC days, inclusive, at most 366 apart; both default to the last 366 days. The
+        table, the totals and the export use one WHERE clause. Unknown or repeated parameters are
+        refused. Page is bounded so that (page - 1) x limit is at most 5,000.
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { enum: [Draft, Intake, Needs Review, Ready, Approved, Closed] } }
+        - { name: assignee, in: query, schema: { type: string, description: "uuid or unassigned" } }
+        - { name: source, in: query, schema: { enum: [crm_simulator, erp_simulator, none] } }
+        - { name: sort, in: query, schema: { enum: [created_desc, created_asc, due_asc, status], default: created_desc } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { $ref: "#/components/parameters/Limit" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/reports/operations/export:
+    get:
+      tags: [reporting]
+      operationId: operationsExport
+      summary: The same rows as the report, as formula-safe CSV, refused over 1,000 rows
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: assignee, in: query, schema: { type: string } }
+        - { name: source, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: CSV. Every cell quoted; a cell starting with = + - @ tab or CR gets a leading apostrophe
+          headers:
+            X-Row-Count: { schema: { type: integer } }
+          content:
+            text/csv:
+              schema: { type: string }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "413": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/status:
+    get:
+      tags: [admin]
+      operationId: adminStatus
+      summary: Owner identity state. 404 for everyone while identity is unconfigured
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Identity state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminStatus" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/logout:
+    post:
+      tags: [admin]
+      operationId: adminLogout
+      summary: Revoke every owner token issued up to now, and audit it
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Signed out here. The browser then ends the provider session
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [signedOut, providerLogoutPath]
+                properties:
+                  signedOut: { const: true }
+                  providerLogoutPath: { type: string }
+        "401": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/salesforce:
+    get:
+      tags: [admin]
+      operationId: salesforceStatus
+      summary: Owner-only connector state. Says Pending Owner Credentials until a real org connects
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+  /api/v1/admin/integrations/salesforce/authorize:
+    post:
+      tags: [admin]
+      operationId: salesforceAuthorize
+      summary: Start the OAuth web server flow with PKCE
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/salesforce/callback:
+    get:
+      tags: [admin]
+      operationId: salesforceCallback
+      summary: Finish the OAuth flow. Single-use state
+      security:
+        - ownerSession: []
+      responses:
+        "302": { description: Back to the admin page }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/sync:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [admin]
+      operationId: startSync
+      summary: Owner-only read-only sync
+      security:
+        - ownerSession: []
+      parameters:
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/runs/{runId}/continue:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [admin]
+      operationId: continueOwnerRun
+      summary: Owner connector. Carry on a healthy run that ran out of pages for one request
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/runs/{runId}/resume:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [admin]
+      operationId: resumeOwnerRun
+      summary: Owner connector. Operator recovery of a failed run from its saved cursor
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: The run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SyncRun" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/integrations/{id}/disconnect:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [admin]
+      operationId: disconnectIntegration
+      summary: Revoke at the provider, then scrub the stored token
+      security:
+        - ownerSession: []
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/automations:
+    get:
+      tags: [admin]
+      operationId: automationStatus
+      summary: Pause state and the honest claim for the Sheet bridge and Zapier
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema: { type: object }
+  /api/v1/admin/automations/pause:
+    post:
+      tags: [admin]
+      operationId: pauseAutomation
+      summary: Emergency stop or resume for every dispatch. Audited; a reason is required to stop
+      security:
+        - ownerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [paused]
+              properties:
+                paused: { type: boolean }
+                reason: { type: string, maxLength: 300 }
+      responses:
+        "200":
+          description: Status
+          content:
+            application/json:
+              schema: { type: object }
+        "400": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/automations/dispatch:
+    post:
+      tags: [admin]
+      operationId: dispatchNow
+      summary: One bounded dispatch pass for the owner's workspace
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: What was dispatched
+          content:
+            application/json:
+              schema: { type: object }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/automations/runs/{id}/confirm:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [admin]
+      operationId: confirmRun
+      summary: Record evidence that moves a run to Confirmed
+      security:
+        - ownerSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [evidenceRef]
+              properties:
+                evidenceRef: { type: string, maxLength: 200 }
+      responses:
+        "200":
+          description: Updated run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "403": { $ref: "#/components/responses/Error" }
+  /api/v1/admin/automations/runs/{id}/retry:
+    parameters:
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [admin]
+      operationId: retryRun
+      summary: Audited Dead Letter to Pending
+      security:
+        - ownerSession: []
+      responses:
+        "200":
+          description: Updated run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Run" }
+        "403": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    demoSession:
+      type: apiKey
+      in: cookie
+      name: __Host-obs_demo
+      description: Opaque, HttpOnly, Secure, SameSite=Strict
+    ownerSession:
+      type: apiKey
+      in: header
+      name: Cf-Access-Jwt-Assertion
+      description: Proposed. Issuer, audience, expiry, signature and subject allowlist are verified.
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string, maxLength: 200 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 64 }
+  responses:
+    Accepted:
+      description: Done. Detailed bodies are defined by the implementing phase.
+      content:
+        application/json:
+          schema: { type: object }
+    Health:
+      description: Healthy
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [status]
+            properties:
+              status: { const: ok }
+    Error:
+      description: Standard error envelope
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    DemoProgress:
+      type: object
+      required: [provenance, startedAt, complete, elapsedSeconds, steps, recap]
+      properties:
+        provenance: { const: SYNTHETIC }
+        startedAt: { type: string, format: date-time }
+        complete: { type: boolean }
+        elapsedSeconds: { type: [integer, "null"] }
+        steps:
+          type: array
+          items:
+            type: object
+            required: [key, done, completedAt]
+            properties:
+              key:
+                enum:
+                  [workspace_launched, case_created, mismatch_detected, document_reviewed, resolution_approved]
+              done: { type: boolean }
+              completedAt: { type: [string, "null"], format: date-time }
+        recap:
+          type: object
+          properties:
+            casesCreated: { type: integer }
+            findingsOpened: { type: integer }
+            reviewsDecided: { type: integer }
+            approvals: { type: integer }
+            auditEventsWritten: { type: integer }
+            automationRuns: { type: integer }
+            automationRunsSimulated: { type: integer }
+            sources: { const: Simulated }
+            aiReview: { const: Deterministic fixture }
+            delivery: { const: Simulated }
+    Error:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+        details: { type: array, items: { type: object } }
+    DemoSession:
+      type: object
+      required: [expiresAt, packVersion]
+      properties:
+        expiresAt: { type: string, format: date-time }
+        packVersion: { type: string }
+        demoRole: { enum: [viewer, analyst, manager] }
+    Me:
+      type: object
+      required: [kind, capabilities]
+      properties:
+        kind: { enum: [guest, owner] }
+        demoRole: { enum: [viewer, analyst, manager] }
+        capabilities: { type: array, items: { type: string } }
+        workspaceMode: { enum: [demo, owner] }
+        workspaceName: { type: string }
+        expiresAt: { type: string, format: date-time }
+        expiresInSeconds: { type: integer, minimum: 0 }
+        environment: { type: string }
+    WorkspaceSummary:
+      type: object
+      required: [provenance, workspaceCases, templateCases]
+      properties:
+        provenance: { const: SYNTHETIC }
+        workspaceCases: { type: object, additionalProperties: { type: integer } }
+        templateCases: { type: object, additionalProperties: { type: integer } }
+    AdminStatus:
+      type: object
+      required: [ownerIdentity, identityMode, simulated]
+      properties:
+        ownerIdentity: { type: string, description: Pending Owner Configuration until a real provider is verified }
+        identityMode: { enum: [access, local-test-double] }
+        simulated: { type: boolean }
+    CaseStatus:
+      enum: [Draft, Intake, Needs Review, Ready, Approved, Closed]
+    Case:
+      type: object
+      required: [id, status, version, readOnly]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        caseType: { type: string }
+        customer: { type: string }
+        status: { $ref: "#/components/schemas/CaseStatus" }
+        queue: { $ref: "#/components/schemas/Queue" }
+        assigneeId: { type: [string, "null"], format: uuid }
+        assignee: { type: [string, "null"] }
+        dueAt: { type: [string, "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        overdue: { type: boolean }
+        ageDays: { type: integer }
+        version: { type: integer }
+        readOnly: { type: boolean, description: True for shared template rows }
+    CaseDetail:
+      allOf:
+        - { $ref: "#/components/schemas/Case" }
+        - type: object
+          required: [checklist, handoffs, approval, documents]
+          properties:
+            checklist: { type: array, items: { type: object } }
+            handoffs: { type: array, items: { type: object } }
+            approval: { type: [object, "null"] }
+            documents: { type: array, items: { type: object } }
+    Activity:
+      type: object
+      required: [id, action, actor, occurredAt]
+      properties:
+        id: { type: string }
+        action: { type: string }
+        actor: { type: string, description: The role that acted. Session and user IDs stay server-side }
+        summary: { type: [string, "null"] }
+        occurredAt: { type: string, format: date-time }
+    Queue:
+      enum: [Field Services, Seasonal Staffing]
+    CaseType:
+      enum: [Onboarding, Billing, Renewal, Field issue]
+    CaseCreate:
+      type: object
+      additionalProperties: false
+      required: [title, customerId, caseType]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        customerId: { type: string, format: uuid }
+        caseType: { $ref: "#/components/schemas/CaseType" }
+        queue: { $ref: "#/components/schemas/Queue" }
+        dueAt: { type: string, format: date-time }
+        draft: { type: boolean, description: Stay in Draft. Otherwise the case starts in Intake }
+    CaseUpdate:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: { type: integer }
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        status:
+          enum: [Intake, Needs Review, Ready, Closed]
+          description: Approved is reachable only through the approval command.
+        reason: { type: string, maxLength: 500, description: Required for Ready to Needs Review }
+        dueAt: { type: [string, "null"], format: date-time }
+    Reopen:
+      type: object
+      additionalProperties: false
+      required: [reason, version]
+      properties:
+        reason: { type: string, minLength: 3, maxLength: 500 }
+        version: { type: integer }
+    Handoff:
+      type: object
+      additionalProperties: false
+      required: [reason, expectedCaseVersion]
+      description: Name exactly one of toAssigneeId and toQueue.
+      properties:
+        toAssigneeId: { type: string, format: uuid }
+        toQueue: { $ref: "#/components/schemas/Queue" }
+        reason: { type: string, maxLength: 500 }
+        dueAt: { type: string, format: date-time }
+        expectedCaseVersion: { type: integer }
+    AiReview:
+      type: object
+      required: [id, status, mode, label, promptVersion]
+      properties:
+        id: { type: string, format: uuid }
+        status: { enum: [Queued, Processing, Needs Human Review, Accepted, Accepted with Edits, Rejected, Failed] }
+        version: { type: integer }
+        mode: { enum: [fixture, live] }
+        label: { enum: [Deterministic demonstration fixture, Live model output] }
+        modelVersion: { type: string }
+        promptVersion: { const: doc-review-v1 }
+        inputSha256: { type: [string, "null"] }
+        suggestion: { type: [object, "null"], description: "The validated doc-review-v1 output; immutable once stored" }
+        citations:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              segmentId: { type: string }
+              page: { type: integer }
+              text: { type: string }
+        validation: { type: [object, "null"], description: "Codes only: checks passed, errors, fallback" }
+        policy: { type: [object, "null"], description: "Deterministic rule result on the current case: comparisons, apply, refused" }
+        abstainReason: { enum: [no_extractable_text, ambiguous, adversarial_content, missing_required_fields, null] }
+        errorCode: { type: [string, "null"] }
+        reviewerEdits: { type: [object, "null"] }
+        applied: { type: [array, "null"] }
+        tokensIn: { type: integer }
+        tokensOut: { type: integer }
+        costMicroUsd: { type: integer, description: "Estimated. Always 0 for a fixture" }
+    Finding:
+      type: object
+      required: [id, kind, severity, status, version]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string }
+        severity: { enum: [low, medium, high] }
+        status: { enum: [Open, Investigating, Proposed, Deferred, Resolved, Dismissed] }
+        deferUntil: { type: [string, "null"], format: date-time }
+        version: { type: integer }
+        customer: { type: [string, "null"] }
+        proposal: { type: [string, "null"] }
+        superseded: { type: boolean }
+        readOnly: { type: boolean }
+        evidence:
+          type: object
+          description: Source values and timestamps, differences, match basis, explanation, rule, recommended action
+    Integration:
+      type: object
+      required: [provider, status]
+      properties:
+        provider: { type: string }
+        label: { type: string, description: "For example ERP Simulator. Never a claim of a live connection" }
+        modeLabel: { enum: [Simulated, Connected Test] }
+        status: { enum: [Not Configured, Simulated, Connected Test, Degraded, Disconnected] }
+        lastSuccessAt: { type: [string, "null"], format: date-time }
+        freshness: { enum: [never, fresh, aging, stale] }
+        lastRun:
+          oneOf:
+            - { $ref: "#/components/schemas/SyncRun" }
+            - { type: "null" }
+    SyncRun:
+      type: object
+      required: [id, kind, status, pages, counts]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { enum: [full, delta] }
+        scenario: { type: string }
+        status: { enum: [running, succeeded, failed, dead_letter] }
+        pages: { type: integer }
+        counts: { type: object }
+        resumes: { type: integer }
+        resumable: { type: boolean }
+        cursorSaved: { type: boolean }
+        error:
+          type: [object, "null"]
+          description: A class, a code and a fixed message. Never provider text
+    Run:
+      type: object
+      required: [id, type, label, attempts, uncertain]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string }
+        ref: { type: string }
+        label: { enum: [Queued, Accepted, Confirmed, Failed, Simulated] }
+        dispatchState: { enum: [pending, processing, retry_scheduled, accepted, simulated, dead_letter] }
+        deliveryEvidence: { enum: [none, provider_accepted, confirmed] }
+        evidenceRef: { type: [string, "null"] }
+        attempts: { type: integer, minimum: 0, maximum: 6 }
+        lastErrorCode: { type: [string, "null"] }
+        nextAttemptAt: { type: [string, "null"], format: date-time }
+        uncertain:
+          type: boolean
+          description: True when the provider accepted the event and nobody has confirmed the effect
+        effects: { type: array, items: { type: object } }
+        history: { type: array, items: { type: object } }
+    Rule:
+      type: object
+      required: [id, name, trigger, condition, action, enabled, version]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 120 }
+        trigger: { enum: [case.created, case.needs_review, approval.completed, reconciliation.resolved, integration.degraded] }
+        condition: { type: object }
+        conditionText: { type: string }
+        action: { enum: [sheet_append, simulated_notice] }
+        enabled: { type: boolean }
+        version: { type: integer, minimum: 1 }
+        reusedFrom: { type: [string, "null"], format: uuid }
+        reusable: { type: boolean }
+    Metric:
+      type: object
+      required: [key, label, unit, value, provenance]
+      properties:
+        key: { type: string }
+        label: { type: string }
+        unit: { enum: [count, days, hours, minutes, ratio, usd] }
+        value: { type: [number, "null"], description: "Null when no source exists or nothing is measured yet" }
+        provenance: { enum: [SYNTHETIC, MEASURED_DEMO, ESTIMATED, UNKNOWN] }

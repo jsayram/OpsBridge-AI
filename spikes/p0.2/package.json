@@ -1,0 +1,18 @@
+{
+  "name": "opsbridge-spike-p0-2",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway ADR-000 proofs. Not application code.",
+  "dependencies": {
+    "hono": "4.13.16",
+    "pdf-lib": "1.17.1",
+    "pg": "8.23.1",
+    "unpdf": "2.1.0",
+    "ws": "8.21.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5",
+    "typescript": "5.9.3",
+    "wrangler": "4.158.0"
+  }
+}

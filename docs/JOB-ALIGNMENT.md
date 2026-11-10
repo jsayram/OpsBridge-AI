@@ -1,8 +1,8 @@
 # OpsBridge AI: job alignment and evidence plan
 
-Reviewed: November 5, 2026 (America/New_York). Planning audit only; application implementation remains paused.
+Reviewed: November 5, 2026 (America/New_York), and re-read against the posting on November 6 at P0.1. `docs/REQUIREMENTS-TRACEABILITY.md` holds the current per-ID state; the build resumed on November 6.
 
-Source: the owner-supplied four-page `Development_Automation_Lead_JD.pdf`, for Development & Automation Lead at másLabor. Source SHA-256: `b29b7d3adf1455107cb41949a864cdd36d107e9b2325cd97b8b681a5262d0a4b`. Essential duties are on pages 2–3; qualifications are on page 3. The document supplies role requirements, not permission to access company systems or contact anyone.
+Source: the owner-supplied four-page `Development_Automation_Lead_JD.pdf`, for the Development & Automation Lead role at the target employer. Source SHA-256: `b29b7d3adf1455107cb41949a864cdd36d107e9b2325cd97b8b681a5262d0a4b`. Essential duties are on pages 2–3; qualifications are on page 3. The document supplies role requirements, not permission to access company systems or contact anyone.
 
 **Evidence status as of this audit:** Every product capability below is **Planned, not implemented or verified**. This matrix is a design for future evidence, not a claim that Jose satisfies every qualification. Personnel requirements need truthful examples from his actual experience in addition to this portfolio. Working conditions and compensation are personal employment considerations, outside application acceptance.
 
@@ -60,7 +60,7 @@ Nice-to-have LLM, BI and executive-business-case qualifications are covered by J
 ## Gaps found in PRD v1.0 and required revisions
 
 1. **Inventory needs executable scope (JOB-11).** Twenty inventory references in seed data are not enough. Add a small read-only adapter contract, canonical identity, discrepancy cases, UI/source status, and acceptance tests in P3. Keep purchasing and stock writeback out of scope.
-2. **Consultant workflow needs visible handoffs (JOB-10).** Existing cases/statuses are a good base. Make assignment, checklist, due date, ownership transfer and audited review explicit. It remains fictional consulting work, not a reproduction of másLabor's internal platform.
+2. **Consultant workflow needs visible handoffs (JOB-10).** Existing cases/statuses are a good base. Make assignment, checklist, due date, ownership transfer and audited review explicit. It remains fictional consulting work, not a reproduction of the target employer's internal platform.
 3. **Customer definitions need semantic examples (JOB-20).** Normalizing names is insufficient for the posting's explicit example. Add a glossary, source-authority matrix, multiple bill-to entities and reviewer-approved identity mapping, with disagreement preserved for audit.
 4. **Self-serve reporting needs a tested interaction (JOB-21).** Add bounded filters, reusable/saved report criteria where useful, scoped safe export and a data dictionary. A static dashboard is only part of the duty.
 5. **People/process evidence needs explicit deliverables (JOB-06, JOB-15–18).** Add a stakeholder brief, prioritized backlog/retrospective, developer/operator onboarding, feedback and rollout/reuse exercise. Keep human leadership/hiring/adoption claims dependent on actual experience/evidence.
@@ -86,4 +86,4 @@ These supplement the PRD's original E2E-01–E2E-28. Stable suffixes avoid silen
 
 For each job-relevant claim, retain: claim text; `JOB-XX` IDs; implementation path; actual test/run evidence; live/simulated status; measured/estimated provenance; limitations; date; owner acceptance. Claims without this record remain planned or illustrative. Release evidence must match deployed behavior. The final five-minute walkthrough should connect business need → reliable integration/data model → human-reviewed AI → controlled automation → reporting/ROI → tests/operations, with a separate engineering drill-down for inventory, SQL and failure recovery.
 
-This file is a planning artifact. It does not certify security, prove hiring outcomes, establish compliance, or imply any affiliation with másLabor or the named vendors.
+This file is a planning artifact. It does not certify security, prove hiring outcomes, establish compliance, or imply any affiliation with the target employer or the named vendors.

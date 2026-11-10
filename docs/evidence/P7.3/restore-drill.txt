@@ -1,0 +1,10 @@
+# Local restore drill, 2026-11-09T23:15:32.715Z, source opsbridge_rollback_test
+backup point: 39 tables, 1984 rows, migrations 0011_dispatcher_contract.sql
+backup: pg_dump -Fc, 315268 bytes, 235 ms
+damage: 1 owner case titles overwritten, 450 metric snapshots deleted
+PASS the source no longer matches the backup point
+restore: pg_restore into opsbridge_rollback_test_recovered, 377 ms
+PASS restored data equals the backup point in every table
+PASS Worker on the restored copy: ready after 1415 ms, smoke 19 checks passed
+recovery work, backup plus restore plus Worker up and smoke: 2498 ms (local machine, excludes a person noticing and deciding)
+DRILL PASSED

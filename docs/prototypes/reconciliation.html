@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reconciliation - OpsBridge AI prototype</title>
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body data-state="normal">
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="proto-banner" role="note"><span class="glyph" aria-hidden="true">&#9650;</span>Static prototype. Not a working app. All names and numbers are synthetic.</div>
+
+<header class="topbar">
+  <div class="brand">OpsBridge <span>AI</span></div>
+  <div class="workspace">Workspace: Northstar Operations (fictional) &middot; Environment: demo</div>
+  <div class="controls">
+    <label for="view-state">View state</label>
+    <select id="view-state">
+      <option value="normal">Normal</option>
+      <option value="loading">Loading (skeletons)</option>
+      <option value="empty">Empty</option>
+      <option value="error">Error (with request ID)</option>
+      <option value="stale">Stale source</option>
+      <option value="denied">Access denied</option>
+    </select>
+    <button type="button" id="theme-toggle" aria-pressed="false">Light theme</button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidenav" aria-label="Primary">
+    <ul>
+      <li><a href="overview.html">Overview<span class="route">/app/overview</span></a></li>
+      <li><a href="cases.html">Cases<span class="route">/app/cases</span></a></li>
+      <li><a href="reconciliation.html" aria-current="page">Reconciliation<span class="route">/app/reconciliation</span></a></li>
+    </ul>
+  </nav>
+
+  <main id="main" tabindex="-1">
+    <div class="page-head">
+      <h1>Reconciliation</h1>
+      <span class="route">/app/reconciliation</span>
+    </div>
+    <p class="sr-only" role="status" aria-live="polite" id="live">Showing normal state.</p>
+
+    <section class="v v-loading" aria-label="Loading findings" aria-busy="true">
+      <div class="grid split-even">
+        <div class="card"><div class="skel-block"><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel lg w60"></div><div class="skel lg"></div><div class="skel lg"></div><div class="skel w80"></div></div></div>
+      </div>
+    </section>
+
+    <section class="v v-empty" aria-labelledby="empty-h">
+      <div class="card state-panel">
+        <h2 id="empty-h"><span aria-hidden="true">&#10003;</span> No findings</h2>
+        <p class="muted">No differences between the CRM Simulator and ERP Simulator records. Run Detect Mismatch in the guided checklist to see an example.</p>
+      </div>
+    </section>
+
+    <section class="v v-error" aria-labelledby="err-h">
+      <div class="callout bad state-panel" role="alert">
+        <div class="t" id="err-h"><span aria-hidden="true">&#10005;</span> Could not load findings</div>
+        <p>The comparison request failed. No record was changed.</p>
+        <p class="small muted" style="margin-top:8px">Request ID: <span class="mono">req_demo_9be2d610</span> (synthetic)</p>
+        <p style="margin-top:16px"><button type="button">Retry</button></p>
+      </div>
+    </section>
+
+    <section class="v v-denied" aria-labelledby="den-h">
+      <div class="callout warn state-panel" role="alert">
+        <div class="t" id="den-h"><span aria-hidden="true">&#9650;</span> Access denied</div>
+        <p>This demo session is not authorized to resolve findings. The server decides access, and Approve, Reject and Defer would be refused.</p>
+        <p style="margin-top:16px"><button type="button">Start a new demo session</button></p>
+      </div>
+    </section>
+
+    <section class="v v-stale" aria-label="Stale data notice" style="margin-bottom:16px">
+      <div class="callout warn" role="status">
+        <div class="t"><span aria-hidden="true">&#9650;</span> Stale source: ERP Simulator</div>
+        <p>ERP Simulator values were last loaded 2026-11-04 08:45 UTC. Resolve with care: the ERP record may have changed since.</p>
+      </div>
+    </section>
+
+    <div class="v v-normal">
+      <div class="grid split-even">
+        <section class="card" aria-labelledby="find-h">
+          <div class="card-head"><h2 id="find-h">Findings</h2><span class="badge sim">Simulated</span></div>
+          <div class="tscroll" role="region" aria-label="Findings table" tabindex="0">
+            <table style="min-width:520px">
+              <caption class="sr-only">Reconciliation findings by severity</caption>
+              <thead><tr><th scope="col">Finding</th><th scope="col">Severity</th><th scope="col">Exception</th></tr></thead>
+              <tbody>
+                <tr aria-selected="true"><th scope="row"><a class="row-link" href="#finding" aria-current="true">Bill-to entity differs</a><div class="small muted">CASE-1042 &middot; Harbor Ridge Produce LLC (fictional)</div></th><td><span class="chip bad"><span class="g" aria-hidden="true">&#10005;</span>High</span></td><td><span class="chip info"><span class="g" aria-hidden="true">&#9679;</span>Investigating</span></td></tr>
+                <tr><th scope="row"><a class="row-link" href="#finding">Payment terms differ</a><div class="small muted">CASE-1038 &middot; Cedar Point Landscaping (fictional)</div></th><td><span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Medium</span></td><td><span class="chip info"><span class="g" aria-hidden="true">&#9671;</span>Proposed</span></td></tr>
+                <tr><th scope="row"><a class="row-link" href="#finding">Postal code format</a><div class="small muted">CASE-1031 &middot; Maple Grove Pools (fictional)</div></th><td><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Low</span></td><td><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Open</span></td></tr>
+                <tr><th scope="row"><a class="row-link" href="#finding">Duplicate contact</a><div class="small muted">CASE-1035 &middot; Bluebird Snow Services (fictional)</div></th><td><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Low</span></td><td><span class="chip warn"><span class="g" aria-hidden="true">&#9208;</span>Deferred</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:8px">Other exception statuses: Resolved, Dismissed.</p>
+        </section>
+
+        <section class="card" id="finding" aria-labelledby="f-h">
+          <div class="card-head">
+            <div>
+              <h2 id="f-h">Bill-to entity differs</h2>
+              <p class="small muted">CASE-1042 &middot; Harbor Ridge Produce LLC (fictional)</p>
+            </div>
+            <span class="row"><span class="chip bad"><span class="g" aria-hidden="true">&#10005;</span>High</span><span class="chip info"><span class="g" aria-hidden="true">&#9679;</span>Investigating</span></span>
+          </div>
+
+          <div class="compare" role="group" aria-label="CRM Simulator compared with ERP Simulator">
+            <div class="side">
+              <div class="row between"><h3>CRM Simulator</h3><span class="badge sim">Simulated</span></div>
+              <dl>
+                <div><dt>Organization</dt><dd class="diff">Harbor Ridge Produce LLC (fictional)</dd></div>
+                <div><dt>Service address</dt><dd>100 Example Way, Springfield</dd></div>
+                <div><dt>Contract value</dt><dd class="num">$12,400.00</dd></div>
+                <div><dt>Source timestamp</dt><dd class="num"><time datetime="2026-11-06T09:00:00Z">2026-11-06 09:00 UTC</time></dd></div>
+              </dl>
+            </div>
+            <div class="side">
+              <div class="row between"><h3>ERP Simulator</h3><span class="badge sim">Simulated</span></div>
+              <dl>
+                <div><dt>Bill-to entity</dt><dd class="diff">Harbor Ridge Holdings Inc. (fictional)</dd></div>
+                <div><dt>Service address</dt><dd>100 Example Way, Springfield</dd></div>
+                <div><dt>Contract value</dt><dd class="num">$12,400.00</dd></div>
+                <div><dt>Source timestamp</dt><dd class="num"><time datetime="2026-11-06T08:45:00Z">2026-11-06 08:45 UTC</time></dd></div>
+              </dl>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:8px">Marked rows differ. Address and contract value match.</p>
+
+          <div class="callout" style="margin-top:16px">
+            <div class="t"><span aria-hidden="true">&#9679;</span> Definition mismatch: related, not interchangeable</div>
+            <p>A CRM organization is the customer relationship. An ERP bill-to entity is the party that receives the invoice. They can be linked, and here they point to the same account, but one does not replace the other. A person should decide whether the difference is expected.</p>
+          </div>
+
+          <div style="margin-top:16px">
+            <h3>Resolution</h3>
+            <p class="small muted" style="margin:4px 0 8px">Proposed: keep both values and link the organization to the bill-to entity. No source value is overwritten.</p>
+            <div class="row" role="group" aria-label="Resolve finding">
+              <button type="button" class="primary">Approve</button>
+              <button type="button" class="danger">Reject</button>
+              <button type="button">Defer</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var sel = document.getElementById('view-state');
+  var live = document.getElementById('live');
+  function set(v) {
+    if (!sel.querySelector('option[value="' + v + '"]')) v = 'normal';
+    document.body.dataset.state = v;
+    sel.value = v;
+    live.textContent = 'Showing ' + sel.options[sel.selectedIndex].text + ' state.';
+  }
+  sel.addEventListener('change', function () { set(sel.value); });
+  set((location.hash || '').slice(1) || 'normal');
+  var tb = document.getElementById('theme-toggle');
+  tb.addEventListener('click', function () {
+    var light = document.documentElement.dataset.theme !== 'light';
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    tb.setAttribute('aria-pressed', String(light));
+    tb.textContent = light ? 'Dark theme' : 'Light theme';
+  });
+})();
+</script>
+</body>
+</html>

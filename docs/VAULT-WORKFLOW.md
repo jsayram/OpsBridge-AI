@@ -1,6 +1,6 @@
 # OpsBridge AI documentation workflow
 
-Planning revision: 2026-11-05 (America/New_York). Implementation remains paused while Jose reviews the stack and revised plan. This workflow does not mark any build phase accepted.
+Planning revision: 2026-11-05 (America/New_York). The build resumed on 2026-11-06 as phased sessions. This workflow does not mark any build phase accepted.
 
 ## Source of truth and audience
 

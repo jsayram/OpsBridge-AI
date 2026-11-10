@@ -1,0 +1,59 @@
+import type { Actor } from "./auth/actor";
+import type { Transport } from "./integrations/types";
+
+export type Bindings = {
+  ASSETS: Fetcher;
+  HYPERDRIVE: Hyperdrive;
+  HYPERDRIVE_CLEANUP: Hyperdrive;
+  // The outbox dispatcher's own role (P7.1, D-076). The request role can't claim or finish events.
+  HYPERDRIVE_DISPATCH: Hyperdrive;
+  API_RATE_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> };
+  // "local", "staging" or "production". Anything missing is treated as production.
+  ENVIRONMENT?: string;
+  APP_ORIGIN?: string;
+  IP_HASH_KEY?: string;
+  DEMO_LAUNCH_PAUSED?: string;
+  OWNER_IDENTITY_MODE?: string;
+  OWNER_SUBJECT_ALLOWLIST?: string;
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+  OWNER_TEST_JWKS?: string;
+  SYNC_PAGES_PER_CALL?: string;
+  // Owner-only Salesforce connector. Off unless every value is present (docs/ENVIRONMENTS.md).
+  SALESFORCE_ENABLED?: string;
+  SALESFORCE_LOGIN_URL?: string;
+  SALESFORCE_CLIENT_ID?: string;
+  SALESFORCE_CLIENT_SECRET?: string;
+  SALESFORCE_REDIRECT_URI?: string;
+  TOKEN_ENCRYPTION_KEY?: string;
+  // In-process test double. Worker variables are strings, so a deployed Worker can't set one.
+  SALESFORCE_TEST_DOUBLE?: Transport;
+  // Owner-only Google Sheet bridge (PRD 9.2 Mode A). Off unless every value is present.
+  SHEETS_ENABLED?: string;
+  SHEET_ID?: string;
+  GOOGLE_SA_KEY?: string;
+  SHEETS_TEST_DOUBLE?: Transport;
+  // Owner-only live AI review (P5.3). Off unless every value is present and inside the caps in
+  // backend/src/ai/gateway.ts. Pending Owner Credentials: no provider account exists.
+  AI_LIVE_ENABLED?: string;
+  AI_PROVIDER?: string;
+  AI_MODEL?: string;
+  AI_API_KEY?: string;
+  AI_MAX_REQUESTS_PER_DAY?: string;
+  AI_MAX_INPUT_TOKENS?: string;
+  AI_MAX_OUTPUT_TOKENS?: string;
+  AI_MAX_CONCURRENCY?: string;
+  AI_TIMEOUT_MS?: string;
+  AI_PRICE_IN_MICRO_USD_PER_MTOK?: string;
+  AI_PRICE_OUT_MICRO_USD_PER_MTOK?: string;
+  // In-process double, used only when ENVIRONMENT is "local". A deployed Worker can't set one.
+  AI_TEST_DOUBLE?: Transport;
+};
+
+export type Variables = {
+  requestId: string;
+  actor: Actor;
+  errorCode?: string;
+};
+
+export type AppEnv = { Bindings: Bindings; Variables: Variables };

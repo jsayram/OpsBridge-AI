@@ -1,0 +1,5 @@
+{"ts":"2026-11-06T18:58:47.969Z","level":"info","event":"sweep","purged":1}
+owner|1|0
+template|1|0
+demo|1|0
+1|1|5

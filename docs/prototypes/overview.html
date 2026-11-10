@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview - OpsBridge AI prototype</title>
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body data-state="normal">
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="proto-banner" role="note"><span class="glyph" aria-hidden="true">&#9650;</span>Static prototype. Not a working app. All names and numbers are synthetic.</div>
+
+<header class="topbar">
+  <div class="brand">OpsBridge <span>AI</span></div>
+  <div class="workspace">Workspace: Northstar Operations (fictional) &middot; Environment: demo</div>
+  <div class="controls">
+    <label for="view-state">View state</label>
+    <select id="view-state">
+      <option value="normal">Normal</option>
+      <option value="waking">First visit: waking database</option>
+      <option value="loading">Loading (skeletons)</option>
+      <option value="empty">Empty</option>
+      <option value="error">Error (with request ID)</option>
+      <option value="stale">Stale source</option>
+      <option value="denied">Access denied</option>
+    </select>
+    <button type="button" id="theme-toggle" aria-pressed="false">Light theme</button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidenav" aria-label="Primary">
+    <ul>
+      <li><a href="overview.html" aria-current="page">Overview<span class="route">/app/overview</span></a></li>
+      <li><a href="cases.html">Cases<span class="route">/app/cases</span></a></li>
+      <li><a href="reconciliation.html">Reconciliation<span class="route">/app/reconciliation</span></a></li>
+    </ul>
+  </nav>
+
+  <main id="main" tabindex="-1">
+    <div class="page-head">
+      <h1>Overview</h1>
+      <span class="route">/app/overview</span>
+    </div>
+    <p class="sr-only" role="status" aria-live="polite" id="live">Showing normal state.</p>
+
+    <!-- waking -->
+    <section class="v v-waking" aria-labelledby="waking-h">
+      <div class="card state-panel">
+        <h2 id="waking-h">Starting your demo workspace</h2>
+        <p class="muted">Starting your demo workspace. This can take a few seconds the first time.</p>
+        <div class="skel-block" style="margin-top:16px" aria-hidden="true">
+          <div class="skel lg w80"></div><div class="skel w60"></div><div class="skel w40"></div>
+        </div>
+        <p class="small muted" style="margin-top:16px"><span aria-hidden="true">&#9684;</span> Status: Processing. A static message remains if animation is reduced.</p>
+      </div>
+    </section>
+
+    <!-- loading -->
+    <section class="v v-loading" aria-label="Loading overview" aria-busy="true">
+      <div class="grid cols-4">
+        <div class="card"><div class="skel-block"><div class="skel w40"></div><div class="skel lg w60"></div><div class="skel w80"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel w40"></div><div class="skel lg w60"></div><div class="skel w80"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel w40"></div><div class="skel lg w60"></div><div class="skel w80"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel w40"></div><div class="skel lg w60"></div><div class="skel w80"></div></div></div>
+      </div>
+      <div class="grid split" style="margin-top:16px">
+        <div class="card"><div class="skel-block"><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div></div></div>
+      </div>
+    </section>
+
+    <!-- empty -->
+    <section class="v v-empty" aria-labelledby="empty-h">
+      <div class="card state-panel">
+        <h2 id="empty-h"><span aria-hidden="true">&#9675;</span> No cases yet</h2>
+        <p class="muted">This workspace has no cases. Follow the guided checklist to create the sample case.</p>
+        <p style="margin-top:16px"><button type="button" class="primary">Create Sample Case</button></p>
+      </div>
+    </section>
+
+    <!-- error -->
+    <section class="v v-error" aria-labelledby="err-h">
+      <div class="callout bad state-panel" role="alert">
+        <div class="t" id="err-h"><span aria-hidden="true">&#10005;</span> Could not load the overview</div>
+        <p>The request timed out before the workspace answered. Nothing was changed.</p>
+        <p class="small muted" style="margin-top:8px">Request ID: <span class="mono">req_demo_7f3a91c2</span> (synthetic)</p>
+        <p style="margin-top:16px"><button type="button">Retry</button></p>
+      </div>
+    </section>
+
+    <!-- denied -->
+    <section class="v v-denied" aria-labelledby="den-h">
+      <div class="callout warn state-panel" role="alert">
+        <div class="t" id="den-h"><span aria-hidden="true">&#9650;</span> Access denied</div>
+        <p>This demo session is not authorized for this workspace. The server decides access, not this page.</p>
+        <p style="margin-top:16px"><button type="button">Start a new demo session</button></p>
+      </div>
+    </section>
+
+    <!-- stale notice -->
+    <section class="v v-stale" aria-label="Stale data notice" style="margin-bottom:16px">
+      <div class="callout warn" role="status">
+        <div class="t"><span aria-hidden="true">&#9650;</span> Stale source: ERP Simulator</div>
+        <p>The ERP Simulator fixture was last refreshed 2026-11-06 08:45 UTC, which is past the 30 minute freshness limit. ERP values below may be out of date.</p>
+      </div>
+    </section>
+
+    <!-- normal -->
+    <div class="v v-normal">
+      <section aria-labelledby="kpi-h">
+        <h2 class="sr-only" id="kpi-h">Key figures</h2>
+        <div class="grid cols-4">
+          <article class="card kpi">
+            <div class="row between"><span class="label">Open cases</span><span class="badge">Synthetic</span></div>
+            <div class="value">14</div>
+            <div class="note">6 Intake, 5 Needs Review, 3 Ready</div>
+          </article>
+          <article class="card kpi">
+            <div class="row between"><span class="label">Open exceptions</span><span class="badge">Synthetic</span></div>
+            <div class="value">7</div>
+            <div class="note">2 Investigating, 1 Proposed, 1 Deferred</div>
+          </article>
+          <article class="card kpi">
+            <div class="row between"><span class="label">AI reviews needing a person</span><span class="badge">Synthetic</span></div>
+            <div class="value">4</div>
+            <div class="note">Status: Needs Human Review</div>
+          </article>
+          <article class="card kpi">
+            <div class="row between"><span class="label">Median case age (days)</span><span class="badge">Synthetic</span></div>
+            <div class="value">3.5</div>
+            <div class="note">Fixture value, not a measurement</div>
+          </article>
+        </div>
+      </section>
+
+      <div class="grid split" style="margin-top:16px">
+        <section class="card" aria-labelledby="wq-h">
+          <div class="card-head">
+            <h2 id="wq-h">Work queue</h2>
+            <span class="badge sim">Simulated</span>
+          </div>
+          <div class="tscroll" role="region" aria-label="Work queue table" tabindex="0">
+            <table class="min">
+              <caption class="sr-only">Cases waiting on a person</caption>
+              <thead><tr><th scope="col">Case</th><th scope="col">Client</th><th scope="col">Status</th><th scope="col">Due</th><th scope="col" class="r">Discrepancies</th></tr></thead>
+              <tbody>
+                <tr><th scope="row"><a class="row-link" href="cases.html">CASE-1042</a></th><td>Harbor Ridge Produce LLC (fictional)</td><td><span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Review</span></td><td>2026-11-09</td><td class="r">3</td></tr>
+                <tr><th scope="row"><a class="row-link" href="cases.html">CASE-1038</a></th><td>Cedar Point Landscaping (fictional)</td><td><span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Review</span></td><td>2026-11-10</td><td class="r">1</td></tr>
+                <tr><th scope="row"><a class="row-link" href="cases.html">CASE-1035</a></th><td>Bluebird Snow Services (fictional)</td><td><span class="chip info"><span class="g" aria-hidden="true">&#9671;</span>Ready</span></td><td>2026-11-12</td><td class="r">0</td></tr>
+                <tr><th scope="row"><a class="row-link" href="cases.html">CASE-1031</a></th><td>Maple Grove Pools (fictional)</td><td><span class="chip info"><span class="g" aria-hidden="true">&#9679;</span>Intake</span></td><td>2026-11-13</td><td class="r">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="int-h">
+          <div class="card-head"><h2 id="int-h">Integration status</h2></div>
+          <ul class="list">
+            <li><span>CRM Simulator</span><span class="row"><span class="badge sim">Simulated</span><span class="chip info"><span class="g" aria-hidden="true">&#9671;</span>Simulated</span></span></li>
+            <li><span>ERP Simulator</span><span class="row"><span class="badge sim">Simulated</span><span class="chip info"><span class="g" aria-hidden="true">&#9671;</span>Simulated</span></span></li>
+            <li><span>Zapier</span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Not configured</span></li>
+          </ul>
+          <p class="small muted" style="margin-top:8px">No external system is contacted. Simulators serve fixed fictional records.</p>
+        </section>
+      </div>
+
+      <div class="grid split-wide-right" style="margin-top:16px">
+        <div class="stack">
+          <section class="card" aria-labelledby="act-h">
+            <div class="card-head"><h2 id="act-h">Recent activity</h2><span class="badge">Seeded events</span></div>
+            <ul class="list">
+              <li><span>Case CASE-1042 created from CRM Simulator fixture</span><time class="small muted num" datetime="2026-11-06T09:00:00Z">09:00 UTC</time></li>
+              <li><span>Exception opened: bill-to entity differs (Open)</span><time class="small muted num" datetime="2026-11-06T09:02:00Z">09:02 UTC</time></li>
+              <li><span>AI review queued for intake form (Queued)</span><time class="small muted num" datetime="2026-11-06T09:03:00Z">09:03 UTC</time></li>
+              <li><span>AI review needs a person (Needs Human Review)</span><time class="small muted num" datetime="2026-11-06T09:04:00Z">09:04 UTC</time></li>
+            </ul>
+            <p class="small muted">Times are fixed seed values. They do not update.</p>
+          </section>
+
+          <section class="card" aria-labelledby="fresh-h">
+            <div class="card-head"><h2 id="fresh-h">Data freshness</h2></div>
+            <div class="tscroll" role="region" aria-label="Data freshness table" tabindex="0">
+              <table class="min">
+                <thead><tr><th scope="col">Source</th><th scope="col">Label</th><th scope="col">Last fixture load</th><th scope="col">State</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">CRM Simulator</th><td><span class="badge sim">Simulated</span></td><td class="num">2026-11-06 09:00 UTC</td><td><span class="chip ok"><span class="g" aria-hidden="true">&#10003;</span>Current</span></td></tr>
+                  <tr><th scope="row">ERP Simulator</th><td><span class="badge sim">Simulated</span></td><td class="num">2026-11-06 08:45 UTC</td><td><span class="chip ok"><span class="g" aria-hidden="true">&#10003;</span>Current</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <section class="card" aria-labelledby="chk-h">
+          <div class="card-head"><h2 id="chk-h">Guided demo checklist</h2><span class="small muted">1 of 5 done</span></div>
+          <ol class="steps">
+            <li><span>Launch Guided Demo</span><span class="chip ok"><span class="g" aria-hidden="true">&#10003;</span>Done</span></li>
+            <li><span>Create Sample Case</span><button type="button" class="primary">Start</button></li>
+            <li><span>Detect Mismatch</span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Not started</span></li>
+            <li><span>Review Document</span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Not started</span></li>
+            <li><span>Approve Resolution</span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Not started</span></li>
+          </ol>
+          <p class="small muted" style="margin-top:8px">Reset Demo restores a fresh isolated session.</p>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var sel = document.getElementById('view-state');
+  var live = document.getElementById('live');
+  function set(v) {
+    if (!sel.querySelector('option[value="' + v + '"]')) v = 'normal';
+    document.body.dataset.state = v;
+    sel.value = v;
+    live.textContent = 'Showing ' + sel.options[sel.selectedIndex].text + ' state.';
+  }
+  sel.addEventListener('change', function () { set(sel.value); });
+  set((location.hash || '').slice(1) || 'normal');
+  var tb = document.getElementById('theme-toggle');
+  tb.addEventListener('click', function () {
+    var light = document.documentElement.dataset.theme !== 'light';
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    tb.setAttribute('aria-pressed', String(light));
+    tb.textContent = light ? 'Dark theme' : 'Light theme';
+  });
+})();
+</script>
+</body>
+</html>

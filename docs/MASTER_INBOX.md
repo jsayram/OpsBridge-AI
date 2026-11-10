@@ -1,6 +1,6 @@
 # OpsBridge AI master inbox
 
-Updated: 2026-11-06 (America/New_York). The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
+Updated: 2026-11-09 (America/New_York), P8 phase session. One item is open: DEC-009. The coordinator reads this first on return. No unanswered item grants permission by silence. Record the owner's actual words and the scope of the answer; retain superseded answers.
 
 ## Open decisions
 
@@ -18,12 +18,96 @@ Updated: 2026-11-06 (America/New_York). The coordinator reads this first on retu
 
 ### DEC-002 — Provider, budget, identity and domain choices
 
-- State: deferred owner decision; not blocking planning.
-- Context: no provider-account or public-release choice is made by this documentation task.
-- Options/recommendation: present the concrete service inventory now that DEC-001 has a stack direction, including current prices, budget/caps versus alerts, ownership, cancellation, auth/MFA feasibility, private storage, and preview/production separation. Reuse approved owner accounts where suitable.
-- Decision needed by: relevant P0 provider gate, before creating resources or enabling live access.
-- Actual owner answer: none recorded for provisioning, spending, identity provider, domain, live integrations or publication.
-- Evidence/affected scope: `PRD.md` owner decisions and spending policy.
+- State: answered 2026-11-06 for free accounts. Jose creates them himself when asked; none exists yet.
+- Package and blocking dependency: P1.1, P1.2, P1.5; P3.3, P4.3 and P5.3 later.
+- Decision needed and why: P1 needs a real staging origin. Accounts, credentials and hosted resources are stop points.
+- Options: (a) create Cloudflare and Neon accounts now, free plans, all owned by Jose; (b) keep building local slices of P1 and delay hosting; (c) a different provider, which reopens ADR-000.
+- Consequence/cost: (a) $0 on Workers Free, Hyperdrive and Neon Free, no card needed for Neon. R2 and Zero Trust may ask for a payment method even at $0. Community reports say Zero Trust free checkout may ask to authorize overage charges, so read it before entering a card. `docs/design/COST-INVENTORY.md` has the full list as of 2026-11-06.
+- Recommendation: (a) for Cloudflare and Neon, capped at 0.25 CU. Add Access only when P1.2 needs it. Also review the database exposure residual risk in `THREAT-MODEL.md` (PRD 6.3) and decide `workers.dev` versus a domain; `workers.dev` is free and enough for staging.
+- Decision needed by: before P1.1 hosted work.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Yes, free accounts (Recommended)”.
+- Authorized scope, as the master stated it: free Cloudflare and Neon accounts on a `workers.dev` address, Access only when owner login needs it, and the database exposure risk accepted for review in `THREAT-MODEL.md`. Jose creates the accounts himself when asked. No session creates any. Excludes spending, a domain, live integrations and any deploy not yet asked for.
+- Evidence/affected scope: `PRD.md` Sections 17 and 23.3, `docs/design/COST-INVENTORY.md`.
+
+### DEC-003 — Where PDF text extraction runs (ADR-000 proof 1b failed)
+
+- State: answered 2026-11-06. Decide again at P5. Raised under the failed-proof stop rule.
+- Package and blocking dependency: P5.1 owner upload. Public demo is unaffected.
+- Decision needed and why: extraction works in workerd but costs about 2.5 ms of CPU a page locally: 1 page 4.7 ms warm and about 40 ms cold, 5 pages 13.1 ms, 20 pages 45.9 ms, against the Workers Free limit of 10 ms. It also can't be cron work on Free. Evidence: `docs/evidence/P0.2/`.
+- Options with consequence/cost: (A) stay on Free. Guests use text extracted at build time (already the P0.3 design). Owner uploads wait until P5.1, and decide then. $0 now. (B) Move to Workers Paid at $5 a month when P5.1 starts, and parse in the Worker up to about 20 pages. Simple, one code path, recurring cost only while wanted. (C) Parse in the owner's browser or a local script and send text. $0, but server trust in that text drops, and it's a second path to secure.
+- Recommendation: A now, then B at P5.1 if Jose wants hosted owner upload in the interview demo. No spend now, and nothing before P5 changes.
+- Decision needed by: start of P5.1. A yes to A now also closes this as a stop point for P1 through P4.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Decide at P5 (Recommended)”.
+- Authorized scope, as the master stated it: stay on Free now. The stop point is closed for P1 through P4. Option B or C stays undecided until P5.1.
+- Resulting ADR/files: `ADR/000-stack-and-hosting.md` item 1b, `docs/reports/P0.2.md`.
+- Final owner answer, 2026-11-09, in the master thread: “Stay free, fixtures only”. P5 builds no hosted owner upload. AI review uses text extracted at build time from the fictional documents, and the app stays on Workers Free at $0. Closed.
+### DEC-004 — Create the GitHub repository and push
+
+- State: answered 2026-11-06, carried out by the master for `main` and `phase/p0-foundation` only.
+- Package and blocking dependency: P0.5, P1.1.
+- Decision needed and why: the workflow has never run on GitHub, so P0-C stays partial. Creating the repo and pushing are stop points.
+- Options: (a) create a repo now and push the phase branch, private until release, then public per Jose's stated plan; (b) keep P0-C partial until P1.
+- Recommendation: (a). Repo private for now, protected `main`, push `phase/p0-foundation` only. The history contains only planning and synthetic material, and gitleaks found nothing across 7 commits. Before any public flip, re-check employer-name references in planning documents.
+- Decision needed by: before P1.1.
+- Actual owner answer: 2026-11-06, forwarded by the master thread: “Yes, public now”.
+- Authorized scope and what was done, as the master reported it: public repo https://github.com/jsayram/OpsBridge-AI, `origin` added, `main` and `phase/p0-foundation` pushed at `84c9694`, `main` protected against force-push and deletion, draft PR https://github.com/jsayram/OpsBridge-AI/pull/1 opened so CI can run. That PR must not be merged. Gitleaks found no secrets across 14 commits at the time of the push.
+- Exclusions: pushing is authorized only for what Jose approved. `phase/p1-shell` is not pushed until the master says so.
+
+### DEC-005 — Employer name in the public repository
+
+- State: answered 2026-11-06.
+- Package and blocking dependency: none blocked. Raised because the repository went public under DEC-004.
+- Decision needed and why: DEC-004's recommendation said to re-check employer-name references before any public flip. `PRD.md` and the v1.0 to v1.3 snapshots name the target employer, in lines that say the project must not touch or copy that employer's systems or branding. They are public now on `main`. Nothing suggests a secret or real record; the question is only how Jose wants to appear to that employer.
+- Options with consequence/cost: (a) leave it, in line with his earlier “public repo is fine”. (b) Say “the target employer” in the next PRD revision, leaving old snapshots and history as they are. The name stays findable. (c) Also rewrite history. That needs a force push, which `main` protection blocks, and it is a destructive stop point.
+- Recommendation: (b) when the master next revises the PRD. Low effort and no destructive step. The master owns the PRD, so this session changed nothing.
+- Decision needed by: before P8 at the latest; sooner is better since the repository is public.
+- Actual owner answer: 2026-11-06, in the master thread: “Say 'target employer' (Recommended)”.
+- Authorized scope: done by the master in PRD v1.4 and `docs/JOB-ALIGNMENT.md`. Old snapshots and Git history stay unchanged.
+
+### DEC-006 — How P1 reaches staging
+
+- State: answered 2026-11-06.
+- Package and blocking dependency: hosted P1.1 and P1.5.
+- Decision needed and why: `.github/workflows/release.yml` runs only from protected `main`, and P1 is on `phase/p1-shell`, which isn't pushed or merged.
+- Options with consequence/cost: (a) Push `phase/p1-shell`, let CI run on a draft PR, review, then Jose approves merging into `main` and releases from there. The cleanest record, and it needs a merge approval. (b) Allow the workflow on the phase branch for the first staging deploy. No merge, but unmerged code reaches a host. (c) Jose deploys from his machine with Wrangler. No workflow evidence, so P1-E's pipeline half stays open.
+- Recommendation: (a). The push alone also gets P1's checks onto real GitHub Actions.
+- Decision needed by: before hosted P1.1.
+- Actual owner answer: 2026-11-06, in the master thread: “Push, then merge (Recommended)”.
+- Authorized scope: push `phase/p1-shell` and open a draft PR. Merging into `main` still needs Jose's separate approval. Staging releases from `main` afterward.
+
+### DEC-007 — P1-E pending and the P2 start
+
+- State: answered 2026-11-06.
+- Package and blocking dependency: start of P2.
+- Decision needed and why: PRD 14 says a missing live configuration blocks full acceptance, and moving on needs Jose's explicit, recorded deferral naming the pending criterion.
+- Options with consequence/cost: (a) Do the account steps first and close P1-E, then start P2. The smallest risk of a surprise from Hyperdrive or Neon before more is built on them. (b) Accept P1 for limited scope with P1-E pending and start P2 locally. Faster, and P2 needs no account, but transaction behavior through Hyperdrive stays unproven longer.
+- Recommendation: (a) if Jose can do `docs/runbooks/HOSTED-SETUP.md` steps 1 to 5 soon, since those take minutes and the Hyperdrive repeat is the largest unknown left. Otherwise (b).
+- Decision needed by: before P2.
+- Actual owner answer: 2026-11-06, in the master thread: “Start P2 locally”.
+- Authorized scope: P1 accepted for limited scope with P1-E pending. Start P2 locally. Hyperdrive and hosted proofs stay pending and are carried into later phases.
+
+### DEC-008 — P3-D pending and the P4 start
+
+- State: answered 2026-11-06.
+- Package and blocking dependency: start of P4. P4 needs no Salesforce account.
+- Decision needed and why: PRD 14 says a missing live configuration blocks full acceptance, and moving on needs Jose's explicit, recorded deferral naming the pending criterion. P3-D can't be met without a real Salesforce Developer Edition org, and no account or credential exists.
+- Options with consequence/cost: (a) Accept P3 for limited scope with P3-D pending and start P4 locally. No account and $0. The connector stays proven only on a labeled double, and any Salesforce claim stays out of the portfolio until it isn't. (b) Create a free Developer Edition org first, then follow `docs/runbooks/CONNECTORS.md`, which closes P3-D before P4. It also needs a hosted origin or a local callback for the connected app, so it depends partly on P1-E.
+- Recommendation: (a). The role names a CRM without naming a vendor, simulation carries the phase, and P4 doesn't depend on it. Do (b) when hosting exists.
+- Decision needed by: before P4.
+- Actual owner answer: 2026-11-06, in the master thread: “Defer all live gaps (Recommended)”.
+- Authorized scope and explicit exclusions: P3 accepted for limited scope with P3-D pending. Standing deferral for later live-account criteria (Salesforce, Google Sheets and Zapier, the AI provider, hosted Access and Hyperdrive or Neon proofs): phases keep going locally on labeled simulations without a new question each time. Excludes creating accounts, credentials, spending, deploys, pushes and merges, and any portfolio claim of a live integration before its real proof runs.
+
+### DEC-009 — After local P8: accept, and start the launch?
+
+- State: answered 2026-11-09.
+- Package and blocking dependency: P8.4 (public launch) and the P8 gate. Nothing local is blocked.
+- Decision needed and why: P8 ran locally on `phase/p8-launch-prep` (`docs/reports/P8.md`). Everything left needs Jose: his own P8 acceptance, the accounts, each push, merge, deploy and publication, and the checks only a person can run. `docs/LAUNCH-CHECKLIST.md` lists them in order, and each step needs its own approval record (`templates/release-approval-record.md`).
+- Options with consequence/cost: (a) Accept P8 for its local scope and start section B of the checklist: Jose creates the free Cloudflare and Neon accounts, then approves a staging deploy. $0 on the free plans; about an afternoon of his time. (b) Revise: name what to change first; no launch work starts. (c) Stop at a local portfolio: keep the repository and run the demo from his machine in interviews. $0, but P8-B, P8-C and P8-F stay unmet and there is no shareable URL.
+- Recommendation: (a), staging only first. The real unknowns (Workers CPU on the analytics routes, Neon wake-up time, real Safari) can only be measured on a host, and staging costs nothing and is private until he shares the URL.
+- Decision needed by: before any P8.4 step.
+- Actual owner answer: none yet.
+- Authorized scope and explicit exclusions: none until answered. An answer to (a) still needs separate approvals for each push, merge, deploy and publication.
+- Owner answer, 2026-11-09, in the master thread: “Go”, replying to the options Staging first (recommended), Revise or Stop here. The master took it as Staging first. Authorized: push the phase branches and open a draft PR so CI runs. Still excluded until Jose acts or approves separately: account creation, credentials, merges into `main`, any deploy, publication and spending.
 
 ## Recorded user direction
 

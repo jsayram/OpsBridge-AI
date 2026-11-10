@@ -1,0 +1,450 @@
+# Query profile, 2026-11-09T22:25:58.222Z
+# Local Docker Postgres 17, role opsbridge_app, RLS on, 1,001 owner cases, 3,000 audit rows. Not Neon.
+
+## API walk
+1001 cases, 11 pages, 333 ms total
+
+## First page
+Execution 0.319 ms
+Limit  (cost=9.30..9.36 rows=26 width=235) (actual time=0.195..0.199 rows=26 loops=1)
+  Buffers: shared hit=16
+  ->  Sort  (cost=9.30..9.36 rows=26 width=235) (actual time=0.195..0.196 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=16
+        ->  Limit  (cost=3.45..8.68 rows=26 width=235) (actual time=0.075..0.131 rows=26 loops=1)
+              Buffers: shared hit=7
+              ->  Nested Loop Left Join  (cost=3.45..194.11 rows=947 width=235) (actual time=0.075..0.129 rows=26 loops=1)
+                    Join Filter: (a.id = c.assignee_id)
+                    Rows Removed by Join Filter: 14
+                    Buffers: shared hit=7
+                    ->  Nested Loop  (cost=2.39..149.33 rows=947 width=183) (actual time=0.035..0.058 rows=26 loops=1)
+                          Join Filter: (cu.id = c.customer_id)
+                          Buffers: shared hit=6
+                          ->  Index Scan using cases_workspace_created on cases c  (cost=1.33..132.87 rows=947 width=149) (actual time=0.022..0.039 rows=26 loops=1)
+                                Index Cond: (workspace_id = '00000000-0000-4000-8000-000000000002'::uuid)
+                                Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1)))
+                                Buffers: shared hit=5
+                                SubPlan 1
+                                  ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Materialize  (cost=1.06..2.25 rows=1 width=66) (actual time=0.000..0.000 rows=1 loops=26)
+                                Buffers: shared hit=1
+                                ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.008..0.008 rows=1 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                      Rows Removed by Filter: 6
+                                      Buffers: shared hit=1
+                                      SubPlan 2
+                                        ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                    ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.000..0.000 rows=1 loops=26)
+                          Buffers: shared hit=1
+                          ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.005..0.005 rows=1 loops=1)
+                                Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                Rows Removed by Filter: 6
+                                Buffers: shared hit=1
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=424
+Planning Time: 1.866 ms
+Execution Time: 0.319 ms
+
+## Deep page, row 900
+Execution 0.436 ms
+Limit  (cost=24.21..24.27 rows=26 width=235) (actual time=0.229..0.233 rows=26 loops=1)
+  Buffers: shared hit=15
+  ->  Sort  (cost=24.21..24.27 rows=26 width=235) (actual time=0.228..0.230 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=15
+        ->  Limit  (cost=3.45..23.60 rows=26 width=235) (actual time=0.098..0.158 rows=26 loops=1)
+              Buffers: shared hit=6
+              ->  Nested Loop Left Join  (cost=3.45..68.54 rows=84 width=235) (actual time=0.098..0.156 rows=26 loops=1)
+                    Join Filter: (a.id = c.assignee_id)
+                    Rows Removed by Join Filter: 13
+                    Buffers: shared hit=6
+                    ->  Nested Loop  (cost=2.39..62.59 rows=84 width=183) (actual time=0.045..0.071 rows=26 loops=1)
+                          Join Filter: (cu.id = c.customer_id)
+                          Buffers: shared hit=5
+                          ->  Index Scan using cases_workspace_created on cases c  (cost=1.33..59.08 rows=84 width=149) (actual time=0.025..0.044 rows=26 loops=1)
+                                Index Cond: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND (ROW(created_at, id) < ROW('2025-12-09 01:00:00+00'::timestamp with time zone, '4ca95616-05c2-488a-ae46-6ab2a61c5cc3'::uuid)))
+                                Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1)))
+                                Buffers: shared hit=4
+                                SubPlan 1
+                                  ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Materialize  (cost=1.06..2.25 rows=1 width=66) (actual time=0.001..0.001 rows=1 loops=26)
+                                Buffers: shared hit=1
+                                ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.014..0.014 rows=1 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                      Rows Removed by Filter: 6
+                                      Buffers: shared hit=1
+                                      SubPlan 2
+                                        ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                    ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.001..0.001 rows=1 loops=26)
+                          Buffers: shared hit=1
+                          ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.004..0.004 rows=1 loops=1)
+                                Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                Rows Removed by Filter: 6
+                                Buffers: shared hit=1
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=422
+Planning Time: 2.371 ms
+Execution Time: 0.436 ms
+
+## Status filter
+Execution 0.363 ms
+Limit  (cost=17.41..17.48 rows=26 width=235) (actual time=0.229..0.233 rows=26 loops=1)
+  Buffers: shared hit=23
+  ->  Sort  (cost=17.41..17.48 rows=26 width=235) (actual time=0.228..0.230 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=23
+        ->  Limit  (cost=3.92..16.80 rows=26 width=235) (actual time=0.181..0.185 rows=26 loops=1)
+              Buffers: shared hit=14
+              ->  Incremental Sort  (cost=3.92..90.15 rows=174 width=235) (actual time=0.181..0.183 rows=26 loops=1)
+                    Sort Key: c.created_at DESC, c.id DESC
+                    Presorted Key: c.created_at
+                    Full-sort Groups: 1  Sort Method: quicksort  Average Memory: 31kB  Peak Memory: 31kB
+                    Buffers: shared hit=14
+                    ->  Nested Loop Left Join  (cost=3.45..82.39 rows=174 width=235) (actual time=0.075..0.150 rows=27 loops=1)
+                          Join Filter: (a.id = c.assignee_id)
+                          Buffers: shared hit=11
+                          ->  Nested Loop  (cost=2.39..72.39 rows=174 width=183) (actual time=0.032..0.076 rows=27 loops=1)
+                                Join Filter: (cu.id = c.customer_id)
+                                Buffers: shared hit=10
+                                ->  Index Scan Backward using cases_workspace_status_created on cases c  (cost=1.33..67.52 rows=174 width=149) (actual time=0.021..0.058 rows=27 loops=1)
+                                      Index Cond: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND (status = 'Closed'::text))
+                                      Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1)))
+                                      Buffers: shared hit=9
+                                      SubPlan 1
+                                        ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                ->  Materialize  (cost=1.06..2.25 rows=1 width=66) (actual time=0.000..0.000 rows=1 loops=27)
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.005..0.006 rows=1 loops=1)
+                                            Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                            Rows Removed by Filter: 6
+                                            Buffers: shared hit=1
+                                            SubPlan 2
+                                              ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                                    Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.000..0.000 rows=1 loops=27)
+                                Buffers: shared hit=1
+                                ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.005..0.005 rows=1 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                      Rows Removed by Filter: 3
+                                      Buffers: shared hit=1
+                                      SubPlan 3
+                                        ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=415
+Planning Time: 1.796 ms
+Execution Time: 0.363 ms
+
+## Search
+Execution 1.986 ms
+Limit  (cost=64.93..64.94 rows=1 width=235) (actual time=1.859..1.863 rows=26 loops=1)
+  Buffers: shared hit=37
+  ->  Sort  (cost=64.93..64.94 rows=1 width=235) (actual time=1.858..1.861 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=37
+        ->  Limit  (cost=64.92..64.92 rows=1 width=235) (actual time=1.814..1.819 rows=26 loops=1)
+              Buffers: shared hit=28
+              ->  Sort  (cost=64.92..64.92 rows=1 width=235) (actual time=1.814..1.816 rows=26 loops=1)
+                    Sort Key: c.created_at DESC, c.id DESC
+                    Sort Method: top-N heapsort  Memory: 31kB
+                    Buffers: shared hit=28
+                    ->  Nested Loop Left Join  (cost=4.51..64.91 rows=1 width=235) (actual time=0.097..1.767 rows=166 loops=1)
+                          Buffers: shared hit=28
+                          ->  Hash Join  (cost=3.32..63.63 rows=1 width=183) (actual time=0.060..1.536 rows=166 loops=1)
+                                Hash Cond: (c.customer_id = cu.id)
+                                Join Filter: ((c.title ~~* '%Timesheet%'::text) OR (cu.canonical_name ~~* '%Timesheet%'::text))
+                                Rows Removed by Join Filter: 835
+                                Buffers: shared hit=28
+                                ->  Seq Scan on cases c  (cost=1.06..58.89 rows=947 width=149) (actual time=0.017..0.588 rows=1001 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1))))
+                                      Rows Removed by Filter: 123
+                                      Buffers: shared hit=27
+                                      SubPlan 1
+                                        ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                ->  Hash  (cost=2.25..2.25 rows=1 width=66) (actual time=0.008..0.008 rows=1 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.004..0.004 rows=1 loops=1)
+                                            Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                            Rows Removed by Filter: 8
+                                            Buffers: shared hit=1
+                                            SubPlan 2
+                                              ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                                    Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Index Scan using assignees_pkey on assignees a  (cost=1.19..1.24 rows=1 width=58) (actual time=0.000..0.000 rows=0 loops=166)
+                                Index Cond: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND (id = c.assignee_id))
+                                Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1)))
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=424
+Planning Time: 1.716 ms
+Execution Time: 1.986 ms
+
+## Search with no match
+Execution 1.8 ms
+Limit  (cost=64.93..64.94 rows=1 width=235) (actual time=1.677..1.679 rows=0 loops=1)
+  Buffers: shared hit=37
+  ->  Sort  (cost=64.93..64.94 rows=1 width=235) (actual time=1.676..1.678 rows=0 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=37
+        ->  Limit  (cost=64.92..64.92 rows=1 width=235) (actual time=1.634..1.636 rows=0 loops=1)
+              Buffers: shared hit=28
+              ->  Sort  (cost=64.92..64.92 rows=1 width=235) (actual time=1.634..1.635 rows=0 loops=1)
+                    Sort Key: c.created_at DESC, c.id DESC
+                    Sort Method: quicksort  Memory: 25kB
+                    Buffers: shared hit=28
+                    ->  Nested Loop Left Join  (cost=4.51..64.91 rows=1 width=235) (actual time=1.628..1.630 rows=0 loops=1)
+                          Buffers: shared hit=28
+                          ->  Hash Join  (cost=3.32..63.63 rows=1 width=183) (actual time=1.628..1.629 rows=0 loops=1)
+                                Hash Cond: (c.customer_id = cu.id)
+                                Join Filter: ((c.title ~~* '%no such text%'::text) OR (cu.canonical_name ~~* '%no such text%'::text))
+                                Rows Removed by Join Filter: 1001
+                                Buffers: shared hit=28
+                                ->  Seq Scan on cases c  (cost=1.06..58.89 rows=947 width=149) (actual time=0.013..0.566 rows=1001 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1))))
+                                      Rows Removed by Filter: 123
+                                      Buffers: shared hit=27
+                                      SubPlan 1
+                                        ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                ->  Hash  (cost=2.25..2.25 rows=1 width=66) (actual time=0.007..0.008 rows=1 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=1
+                                      ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.003..0.003 rows=1 loops=1)
+                                            Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                            Rows Removed by Filter: 8
+                                            Buffers: shared hit=1
+                                            SubPlan 2
+                                              ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                                    Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Index Scan using assignees_pkey on assignees a  (cost=1.19..1.24 rows=1 width=58) (never executed)
+                                Index Cond: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND (id = c.assignee_id))
+                                Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1)))
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=424
+Planning Time: 1.705 ms
+Execution Time: 1.800 ms
+
+## Overdue
+Execution 0.262 ms
+Limit  (cost=13.37..13.44 rows=26 width=235) (actual time=0.166..0.169 rows=26 loops=1)
+  Buffers: shared hit=16
+  ->  Sort  (cost=13.37..13.44 rows=26 width=235) (actual time=0.165..0.167 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=16
+        ->  Limit  (cost=3.45..12.76 rows=26 width=235) (actual time=0.064..0.124 rows=26 loops=1)
+              Buffers: shared hit=7
+              ->  Nested Loop Left Join  (cost=3.45..173.24 rows=474 width=235) (actual time=0.063..0.122 rows=26 loops=1)
+                    Join Filter: (a.id = c.assignee_id)
+                    Rows Removed by Join Filter: 13
+                    Buffers: shared hit=7
+                    ->  Nested Loop  (cost=2.39..149.74 rows=474 width=183) (actual time=0.028..0.058 rows=26 loops=1)
+                          Join Filter: (cu.id = c.customer_id)
+                          Buffers: shared hit=6
+                          ->  Index Scan using cases_workspace_created on cases c  (cost=1.33..140.38 rows=474 width=149) (actual time=0.017..0.040 rows=26 loops=1)
+                                Index Cond: (workspace_id = '00000000-0000-4000-8000-000000000002'::uuid)
+                                Filter: (((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1))) AND COALESCE(((due_at < now()) AND (status <> ALL ('{Approved,Closed}'::text[]))), false))
+                                Rows Removed by Filter: 13
+                                Buffers: shared hit=5
+                                SubPlan 1
+                                  ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Materialize  (cost=1.06..2.25 rows=1 width=66) (actual time=0.000..0.000 rows=1 loops=26)
+                                Buffers: shared hit=1
+                                ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.005..0.005 rows=1 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                      Rows Removed by Filter: 6
+                                      Buffers: shared hit=1
+                                      SubPlan 2
+                                        ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                    ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.000..0.000 rows=1 loops=26)
+                          Buffers: shared hit=1
+                          ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.003..0.003 rows=1 loops=1)
+                                Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                Rows Removed by Filter: 6
+                                Buffers: shared hit=1
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=424
+Planning Time: 1.514 ms
+Execution Time: 0.262 ms
+
+## Unassigned
+Execution 0.292 ms
+Limit  (cost=13.25..13.32 rows=26 width=235) (actual time=0.170..0.174 rows=26 loops=1)
+  Buffers: shared hit=16
+  ->  Sort  (cost=13.25..13.32 rows=26 width=235) (actual time=0.170..0.172 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 31kB
+        Buffers: shared hit=16
+        ->  Limit  (cost=3.45..12.64 rows=26 width=235) (actual time=0.072..0.128 rows=26 loops=1)
+              Buffers: shared hit=7
+              ->  Nested Loop Left Join  (cost=3.45..164.65 rows=456 width=235) (actual time=0.071..0.125 rows=26 loops=1)
+                    Join Filter: (a.id = c.assignee_id)
+                    Rows Removed by Join Filter: 26
+                    Buffers: shared hit=7
+                    ->  Nested Loop  (cost=2.39..141.96 rows=456 width=183) (actual time=0.028..0.051 rows=26 loops=1)
+                          Join Filter: (cu.id = c.customer_id)
+                          Buffers: shared hit=6
+                          ->  Index Scan using cases_workspace_created on cases c  (cost=1.33..132.87 rows=456 width=149) (actual time=0.016..0.034 rows=26 loops=1)
+                                Index Cond: (workspace_id = '00000000-0000-4000-8000-000000000002'::uuid)
+                                Filter: ((assignee_id IS NULL) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1))))
+                                Rows Removed by Filter: 24
+                                Buffers: shared hit=5
+                                SubPlan 1
+                                  ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Materialize  (cost=1.06..2.25 rows=1 width=66) (actual time=0.000..0.000 rows=1 loops=26)
+                                Buffers: shared hit=1
+                                ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.005..0.005 rows=1 loops=1)
+                                      Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                      Rows Removed by Filter: 6
+                                      Buffers: shared hit=1
+                                      SubPlan 2
+                                        ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                    ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.000..0.001 rows=1 loops=26)
+                          Buffers: shared hit=1
+                          ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.008..0.008 rows=1 loops=1)
+                                Filter: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                Rows Removed by Filter: 6
+                                Buffers: shared hit=1
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+Planning:
+  Buffers: shared hit=424
+Planning Time: 1.744 ms
+Execution Time: 0.292 ms
+
+## Guest own plus template
+Execution 0.436 ms
+Limit  (cost=35.16..35.22 rows=26 width=235) (actual time=0.249..0.253 rows=26 loops=1)
+  Buffers: shared hit=46
+  ->  Sort  (cost=35.16..35.22 rows=27 width=235) (actual time=0.248..0.251 rows=26 loops=1)
+        Sort Key: (0), c.created_at DESC, c.id DESC
+        Sort Method: quicksort  Memory: 32kB
+        Buffers: shared hit=46
+        ->  Append  (cost=3.45..34.51 rows=27 width=235) (actual time=0.063..0.195 rows=29 loops=1)
+              Buffers: shared hit=37
+              ->  Limit  (cost=3.45..11.59 rows=1 width=235) (actual time=0.062..0.077 rows=3 loops=1)
+                    Buffers: shared hit=9
+                    ->  Nested Loop Left Join  (cost=3.45..11.59 rows=1 width=235) (actual time=0.062..0.077 rows=3 loops=1)
+                          Join Filter: (a.id = c.assignee_id)
+                          Rows Removed by Join Filter: 1
+                          Buffers: shared hit=9
+                          ->  Nested Loop  (cost=2.39..9.38 rows=1 width=183) (actual time=0.026..0.035 rows=3 loops=1)
+                                Join Filter: (cu.id = c.customer_id)
+                                Rows Removed by Join Filter: 1
+                                Buffers: shared hit=6
+                                ->  Index Scan using cases_workspace_created on cases c  (cost=1.33..7.12 rows=1 width=149) (actual time=0.018..0.024 rows=3 loops=1)
+                                      Index Cond: (workspace_id = 'b8a29310-b917-4c15-85d6-699e54de88d0'::uuid)
+                                      Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 1).col1)))
+                                      Buffers: shared hit=3
+                                      SubPlan 1
+                                        ->  Seq Scan on workspaces  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                ->  Seq Scan on customers cu  (cost=1.06..2.25 rows=1 width=66) (actual time=0.003..0.003 rows=1 loops=3)
+                                      Filter: ((workspace_id = 'b8a29310-b917-4c15-85d6-699e54de88d0'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 2).col1))))
+                                      Rows Removed by Filter: 9
+                                      Buffers: shared hit=3
+                                      SubPlan 2
+                                        ->  Seq Scan on workspaces workspaces_1  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                          ->  Seq Scan on assignees a  (cost=1.06..2.17 rows=1 width=58) (actual time=0.002..0.002 rows=1 loops=3)
+                                Filter: ((workspace_id = 'b8a29310-b917-4c15-85d6-699e54de88d0'::uuid) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 3).col1))))
+                                Rows Removed by Filter: 7
+                                Buffers: shared hit=3
+                                SubPlan 3
+                                  ->  Seq Scan on workspaces workspaces_2  (cost=0.00..1.05 rows=1 width=16) (never executed)
+                                        Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+              ->  Limit  (cost=4.50..22.79 rows=26 width=235) (actual time=0.048..0.115 rows=26 loops=1)
+                    Buffers: shared hit=28
+                    InitPlan 4
+                      ->  Seq Scan on workspaces workspaces_3  (cost=0.00..1.05 rows=1 width=16) (actual time=0.003..0.004 rows=1 loops=1)
+                            Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                            Rows Removed by Filter: 3
+                            Buffers: shared hit=1
+                    ->  Nested Loop Left Join  (cost=3.45..115.97 rows=160 width=235) (actual time=0.048..0.112 rows=26 loops=1)
+                          Join Filter: (a_1.id = c_1.assignee_id)
+                          Rows Removed by Join Filter: 33
+                          Buffers: shared hit=28
+                          ->  Nested Loop  (cost=2.39..106.60 rows=160 width=183) (actual time=0.036..0.069 rows=26 loops=1)
+                                Join Filter: (cu_1.id = c_1.customer_id)
+                                Rows Removed by Join Filter: 59
+                                Buffers: shared hit=26
+                                ->  Index Scan using cases_workspace_created on cases c_1  (cost=1.33..96.35 rows=280 width=149) (actual time=0.021..0.038 rows=26 loops=1)
+                                      Index Cond: (workspace_id = (InitPlan 4).col1)
+                                      Filter: ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 5).col1)))
+                                      Buffers: shared hit=24
+                                      SubPlan 5
+                                        ->  Seq Scan on workspaces workspaces_4  (cost=0.00..1.05 rows=1 width=16) (actual time=0.002..0.002 rows=1 loops=1)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                              Rows Removed by Filter: 3
+                                              Buffers: shared hit=1
+                                ->  Materialize  (cost=1.06..2.26 rows=2 width=66) (actual time=0.001..0.001 rows=3 loops=26)
+                                      Buffers: shared hit=2
+                                      ->  Seq Scan on customers cu_1  (cost=1.06..2.25 rows=2 width=66) (actual time=0.006..0.009 rows=6 loops=1)
+                                            Filter: ((workspace_id = (InitPlan 4).col1) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 6).col1))))
+                                            Buffers: shared hit=2
+                                            SubPlan 6
+                                              ->  Seq Scan on workspaces workspaces_5  (cost=0.00..1.05 rows=1 width=16) (actual time=0.002..0.002 rows=1 loops=1)
+                                                    Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                                    Rows Removed by Filter: 3
+                                                    Buffers: shared hit=1
+                          ->  Materialize  (cost=1.06..2.17 rows=1 width=58) (actual time=0.000..0.000 rows=2 loops=26)
+                                Buffers: shared hit=2
+                                ->  Seq Scan on assignees a_1  (cost=1.06..2.17 rows=1 width=58) (actual time=0.005..0.007 rows=3 loops=1)
+                                      Filter: ((workspace_id = (InitPlan 4).col1) AND ((workspace_id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (ANY (workspace_id = (hashed SubPlan 7).col1))))
+                                      Rows Removed by Filter: 7
+                                      Buffers: shared hit=2
+                                      SubPlan 7
+                                        ->  Seq Scan on workspaces workspaces_6  (cost=0.00..1.05 rows=1 width=16) (actual time=0.001..0.002 rows=1 loops=1)
+                                              Filter: ((mode = 'template'::text) AND ((id = (NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid) OR (mode = 'template'::text)))
+                                              Rows Removed by Filter: 3
+                                              Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=415
+Planning Time: 1.981 ms
+Execution Time: 0.436 ms
+
+## Case activity
+Execution 0.055 ms
+Limit  (cost=0.28..11.84 rows=3 width=67) (actual time=0.024..0.026 rows=3 loops=1)
+  Buffers: shared hit=4
+  ->  Result  (cost=0.28..11.84 rows=3 width=67) (actual time=0.023..0.025 rows=3 loops=1)
+        One-Time Filter: ((NULLIF(current_setting('app.workspace_id'::text, true), ''::text))::uuid = '00000000-0000-4000-8000-000000000002'::uuid)
+        Buffers: shared hit=4
+        ->  Index Scan Backward using audit_events_target on audit_events  (cost=0.28..11.84 rows=3 width=67) (actual time=0.019..0.020 rows=3 loops=1)
+              Index Cond: ((workspace_id = '00000000-0000-4000-8000-000000000002'::uuid) AND (target = '06ec991b-7b19-40a7-adca-a42cf19cfd0a'::text))
+              Buffers: shared hit=4
+Planning:
+  Buffers: shared hit=216
+Planning Time: 0.784 ms
+Execution Time: 0.055 ms

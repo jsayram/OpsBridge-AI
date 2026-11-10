@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cases - OpsBridge AI prototype</title>
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body data-state="normal">
+<a class="skip-link" href="#main">Skip to main content</a>
+<div class="proto-banner" role="note"><span class="glyph" aria-hidden="true">&#9650;</span>Static prototype. Not a working app. All names and numbers are synthetic.</div>
+
+<header class="topbar">
+  <div class="brand">OpsBridge <span>AI</span></div>
+  <div class="workspace">Workspace: Northstar Operations (fictional) &middot; Environment: demo</div>
+  <div class="controls">
+    <label for="view-state">View state</label>
+    <select id="view-state">
+      <option value="normal">Normal</option>
+      <option value="loading">Loading (skeletons)</option>
+      <option value="empty">Empty</option>
+      <option value="error">Error (with request ID)</option>
+      <option value="stale">Stale source</option>
+      <option value="denied">Access denied</option>
+    </select>
+    <button type="button" id="theme-toggle" aria-pressed="false">Light theme</button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidenav" aria-label="Primary">
+    <ul>
+      <li><a href="overview.html">Overview<span class="route">/app/overview</span></a></li>
+      <li><a href="cases.html" aria-current="page">Cases<span class="route">/app/cases</span></a></li>
+      <li><a href="reconciliation.html">Reconciliation<span class="route">/app/reconciliation</span></a></li>
+    </ul>
+  </nav>
+
+  <main id="main" tabindex="-1">
+    <div class="page-head">
+      <h1>Cases</h1>
+      <span class="route">/app/cases &middot; detail pane: /app/cases/CASE-1042</span>
+    </div>
+    <p class="sr-only" role="status" aria-live="polite" id="live">Showing normal state.</p>
+
+    <section class="v v-loading" aria-label="Loading cases" aria-busy="true">
+      <div class="grid split">
+        <div class="card"><div class="skel-block"><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div><div class="skel lg"></div></div></div>
+        <div class="card"><div class="skel-block"><div class="skel lg w60"></div><div class="skel w80"></div><div class="skel w40"></div><div class="skel lg"></div></div></div>
+      </div>
+    </section>
+
+    <section class="v v-empty" aria-labelledby="empty-h">
+      <div class="card state-panel">
+        <h2 id="empty-h"><span aria-hidden="true">&#9675;</span> No cases match</h2>
+        <p class="muted">No cases match these filters, or this workspace has none yet.</p>
+        <p style="margin-top:16px"><button type="button">Clear filters</button> <button type="button" class="primary">Create Sample Case</button></p>
+      </div>
+    </section>
+
+    <section class="v v-error" aria-labelledby="err-h">
+      <div class="callout bad state-panel" role="alert">
+        <div class="t" id="err-h"><span aria-hidden="true">&#10005;</span> Could not load cases</div>
+        <p>The case list request failed. Nothing was changed.</p>
+        <p class="small muted" style="margin-top:8px">Request ID: <span class="mono">req_demo_c41d08ab</span> (synthetic)</p>
+        <p style="margin-top:16px"><button type="button">Retry</button></p>
+      </div>
+    </section>
+
+    <section class="v v-denied" aria-labelledby="den-h">
+      <div class="callout warn state-panel" role="alert">
+        <div class="t" id="den-h"><span aria-hidden="true">&#9650;</span> Access denied</div>
+        <p>This demo session is not authorized to view cases in this workspace. The server decides access.</p>
+        <p style="margin-top:16px"><button type="button">Start a new demo session</button></p>
+      </div>
+    </section>
+
+    <section class="v v-stale" aria-label="Stale data notice" style="margin-bottom:16px">
+      <div class="callout warn" role="status">
+        <div class="t"><span aria-hidden="true">&#9650;</span> Stale source: CRM Simulator</div>
+        <p>Case assignee and due date values came from a CRM Simulator fixture last loaded 2026-11-05 17:00 UTC. Treat them as possibly out of date.</p>
+      </div>
+    </section>
+
+    <div class="v v-normal">
+      <form class="card" role="search" aria-label="Filter cases" onsubmit="return false" style="margin-bottom:16px">
+        <div class="filters">
+          <label class="field" for="q">Search<input id="q" type="search" placeholder="Case ID or client"></label>
+          <label class="field" for="f-status">Status
+            <select id="f-status"><option>All statuses</option><option>Draft</option><option>Intake</option><option>Needs Review</option><option>Ready</option><option>Approved</option><option>Closed</option></select>
+          </label>
+          <label class="field" for="f-assignee">Assignee
+            <select id="f-assignee"><option>Anyone</option><option>Ana Whitfield (fictional)</option><option>Marcus Oyelaran (fictional)</option><option>Priya Desai (fictional)</option></select>
+          </label>
+          <label class="field" for="f-sort">Sort by
+            <select id="f-sort"><option>Due date, soonest</option><option>Discrepancies, most</option><option>Case ID</option></select>
+          </label>
+          <button type="button" class="primary">Apply</button>
+          <button type="button">Clear</button>
+        </div>
+      </form>
+
+      <div class="grid split">
+        <section class="card" aria-labelledby="list-h">
+          <div class="card-head"><h2 id="list-h">All cases</h2><span class="row"><span class="badge sim">Simulated</span><span class="small muted">5 of 14 shown</span></span></div>
+          <div class="tscroll" role="region" aria-label="Cases table" tabindex="0">
+            <table class="min">
+              <caption class="sr-only">Cases, sorted by due date</caption>
+              <thead><tr><th scope="col">Case</th><th scope="col">Status</th><th scope="col">Assignee</th><th scope="col">Due</th><th scope="col" class="r">Discrepancies</th></tr></thead>
+              <tbody>
+                <tr aria-selected="true"><th scope="row"><a class="row-link" href="#detail" aria-current="true">CASE-1042</a><div class="small muted">Harbor Ridge Produce LLC (fictional)</div></th><td><span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Review</span></td><td>Ana Whitfield (fictional)</td><td class="num">2026-11-09</td><td class="r num">3</td></tr>
+                <tr><th scope="row"><a class="row-link" href="#detail">CASE-1038</a><div class="small muted">Cedar Point Landscaping (fictional)</div></th><td><span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Review</span></td><td>Marcus Oyelaran (fictional)</td><td class="num">2026-11-10</td><td class="r num">1</td></tr>
+                <tr><th scope="row"><a class="row-link" href="#detail">CASE-1035</a><div class="small muted">Bluebird Snow Services (fictional)</div></th><td><span class="chip info"><span class="g" aria-hidden="true">&#9671;</span>Ready</span></td><td>Priya Desai (fictional)</td><td class="num">2026-11-12</td><td class="r num">0</td></tr>
+                <tr><th scope="row"><a class="row-link" href="#detail">CASE-1031</a><div class="small muted">Maple Grove Pools (fictional)</div></th><td><span class="chip info"><span class="g" aria-hidden="true">&#9679;</span>Intake</span></td><td>Ana Whitfield (fictional)</td><td class="num">2026-11-13</td><td class="r num">0</td></tr>
+                <tr><th scope="row"><a class="row-link" href="#detail">CASE-1027</a><div class="small muted">Lakeview Window Cleaning (fictional)</div></th><td><span class="chip ok"><span class="g" aria-hidden="true">&#10003;</span>Approved</span></td><td>Marcus Oyelaran (fictional)</td><td class="num">2026-11-04</td><td class="r num">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:8px">Other statuses in the vocabulary: Draft, Closed.</p>
+        </section>
+
+        <aside class="card" id="detail" aria-labelledby="detail-h">
+          <div class="card-head">
+            <div>
+              <h2 id="detail-h">CASE-1042</h2>
+              <p class="small muted">Harbor Ridge Produce LLC (fictional)</p>
+            </div>
+            <span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Review</span>
+          </div>
+
+          <h3>Timeline</h3>
+          <ol class="timeline" style="margin:8px 0 16px">
+            <li><time datetime="2026-11-06T09:00:00Z">2026-11-06 09:00 UTC</time>Case created from CRM Simulator fixture (Intake)</li>
+            <li><time datetime="2026-11-06T09:02:00Z">2026-11-06 09:02 UTC</time>Exception opened: bill-to entity differs (Open)</li>
+            <li><time datetime="2026-11-06T09:04:00Z">2026-11-06 09:04 UTC</time>Document review needs a person (Needs Human Review)</li>
+          </ol>
+
+          <h3>Document checklist</h3>
+          <ul class="checks" style="margin:8px 0 16px">
+            <li><input type="checkbox" id="c1" checked><label for="c1">Service agreement received</label></li>
+            <li><input type="checkbox" id="c2" checked><label for="c2">Tax form on file (fictional placeholder)</label></li>
+            <li><input type="checkbox" id="c3"><label for="c3">Signed bill-to confirmation</label></li>
+            <li><input type="checkbox" id="c4"><label for="c4">Service start date</label></li>
+          </ul>
+
+          <section class="card raised" aria-labelledby="doc-h" style="margin-bottom:16px">
+            <div class="card-head" style="margin-bottom:8px">
+              <h3 id="doc-h">Document review</h3>
+              <span class="chip warn"><span class="g" aria-hidden="true">&#9650;</span>Needs Human Review</span>
+            </div>
+            <p><span class="badge">Deterministic demonstration fixture</span></p>
+            <p class="small muted" style="margin-top:8px">Two fields were flagged as missing. Each points to a source location.</p>
+            <ul class="list">
+              <li><span>Service start date<br><span class="small muted">Source: intake form, page 1, line 6</span></span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Missing</span></li>
+              <li><span>Bill-to entity<br><span class="small muted">Source: intake form, page 2, line 3</span></span><span class="chip neutral"><span class="g" aria-hidden="true">&#9675;</span>Missing</span></li>
+            </ul>
+            <p class="row" style="margin-top:8px"><button type="button">Accept</button><button type="button">Accept with Edits</button><button type="button" class="danger">Reject</button></p>
+          </section>
+
+          <section aria-labelledby="appr-h">
+            <h3 id="appr-h">Approval</h3>
+            <p class="small muted" style="margin:4px 0 8px">3 discrepancies are unresolved, so the case cannot move to Approved.</p>
+            <button type="button" disabled aria-describedby="appr-why">Approve case</button>
+            <p class="small muted" id="appr-why" style="margin-top:8px">Needs Review to Ready first. Approval is recorded in audit history.</p>
+          </section>
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  var sel = document.getElementById('view-state');
+  var live = document.getElementById('live');
+  function set(v) {
+    if (!sel.querySelector('option[value="' + v + '"]')) v = 'normal';
+    document.body.dataset.state = v;
+    sel.value = v;
+    live.textContent = 'Showing ' + sel.options[sel.selectedIndex].text + ' state.';
+  }
+  sel.addEventListener('change', function () { set(sel.value); });
+  set((location.hash || '').slice(1) || 'normal');
+  var tb = document.getElementById('theme-toggle');
+  tb.addEventListener('click', function () {
+    var light = document.documentElement.dataset.theme !== 'light';
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    tb.setAttribute('aria-pressed', String(light));
+    tb.textContent = light ? 'Dark theme' : 'Light theme';
+  });
+})();
+</script>
+</body>
+</html>

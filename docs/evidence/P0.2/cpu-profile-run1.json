@@ -1,0 +1,148 @@
+{
+  "takenAt": "2026-11-06T17:14:19.442Z",
+  "method": "V8 Profiler via workerd inspector, 100us sampling, active = non-idle samples",
+  "host": "Apple M1 Max",
+  "workerd": "workerd 2026-11-04",
+  "results": {
+    "noop": {
+      "firstTwoActiveMs": [
+        16.42,
+        0
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 0,
+        "p50": 2.21,
+        "p95": 20.87,
+        "max": 22.59
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 2.62,
+        "p50": 3.58,
+        "p95": 4.99,
+        "max": 5.14
+      }
+    },
+    "read_cases (tx + set_config + select)": {
+      "firstTwoActiveMs": [
+        24.37,
+        9.25
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 8.89,
+        "p50": 11.13,
+        "p95": 17.81,
+        "max": 23.01
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 10.89,
+        "p50": 12.17,
+        "p95": 18.81,
+        "max": 29.98
+      }
+    },
+    "approve (full atomic command)": {
+      "firstTwoActiveMs": [
+        13.31,
+        14.6
+      ],
+      "warmActiveMs": {
+        "n": 20,
+        "min": 11.13,
+        "p50": 14.57,
+        "p95": 16.57,
+        "max": 17.38
+      },
+      "warmWallMs": {
+        "n": 20,
+        "min": 14.22,
+        "p50": 16.44,
+        "p95": 19.59,
+        "max": 26.14
+      }
+    },
+    "rs256_sign (import + sign)": {
+      "firstTwoActiveMs": [
+        1.43,
+        3.97
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 0.98,
+        "p50": 3.23,
+        "p95": 4.82,
+        "max": 8.32
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 3.2,
+        "p50": 4.09,
+        "p95": 5.61,
+        "max": 7.47
+      }
+    },
+    "pdf_1p": {
+      "firstTwoActiveMs": [
+        40.38,
+        11.53
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 3.56,
+        "p50": 5.99,
+        "p95": 23.09,
+        "max": 23.59
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 5.58,
+        "p50": 6.54,
+        "p95": 9.48,
+        "max": 10.03
+      }
+    },
+    "pdf_5p": {
+      "firstTwoActiveMs": [
+        16.11,
+        15.54
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 11.86,
+        "p50": 14.64,
+        "p95": 19.91,
+        "max": 25.38
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 14.75,
+        "p50": 15.73,
+        "p95": 22.46,
+        "max": 24.06
+      }
+    },
+    "pdf_20p": {
+      "firstTwoActiveMs": [
+        47.86,
+        47.13
+      ],
+      "warmActiveMs": {
+        "n": 25,
+        "min": 43.03,
+        "p50": 47.47,
+        "p95": 75.02,
+        "max": 75.23
+      },
+      "warmWallMs": {
+        "n": 25,
+        "min": 45.72,
+        "p50": 49.97,
+        "p95": 76.01,
+        "max": 76.46
+      }
+    }
+  }
+}
