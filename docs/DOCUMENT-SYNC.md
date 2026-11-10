@@ -1,6 +1,6 @@
 # OpsBridge AI documentation synchronization inventory
 
-Verified: 2026-11-09T20:40:00-05:00, P8 rows and every row they replaced, by the P8 phase session: ten P8 notes written new after confirming each was absent, and the phase ledger, handoff, master inbox, hub, P8 phase guide, session log and decision log overwritten only after each was read back and matched its recorded hash. Every note was read back through the Obsidian CLI (45-second hard timeout per call, one note at a time) and matched its source byte for byte. The PRD did not change in P8.
+Verified: 2026-11-09T20:07:46-05:00, inbox and ledger rows by the master; P8 rows and every row they replaced, by the P8 phase session: ten P8 notes written new after confirming each was absent, and the phase ledger, handoff, master inbox, hub, P8 phase guide, session log and decision log overwritten only after each was read back and matched its recorded hash. Every note was read back through the Obsidian CLI (45-second hard timeout per call, one note at a time) and matched its source byte for byte. The PRD did not change in P8.
 
 Earlier: 2026-11-09T19:09:35-05:00, P7 rows and every row they replaced, by the P7 phase session: nine P7 and P8 notes written new after confirming each was absent, and the phase ledger, handoff, hub, P7 phase guide, decision log and session log overwritten only after each was read back and found unchanged since the session's first read. Every note was read back through the Obsidian CLI and matched its source byte for byte. The PRD did not change in P7.
 
@@ -14,8 +14,8 @@ Earlier: 2026-11-06T17:55:00-05:00, P3 rows.
 | `docs/ROADMAP.md` | `Projects/OpsBridge AI/Roadmap.md` | `d5ee72d4af7a99da696ab727a22ced5a68f7ba71cc6bc3458e07ed34a47651d1` | 3703 | Verified |
 | `docs/JOB-ALIGNMENT.md` | `Projects/OpsBridge AI/Job alignment.md` | `dcf59fbf7f8e17346c955744f55d7935e6e934a6bacd7ed4f30d3a48fd706ecd` | 17883 | Verified |
 | `docs/VAULT-WORKFLOW.md` | `Projects/OpsBridge AI/Documentation workflow.md` | `82a543023023006005085e4f1b261918c3d80ff1de0bc83100a0a4018e766817` | 11207 | Verified |
-| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `06a5f8b494488e5c181f15e9c3fbf2b14fc8a616d66fdb4ade20a5bdbd33f726` | 25955 | Verified |
-| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `6ceec10ecbad4679e4485f798c6b482fc3b99a0b218c0d8bb60f25f78f773b42` | 16052 | Verified |
+| `docs/PHASE-LEDGER.md` | `Projects/OpsBridge AI/Phase ledger.md` | `211b154c25a2978deec8abc4f6c9094bd4a49420d45db89002ff2c30fcab28b5` | 26539 | Verified |
+| `docs/MASTER_INBOX.md` | `Projects/OpsBridge AI/Master inbox.md` | `6ee9b1717e864d542509634317b20af6fd4f1decf680e3d0e1a93e06c3d0d7f9` | 16407 | Verified |
 | `docs/SESSION_HANDOFF.md` | `Projects/OpsBridge AI/Handoff.md` | `a5d0a45f00d899582d92b50cc3a2994b0cf029e61d8e6e21155f7d3441bf1daa` | 12347 | Verified |
 | `templates/work-package-brief.md` | `Projects/OpsBridge AI/Templates/work-package-brief.md` | `1ceefc08fa0bc714f4dd5dbedd0ae292fc31b74379b20d18ef91466cab3d59de` | 2719 | Verified |
 | `templates/work-package-report.md` | `Projects/OpsBridge AI/Templates/work-package-report.md` | `5ef61afc8dab62d10dc37f052e56e2be679020fe0d9e48adb84587da26be671e` | 2406 | Verified |

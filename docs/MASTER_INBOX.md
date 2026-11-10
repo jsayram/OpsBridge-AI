@@ -99,7 +99,7 @@ Updated: 2026-11-09 (America/New_York), P8 phase session. One item is open: DEC-
 
 ### DEC-009 — After local P8: accept, and start the launch?
 
-- State: open, raised 2026-11-09 by the P8 phase session.
+- State: answered 2026-11-09.
 - Package and blocking dependency: P8.4 (public launch) and the P8 gate. Nothing local is blocked.
 - Decision needed and why: P8 ran locally on `phase/p8-launch-prep` (`docs/reports/P8.md`). Everything left needs Jose: his own P8 acceptance, the accounts, each push, merge, deploy and publication, and the checks only a person can run. `docs/LAUNCH-CHECKLIST.md` lists them in order, and each step needs its own approval record (`templates/release-approval-record.md`).
 - Options with consequence/cost: (a) Accept P8 for its local scope and start section B of the checklist: Jose creates the free Cloudflare and Neon accounts, then approves a staging deploy. $0 on the free plans; about an afternoon of his time. (b) Revise: name what to change first; no launch work starts. (c) Stop at a local portfolio: keep the repository and run the demo from his machine in interviews. $0, but P8-B, P8-C and P8-F stay unmet and there is no shareable URL.
@@ -107,6 +107,7 @@ Updated: 2026-11-09 (America/New_York), P8 phase session. One item is open: DEC-
 - Decision needed by: before any P8.4 step.
 - Actual owner answer: none yet.
 - Authorized scope and explicit exclusions: none until answered. An answer to (a) still needs separate approvals for each push, merge, deploy and publication.
+- Owner answer, 2026-11-09, in the master thread: “Go”, replying to the options Staging first (recommended), Revise or Stop here. The master took it as Staging first. Authorized: push the phase branches and open a draft PR so CI runs. Still excluded until Jose acts or approves separately: account creation, credentials, merges into `main`, any deploy, publication and spending.
 
 ## Recorded user direction
 
