@@ -52,6 +52,8 @@ Package titles, scope and dependencies live in `PRD.md` and `docs/ROADMAP.md`. I
 
 **P8:** Local run on `phase/p8-launch-prep` from `a6a4740`, waiting for coordinator review. The guided demo is one page with a checklist read back from the records, a recap and a reset; `/about/engineering` is the public evidence page (E2E-28). Two user-visible bugs fixed: the WebKit "New case" miss (a layout shift) and a case-list crash when a search aborted a request mid-body. P8-E is met locally. P8-A's path is met locally; a timed run by a first-time person is pending. P8-B, P8-C's deployed half, P8-D's owner walkthrough and P8-F need Jose and a host. P8.4 prepared only: nothing created, deployed, pushed, merged or published. DEC-009 is open. Owner Accepted stays empty.
 
+**P8:** Coordinator accepted for limited scope under delegation on 2026-11-09, at `1d0e536`, after the master reran `npm run ci:local`. The guided demo, the public evidence page, the case study draft and the handoff documents are built locally, and the WebKit "New case" intermittent is fixed. P8.4 launch is prepared only. Everything hosted, the real Safari, iPhone and VoiceOver runs, the first-visitor timing, the video and Jose's own handoff walk-through and acceptance are pending (DEC-009). Owner Accepted stays empty. Nothing from P8 is pushed, merged, deployed or published.
+
 ## Work-package inventory
 Titles and bounded scope are defined in the PRD/roadmap. P0 rows show actual results. All other rows are planned IDs only.
 | Package | Scope state | Implementation | Verification | Coordinator review | Owner acceptance | Merged | Deployed |
