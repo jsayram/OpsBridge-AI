@@ -73,7 +73,7 @@ The build runs in phases P0 to P8. `docs/PHASE-LEDGER.md` is the record of what 
 | P5 | AI document review and evaluation | Accepted for limited scope, locally |
 | P6 | Analytics, reports and ROI | Accepted for limited scope, locally |
 | P7 | Security, recovery and release gate | Accepted for limited scope, locally |
-| P8 | Guided demo, case study, handoff, launch preparation | Run locally, waiting for review. Public launch not started |
+| P8 | Guided demo, case study, handoff, launch preparation | Accepted for limited scope, locally. Public launch not started |
 
 "Accepted for limited scope" means the coordinator reviewed the evidence and reran the local checks, with live-account items deferred. No phase has owner acceptance yet. `docs/EVIDENCE-MATRIX.md` lists every capability as shipped, built on a test double, or pending.
 
