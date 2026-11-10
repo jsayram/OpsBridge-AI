@@ -123,6 +123,20 @@ describe("guided demo progress (P8.1)", () => {
     expect(await doneKeys(after)).toEqual(["workspace_launched"]);
   });
 
+  it("a rejected approval doesn't count as approving a resolution", async () => {
+    const g = await launch();
+    await setRole(g.cookie, "manager");
+    const ready = (await packCases(g))["case-3"] as { id: string };
+    const detail = await call(`/api/v1/cases/${ready.id}`, { cookie: g.cookie });
+    const res = await call(`/api/v1/approvals/${detail.json.approval.id}/decision`, {
+      cookie: g.cookie,
+      headers: idempotencyKey(),
+      body: { decision: "reject", caseVersion: detail.json.version, reason: "Not yet" },
+    });
+    expect(res.status).toBe(200);
+    expect(await doneKeys(g)).toEqual(["workspace_launched"]);
+  });
+
   it("refuses no session, and an owner gets 404", async () => {
     expect((await call("/api/v1/demo/progress")).status).toBe(401);
     const owner = await call("/api/v1/demo/progress", {

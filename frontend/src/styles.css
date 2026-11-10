@@ -1000,3 +1000,12 @@ button.link {
   width: 17rem;
   max-width: 100%;
 }
+/* The public evidence table is two short columns, so it wraps on a phone instead of scrolling. */
+table.evidence {
+  width: 100%;
+  table-layout: fixed;
+}
+table.evidence th,
+table.evidence td {
+  overflow-wrap: anywhere;
+}

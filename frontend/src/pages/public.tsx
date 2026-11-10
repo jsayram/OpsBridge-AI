@@ -550,7 +550,7 @@ export function Engineering() {
         </p>
         <h2>Latest test results</h2>
         <p className="small muted">{EVIDENCE_RUN}. The same steps run in the repository's CI.</p>
-        <table className="min">
+        <table className="evidence">
           <caption className="sr-only">Test results</caption>
           <thead>
             <tr>

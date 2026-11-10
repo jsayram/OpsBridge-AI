@@ -124,10 +124,12 @@ demo.get("/progress", requireActor, async (c) => {
     const ws = await db.query("SELECT created_at FROM app.workspaces WHERE id = $1", [
       actor.workspaceId,
     ]);
+    // approval.completed is written for a rejection too; only an approval counts for step 5.
     const audit = await db.query(
       `SELECT action, min(occurred_at) AS first_at, count(*)::int AS n
          FROM app.audit_events
         WHERE workspace_id = $1 AND actor_type = 'demo_session' AND action = ANY($2)
+          AND (action <> 'approval.completed' OR summary LIKE 'approved%')
         GROUP BY action`,
       [actor.workspaceId, actions],
     );
