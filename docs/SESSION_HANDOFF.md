@@ -65,7 +65,7 @@ The repository root is this project folder. Docker volume `opsbridge_opsbridge-p
 
 ## Exact restart steps
 
-1. Read fresh `/Users/jramirez/Library/Application Support/CodexUsageMonitor/status.json`. Unknown/stale telemetry is not zero remaining. If a fresh signal requires handoff, finish the safe step and wait for Jose; do not schedule a continuation.
+1. Read fresh `$HOME/Library/Application Support/CodexUsageMonitor/status.json`. Unknown/stale telemetry is not zero remaining. If a fresh signal requires handoff, finish the safe step and wait for Jose; do not schedule a continuation.
 2. Read the master inbox, this handoff, maintained PRD, roadmap, job alignment, ledger, and relevant ADRs. Confirm source/mirror version and hashes; repair any documented sync gap through the official Obsidian CLI.
 3. Inspect actual files and `git status` scoped to this project. Preserve other writers' changes and unrelated parent-repository content. Check for task-owned services before claiming none remain.
 4. Check the current phase and branch in `docs/PHASE-LEDGER.md`. P8 is the last phase. What remains is in `docs/LAUNCH-CHECKLIST.md` and depends on Jose's answer to DEC-009; hosted work follows `docs/runbooks/HOSTED-SETUP.md`. New readers start at `START-HERE.md`. The metric definitions and report limits are in `docs/design/METRICS.md`. Connector operations and Salesforce setup are in `docs/runbooks/CONNECTORS.md`. Local recovery is in `docs/runbooks/RECOVERY.md`, incidents in `docs/runbooks/INCIDENT.md`, and the security checklist in `docs/SECURITY-CHECKLIST.md`.

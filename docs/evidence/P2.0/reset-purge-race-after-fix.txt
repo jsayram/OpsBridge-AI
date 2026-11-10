@@ -1,5 +1,5 @@
 
- RUN  v5.1.0 /Users/jramirez/Git/OpsBridge-AI
+ RUN  v5.1.0 <project-root>
 
 stdout | tests/integration/sweep.test.ts > cron sweep > the sweep drains a backlog across runs
 {"ts":"2026-11-06T20:31:39.231Z","level":"info","event":"sweep","purged":4}

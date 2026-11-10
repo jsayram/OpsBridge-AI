@@ -31,7 +31,7 @@ The official Obsidian CLI performs writes and full read-back; saved bytes are in
 
 ## Limits and restart
 
-No application code, migrations, application tests, hosted CI, provider connection, paid resource, account, public release, message, merge or push was performed by this planning revision. No application services were started. No build phase is owner-accepted. The project still inherits `/Users/jramirez/Git` as Git root; resolve the intended isolated repository boundary before implementation, without staging sibling projects.
+No application code, migrations, application tests, hosted CI, provider connection, paid resource, account, public release, message, merge or push was performed by this planning revision. No application services were started. No build phase is owner-accepted. The project still inherits `$HOME/Git` as Git root; resolve the intended isolated repository boundary before implementation, without staging sibling projects.
 
 Next: Jose reviews PRD v1.1 and continues the stack discussion. P0.2 records the final stack/hosting/database/identity/storage/budget decision before stack-dependent scaffolding; application implementation requires explicit resumption. Resume manually and read fresh Python quota telemetry.
 

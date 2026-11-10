@@ -131,7 +131,7 @@ Running 110 tests using 2 workers
       179 |   let dropped = false;
       180 |   await page.route("**/api/v1/cases", async (route) => {
       181 |     if (route.request().method() === "POST" && !dropped) {
-        at /Users/jramirez/Git/OpsBridge-AI/tests/e2e/core.spec.ts:178:39
+        at <project-root>/tests/e2e/core.spec.ts:178:39
 
     Error Context: test-results/core-a-lost-response-retri-c0a70-ame-key-so-one-case-is-made-webkit-desktop/error-context.md
 
