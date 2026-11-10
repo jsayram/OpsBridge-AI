@@ -2,6 +2,8 @@
 
 OpsBridge AI is an independent portfolio app: an operations command center for Northstar Operations, a fictional services business. It connects CRM, ERP, inventory and case workflows in one place. It finds conflicts between those systems and routes each one to a person to resolve. It runs AI-assisted document review that a human approves, accepts with edits or rejects. Approved changes drive automations, and analytics show what happened, with ROI figures labeled as illustrative projections. All data is synthetic.
 
+![The OpsBridge AI guided demo checklist](docs/screenshots/02-guided-demo.jpg)
+
 ## What it demonstrates
 
 - REST API design, CRM and ERP integration, and sync that survives replays, retries and partial failure.
@@ -85,6 +87,75 @@ What that means in practice:
 - **AI results come from fixtures.** Every review a visitor sees is a labeled deterministic fixture. No language model has been called, and the 40-document evaluation reports fixture results, not live-model accuracy.
 - **ROI figures are illustrative.** They are projections from stated assumptions over synthetic workload, not measured savings.
 - **Browser coverage** is Chromium and Playwright WebKit, desktop and phone sizes. Real Safari, a physical iPhone and a VoiceOver pass have not been done.
+
+## Demo tour
+
+These screenshots come from a local run with synthetic data. They are regenerated with `node scripts/capture-readme-screens.mjs` while the app is running. The banner on every screen marks the demo as simulated.
+
+### Landing page
+The public entry point: what the app is, how it's built, and a single button that starts a private workspace with no sign-up.
+
+![Landing page](docs/screenshots/01-landing.jpg)
+
+### Overview
+The work queue, integration status and recent activity for the visitor's workspace.
+
+![Overview](docs/screenshots/03-overview.jpg)
+
+### Cases
+Consultant case work: search and filters, status, assignee, queue, due dates and aging. Each case has a checklist, handoffs, approvals and a full activity history.
+
+![Cases list](docs/screenshots/04-cases.jpg)
+
+### Integrations
+Simulated CRM, NetSuite-style ERP and inventory sources. Each sync can replay a failure scenario, such as a renamed customer, rate limits, timeouts or duplicates. The sync is safe to rerun.
+
+![Integrations](docs/screenshots/05-integrations.jpg)
+
+### Reconciliation
+Every conflict between sources becomes a finding with a severity and status. Nothing merges on a similar name, and nothing is written back to a source.
+
+![Reconciliation findings](docs/screenshots/06-reconciliation.jpg)
+
+### A definition conflict
+One CRM account legitimately maps to two ERP billing entities. The finding states the business rule, shows each source's raw values and timestamps, and leaves the decision to a person. The records are mapped, never merged.
+
+![Definition conflict detail](docs/screenshots/07-definition-conflict.jpg)
+
+### Document review
+A labeled fixture review of a fictional document. Every suggested field cites the page and text it came from, missing fields are flagged instead of guessed, and only a Manager can accept, edit or reject the suggestion.
+
+![Document review on a case](docs/screenshots/08-document-review.jpg)
+
+### Automations
+Approved changes become events in a durable outbox. Typed rules decide what each event does, and in a demo workspace every effect is recorded as Simulated.
+
+![Automations](docs/screenshots/09-automations.jpg)
+
+### Analytics
+Every number is computed from the workspace's records and carries a definition and a provenance label.
+
+![Analytics](docs/screenshots/10-analytics.jpg)
+
+### Reports
+Self-serve filters by date, source, status and assignee, with a bounded, formula-safe CSV export.
+
+![Reports](docs/screenshots/11-reports.jpg)
+
+### ROI calculator
+An illustrative projection built from stated assumptions, with conservative, base and optimistic scenarios and a sensitivity table. The conservative case shows a loss on purpose. None of these figures are measured savings.
+
+![ROI calculator](docs/screenshots/12-roi.jpg)
+
+### Inventory
+Read-only synthetic inventory snapshots with units, source freshness and mismatch findings. Nothing is ordered or written back.
+
+![Inventory](docs/screenshots/13-inventory.jpg)
+
+### Engineering evidence
+The public evidence page: what is tested, what is simulated and what is still pending.
+
+![Engineering evidence](docs/screenshots/14-engineering-evidence.jpg)
 
 ## Getting started
 
